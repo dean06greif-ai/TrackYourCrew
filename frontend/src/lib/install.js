@@ -8,19 +8,23 @@ export function installPlatform({ ua = "", standalone = false, touchMac = false 
   // In-App-Browser (Instagram, Facebook, WhatsApp, TikTok, Snapchat, LinkedIn, Line, Telegram-Webview)
   if (/Instagram|FBAN|FBAV|FB_IAB|WhatsApp|musical_ly|TikTok|Bytedance|Snapchat|LinkedInApp|\bLine\/|Telegram/i.test(s)) return "inapp";
   if (/iPhone|iPad|iPod/i.test(s) || touchMac) {
-    // Nur Safari kann auf iOS zum Home-Bildschirm hinzufügen (Chrome/Firefox seit iOS 16.4 auch,
-    // aber mit anderem Menü) – wir zeigen die Safari-Anleitung, andere Browser sehen den Umweg-Hinweis.
-    return /CriOS|FxiOS|EdgiOS|OPiOS/i.test(s) ? "inapp" : "ios";
+    // Hinweis nur in echtem Safari (Dean 2026-11-26). Google-App (GSA), Chrome, Firefox, Edge u. a.
+    // und eingebettete Ansichten (ohne „Safari/“ im Kennzeichen) zählen als „inapp“ -> kein Hinweis von selbst.
+    const otherIos = /CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|GSA\/|YaBrowser|DuckDuckGo|Brave|Ddg\//i;
+    if (touchMac) return otherIos.test(s) ? "inapp" : "ios";
+    return /Safari\//.test(s) && !otherIos.test(s) ? "ios" : "inapp";
   }
-  if (/Android/i.test(s)) return "android";
+  // Android: eingebettete Ansichten („; wv)“) und die Google-App können nicht installieren
+  if (/Android/i.test(s)) return /;\s*wv\)|GSA\//i.test(s) ? "inapp" : "android";
   return "desktop";
 }
 
 export const REMIND_AFTER_DAYS = 14;
 
-// Soll der Hinweis von selbst erscheinen? (Nie am PC, nie beim ersten Besuch.)
+// Soll der Hinweis von selbst erscheinen? Nur wo man gerade wirklich installieren kann
+// (iPhone: Safari, Android: normaler Browser) – nie am PC, nie in App-Browsern, nie beim ersten Besuch.
 export function shouldAutoShow(platform, state = {}, now = Date.now()) {
-  if (!["ios", "android", "inapp"].includes(platform)) return false;
+  if (!["ios", "android"].includes(platform)) return false;
   if (state.never) return false;
   if (state.snoozedUntil && now < state.snoozedUntil) return false;
   return (state.visits || 0) >= 2 || !!state.logged;

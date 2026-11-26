@@ -59,8 +59,12 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
 - **Tutorial (Plan 4a, im Code noch „tour“):** nach dem Onboarding `tour_step` 0, 11 Schritte in `frontend/src/lib/tour.js` (Schritt 0 = Begrüßung ohne Ziel, Karte mittig)
   (inkl. Eintrag-Einstellungen), die Seite meldet echte Aktionen mit `tourEvent("…")`, Ziele per `data-tour`-Attribut.
   Wo man etwas tun muss: weiß leuchtender Rahmen; weiter/zurück per Pfeil. Neustart in den Einstellungen.
-- **App installieren (Plan 10):** `lib/install.js` (Regeln, localStorage `tyc_install`), `InstallSheet.jsx`,
-  `public/sw.js` reicht nur durch (kein Cache), registriert nur im Produktions-Build.
+- **App installieren (Plan 10):** `lib/install.js` (Regeln, localStorage `tyc_install`), `InstallSheet.jsx`;
+  Hinweis von selbst nur, wo man installieren kann (iPhone: nur echtes Safari, Android: normaler Browser).
+- **Offline (2026-11-26):** `public/sw.js` speichert die App-Dateien (Seite: erst Netz, `/assets/`: Cache), registriert
+  nur im Produktions-Build (Test: `.claude/launch.json` `frontend-alt-prod`). `lib/offline.js`: Snapshots `tyc_off_me`/`tyc_off_board`,
+  Postausgang `tyc_outbox` (je Woche ein ganzer Wochenstand + Basis), senden beim Start/online/alle 30 s (Web Lock, ein Tab);
+  409 -> `alreadyApplied` (Antwort verloren) sonst `mergeDays` (eigene Änderung auf Server-Stand). Netzfehler loggen nie aus.
 - **Crew/Freunde (Plan 4b):** Hinzufügen per Name + Code ist eine Anfrage, die der andere annimmt (optional
   „zurück hinzufügen“). Einladungslink `/join/CODE` verbindet sofort gegenseitig. Freundschaft bleibt technisch
   einseitig (`users.friends`), Anfragen in `users.friend_requests_in`, Schalter `accept_friend_requests`.

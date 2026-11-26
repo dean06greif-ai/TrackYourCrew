@@ -362,6 +362,9 @@ async def _board_entry(u: dict, viewer_id: str, week: Optional[int] = None) -> d
         "values": values,
         "days": days,
         "updated_at": entry.get("updated_at") if entry else None,
+        # Anzeige „Stand“ auf der Karte: letzter Eintrag über alle Wochen (updated_at bleibt die
+        # aktuelle Woche, das braucht die Konflikt-Erkennung beim Speichern)
+        "last_active_at": max((str(e.get("updated_at")) for e in all_entries if e.get("updated_at")), default=None),
         "streak": streak,
         "all_time": {k: round(v, 2) for k, v in all_time_totals.items()},
         # 🏆 Höchster je in EINER Woche „erspielter" Wert pro Übung

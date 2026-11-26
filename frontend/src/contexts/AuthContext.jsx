@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { api, tokenStore } from "../lib/api";
+import { saveSnapshot, loadSnapshot, isNetworkError, clearOffline } from "../lib/offline";
 import { useI18n, getLang } from "../i18n";
 import { Lightning } from "@phosphor-icons/react";
 
@@ -187,6 +188,16 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // Offline (Dean 2026-11-26): ohne Netz mit dem zuletzt bekannten Konto starten, statt den
+    // Wake-Screen zu zeigen. Sobald wieder Netz da ist, wird das Konto im Hintergrund neu geprüft.
+    const cached = loadSnapshot("me")?.data || null;
+    if (cached && typeof navigator !== "undefined" && navigator.onLine === false) {
+      setUser(cached);
+      setPrecheck(false);
+      setLoading(false);
+      return;
+    }
+
     // ────────────────────────────────────────────────────────────────
     // PHASE 1: HEALTH-PROBE
     // Sehr kurze Probe gegen /api/health, BEVOR irgendwas anderes passiert.
@@ -237,6 +248,13 @@ export function AuthProvider({ children }) {
       const ok = await waitForBackend(ctrl.signal);
       clearInterval(dramaInterval);
 
+      if (!ok && cached) {
+        // Server/Netz nicht erreichbar, aber Konto bekannt: offline weiter
+        setWaking(false);
+        setUser(cached);
+        setLoading(false);
+        return;
+      }
       if (!ok) {
         pushLine("CONNECTION TIMED OUT");
         setWakeFailed(true);
@@ -262,6 +280,7 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await api.get("/auth/me");
       setUser(data);
+      saveSnapshot("me", data);
       // Sprache: Konto-Sprache gilt auf allen Geräten. Hat das Konto noch keine,
       // wird die aktuelle (gewählte oder erkannte) Sprache gespeichert.
       if (data?.language) {
@@ -269,12 +288,28 @@ export function AuthProvider({ children }) {
       } else {
         api.put("/me/language", { language: getLang() }).catch(() => {});
       }
-    } catch {
-      setUser(null);
-      tokenStore.clear();
+    } catch (e) {
+      // Nur bei echter Ablehnung abmelden – ein Netzfehler darf niemanden ausloggen
+      if (isNetworkError(e) && cached) setUser(cached);
+      else {
+        setUser(null);
+        tokenStore.clear();
+      }
     }
     setLoading(false);
   }, [setLang]);
+
+  // Wieder online: Konto still neu prüfen (abgelaufene Anmeldung -> abmelden)
+  useEffect(() => {
+    const h = () => {
+      if (!tokenStore.get()) return;
+      api.get("/auth/me")
+        .then(({ data }) => { setUser(data); saveSnapshot("me", data); })
+        .catch((e) => { if (e.response?.status === 401) { setUser(null); tokenStore.clear(); } });
+    };
+    window.addEventListener("online", h);
+    return () => window.removeEventListener("online", h);
+  }, []);
 
   useEffect(() => {
     checkAuth();
@@ -283,6 +318,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try { await api.post("/auth/logout"); } catch (e) { /* ignore */ }
     tokenStore.clear();
+    clearOffline();
     setUser(null);
   };
 

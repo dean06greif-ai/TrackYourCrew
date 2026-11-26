@@ -31,6 +31,7 @@ import { amountParts } from "../lib/amount";
 import { VoiceLogButton, VoiceLogPanel, VoiceSaved } from "../components/VoiceLog";
 import { GlobalMicButton, useGlobalVoiceRouter } from "../components/GlobalVoice";
 import LegalLinks from "../components/LegalLinks";
+import { isNetworkError, queueEntry, readOutbox, writeOutbox, mergeDays, alreadyApplied, sumsFromDays, saveSnapshot, loadSnapshot, useOnline, useOutboxCount } from "../lib/offline";
 import { useVoiceConfirm, setGlobalVoice } from "../lib/voiceHub";
 import { ActivityLogRow, ActivityDayButton } from "../components/ActivityLog";
 import { isActivity, doneDays } from "../lib/activities";
@@ -82,7 +83,11 @@ export default function Dashboard() {
     refreshUser,
     updateOnlineUsers,
     flashUser,
+    setBoard,
   } = useBoardState(user);
+  // Offline-Eintragen (Dean 2026-11-26): Stand + Postausgang, siehe lib/offline.js
+  const online = useOnline();
+  const pendingOffline = useOutboxCount(user?.user_id);
   // Meilensteine: eigene melden, neue der Crew einmal als Toast zeigen (Plan 1e).
   const { toasts: milestoneToasts, dismiss: dismissMilestone } = useMilestones({ board, user, lang });
   // Prozent-Vergleiche (nur echte Daten, erst ab genug Nutzern je Übungsart)
@@ -991,6 +996,76 @@ export default function Dashboard() {
   const daysLeft = 7 - getTodayIdx();
   const daysLeftLabel = daysLeft === 1 ? t("hero.lastDay") : t("hero.daysLeft", { n: daysLeft });
 
+  // Offline gespeicherten Stand sofort zeigen: Snapshots, eigene Karte, lokaler Board-Stand
+  const applyLocalProgress = (days) => {
+    const copy = JSON.parse(JSON.stringify(days || {}));
+    setSavedLogDays(copy);
+    setSavedLogForm(sumsFromDays(copy));
+    setBoard((prev) => {
+      if (!prev?.users) return prev;
+      const next = {
+        ...prev,
+        users: prev.users.map((u) => (u.user_id === user?.user_id ? { ...u, days: copy, values: { ...(u.values || {}), ...sumsFromDays(copy) } } : u)),
+      };
+      saveSnapshot("board", { userId: user?.user_id, data: next });
+      return next;
+    });
+  };
+
+  // Postausgang senden (beim Start, wenn wieder online, alle 30 s solange etwas wartet).
+  // Konflikt (anderes Gerät hat inzwischen gespeichert): eigene Änderung auf den neuen Stand aufrechnen.
+  const flushingRef = useRef(false);
+  const runFlush = useCallback(async () => {
+    if (flushingRef.current || !user?.user_id) return;
+    const mine = readOutbox().filter((o) => o.userId === user.user_id);
+    if (!mine.length) return;
+    flushingRef.current = true;
+    let sent = 0;
+    try {
+      for (const o of mine) {
+        try {
+          try {
+            await api.put("/progress/me", o.payload);
+          } catch (e) {
+            if (e.response?.status !== 409) throw e;
+            const { data: cur } = await api.get("/progress/me", { params: { week: o.payload.week_number } });
+            // Antwort ging verloren, Anfrage kam aber an: schon gespeichert, nicht doppelt zählen
+            if (!alreadyApplied(cur?.days || {}, o.baseDays, o.payload.days)) {
+              const days = mergeDays(cur?.days || {}, o.baseDays, o.payload.days);
+              await api.put("/progress/me", { week_number: o.payload.week_number, days, base_updated_at: cur?.updated_at ?? null });
+            }
+          }
+          sent += 1;
+        } catch (e) {
+          if (isNetworkError(e)) break; // immer noch offline: später nochmal
+          toast.error(e.response?.data?.detail || t("offline.rejected"), { duration: 5000 });
+        }
+        // gesendet oder vom Server abgelehnt: aus dem Postausgang
+        writeOutbox(readOutbox().filter((x) => !(x.userId === o.userId && x.payload.week_number === o.payload.week_number)));
+      }
+    } finally {
+      flushingRef.current = false;
+    }
+    if (sent) {
+      toast.success(t("offline.synced"), { id: "offline-synced", duration: 3000 });
+      fetchBoard().catch(() => {});
+    }
+  }, [user?.user_id, fetchBoard, t]);
+  // Mehrere Tabs offen: immer nur einer sendet (Web Locks); ohne diese Funktion direkt
+  const flushOutbox = useCallback(async () => {
+    if (navigator.locks?.request) {
+      await navigator.locks.request("tyc-outbox", { ifAvailable: true }, async (lock) => { if (lock) await runFlush(); });
+    } else await runFlush();
+  }, [runFlush]);
+  useEffect(() => {
+    if (!user?.user_id) return undefined;
+    flushOutbox();
+    const h = () => flushOutbox();
+    window.addEventListener("online", h);
+    const iv = window.setInterval(() => { if (readOutbox().length) flushOutbox(); }, 30000);
+    return () => { window.removeEventListener("online", h); window.clearInterval(iv); };
+  }, [user?.user_id, flushOutbox]);
+
   const handleLogProgress = async ({ silent = false } = {}) => {
     if (!me) return;
     // Nie zwei Speichervorgänge gleichzeitig (sonst hielte der zweite den ersten für ein anderes Gerät).
@@ -999,6 +1074,7 @@ export default function Dashboard() {
       return;
     }
     saveBusyRef.current = true;
+    let sentPayload = null;
     try {
       const payload = { week_number: me.week_number, base_updated_at: baseUpdatedAtRef.current };
       if (logMode === "days") {
@@ -1071,6 +1147,7 @@ export default function Dashboard() {
         // Optimistisch State aktualisieren, damit der Mo–So Tab sofort den richtigen Tag zeigt
         setLogDays(newDays);
       }
+      sentPayload = payload;
       const { data: savedDoc } = await api.put("/progress/me", payload);
       if (savedDoc?.updated_at) baseUpdatedAtRef.current = savedDoc.updated_at;
       tourEvent("progress-saved");
@@ -1107,6 +1184,31 @@ export default function Dashboard() {
       }
       fetchBoard();
     } catch (e) {
+      if (isNetworkError(e) && sentPayload?.days) {
+        // Kein Netz: am Gerät merken, eigene Karte gleich aktualisieren, später automatisch senden
+        writeOutbox(queueEntry(readOutbox(), {
+          userId: user.user_id,
+          baseDays: JSON.parse(JSON.stringify(savedLogDays || {})),
+          payload: JSON.parse(JSON.stringify(sentPayload)),
+          at: Date.now(),
+        }));
+        applyLocalProgress(sentPayload.days);
+        saveAgainRef.current = false;
+        if (!silent) {
+          const vRows = voiceSummaryRef.current;
+          voiceSummaryRef.current = null;
+          toast(t("offline.savedLocal"), {
+            id: "offline-saved",
+            duration: vRows?.length ? 6000 : 3500,
+            description: vRows?.length
+              ? <VoiceSaved rows={vRows} exercises={me?.exercises || []} todayIdx={getTodayIdx()} dayNames={weekdayNames(locale, "long")} t={t} locale={locale} />
+              : t("offline.savedLocalText"),
+          });
+          closeStepSettings();
+          setLogging(false);
+        }
+        return;
+      }
       if (e.response?.status === 409) {
         // Anderes Gerät war schneller: nichts überschreiben, Nutzer entscheidet.
         saveAgainRef.current = false;
@@ -1362,6 +1464,17 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
+
+      {(!online || pendingOffline > 0) && (
+        <div className="border-b border-[#FF8800]/40 bg-[#FF8800]/10" data-testid="offline-banner">
+          <p className="max-w-7xl mx-auto px-6 py-2.5 text-xs text-[#FFB866] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#FF8800] shrink-0" />
+            {!online
+              ? t("offline.banner", { time: new Date(loadSnapshot("board")?.at || Date.now()).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }) })
+              : t("offline.pending", { n: pendingOffline })}
+          </p>
+        </div>
+      )}
 
       <section className="border-b border-[#1A1A1A] tactical-grid">
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row md:items-end md:justify-between gap-8">

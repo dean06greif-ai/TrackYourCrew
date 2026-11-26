@@ -38,7 +38,8 @@ function useIsTouchDevice() {
 
 export default function UserCard({ entry, isMe, flash, canBoost, onBoost, onCancelBoost, hasBoostedThisWeek, hideBoostButtons, celebrating, failing, pendingCelebration, pendingFailing, onCelebrationShown, onFailingShown, isOnline, isActive, seenEffects, onMarkSeen, onSendEmoji, onChallenge, burst, onBurstDone }) {
   const { t, locale } = useI18n();
-  const { name, picture, week_number, values, updated_at, handle, streak, all_time } = entry;
+  const { name, picture, week_number, values, handle, streak, all_time } = entry;
+  const updated_at = entry.last_active_at || entry.updated_at; // „Stand“: letzter Eintrag, auch aus früheren Wochen
   // Übungen (Balken, Rang, Radar) und Aktivitäten (Kästchen) getrennt (Dean 2026-11-26)
   const exercises = (entry.exercises || []).filter((e) => !isActivity(e));
   const activities = (entry.exercises || []).filter(isActivity);

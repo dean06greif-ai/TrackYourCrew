@@ -1,5 +1,5 @@
 """BACKLOG P4: einzelne Karte nachladen statt des ganzen Boards."""
-from conftest import befriend
+from conftest import befriend, run
 
 
 def _strip(entry):
@@ -30,3 +30,13 @@ def test_stranger_card_is_not_visible(auth, make_user):
 
 def test_needs_login(client, user):
     assert client.get(f"/api/board/users/{user['user_id']}").status_code == 401
+
+
+def test_last_active_at_shows_earlier_weeks(auth, user, db):
+    """„Stand“ auf der Karte: auch ohne Eintrag in dieser Woche der letzte Eintrag (frühere Woche)."""
+    run(db.progress_entries.insert_one(
+        {"user_id": user["user_id"], "week_number": 0, "values": {}, "days": {}, "updated_at": "2026-01-05T10:00:00+00:00"}
+    ))
+    me = auth.get("/api/board").json()["users"][0]
+    assert me["updated_at"] is None  # aktuelle Woche: nichts (Konflikt-Erkennung)
+    assert me["last_active_at"] == "2026-01-05T10:00:00+00:00"

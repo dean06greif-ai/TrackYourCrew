@@ -35,6 +35,15 @@
         "cd frontend&& set REACT_APP_BACKEND_URL=http://localhost:5055&& set PORT=3055&& npm start"
       ],
       "port": 3055
+    },
+    {
+      "name": "frontend-alt-prod",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd frontend&& set REACT_APP_BACKEND_URL=http://localhost:5055&& npx vite build --outDir build-test&& npx vite preview --outDir build-test --port 3055 --strictPort"
+      ],
+      "port": 3055
     }
   ]
 }

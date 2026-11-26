@@ -28,3 +28,6 @@ Thumbs.db
 # Claude Code: lokale Einstellungen
 .claude/settings.local.json
 .claude/worktrees/
+
+# Testmodus mit fertigem Build (Offline/Service-Worker prüfen)
+frontend/build-test/

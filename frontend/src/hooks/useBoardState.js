@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 import { translate, getLang } from "../i18n";
+import { saveSnapshot, loadSnapshot, isNetworkError } from "../lib/offline";
 
 /**
  * Custom Hook für Board State Management
@@ -26,6 +27,7 @@ export function useBoardState(user) {
       const { data } = await api.get(`/board`);
       setBoard(data);
       boardCache = data;
+      saveSnapshot("board", { userId: user.user_id, data });
 
       if (!livePresenceRef.current && Array.isArray(data?.online_user_ids)) {
         setOnlineUserIds(new Set(data.online_user_ids));
@@ -33,6 +35,14 @@ export function useBoardState(user) {
 
       return data;
     } catch (error) {
+      // Offline: letzten Stand dieses Kontos zeigen (Dean 2026-11-26), kein Fehler-Toast
+      if (isNetworkError(error)) {
+        const snap = loadSnapshot("board")?.data;
+        if (snap?.userId === user.user_id && snap.data) {
+          if (!boardCache) { setBoard(snap.data); boardCache = snap.data; }
+          return boardCache;
+        }
+      }
       console.error("Failed to fetch board:", error);
       toast.error(translate(getLang(), "board.loadFailed"), { duration: 2500 });
       throw error;
