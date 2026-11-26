@@ -1,0 +1,4 @@
+# Shell-Skripte brauchen Unix-Zeilenenden, sonst laufen sie unter Linux/CI nicht.
+*.sh text eol=lf
+# Windows-Skripte brauchen CRLF.
+*.bat text eol=crlf

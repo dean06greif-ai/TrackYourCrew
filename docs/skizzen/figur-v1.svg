@@ -1,0 +1,52 @@
+<svg viewBox="0 0 400 690" xmlns="http://www.w3.org/2000/svg" role="img"><title>Skizzen Figur</title><desc>Strichfiguren männlich und weiblich in drei Athletik-Stufen</desc><rect width="400" height="690" fill="#0A0A0A" rx="12"/><text x="20" y="26" fill="#CCFF00" font-size="13" font-family="sans-serif">♂</text><text x="20" y="346" fill="#CCFF00" font-size="13" font-family="sans-serif">♀</text><circle cx="70" cy="62" r="15" fill="none" stroke="#9A9A9A" stroke-width="1.6"/>
+<path d="M63 60h4 M73 60h4 M66 69h8" stroke="#9A9A9A" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M75 78 L75 86 Q88.2 87 96 93 Q108.9 98 103.15 120 Q105.02000000000001 134 100.55 148 L99.25 186 Q96.65 196 91.45 186 L90.15 148 L85.6 118 Q93.0 138 92 158 Q91 172 90 188 Q89.8 230 84.75 246 L83.25 290 L90.25 296 L74.25 296 L75.0 246 Q73.3 225 72 196" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M65 78 L65 86 Q51.8 87 44 93 Q31.099999999999994 98 36.85 120 Q34.98 134 39.45 148 L40.75 186 Q43.35 196 48.55 186 L49.85 148 L54.4 118 Q47.0 138 48 158 Q49 172 50 188 Q50.2 230 55.25 246 L56.75 290 L49.75 296 L65.75 296 L65.0 246 Q66.7 225 68 196" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<text x="70" y="320" fill="#9A9A9A" font-size="12" text-anchor="middle" font-family="sans-serif">Start (F–D)</text>
+<circle cx="190" cy="62" r="15" fill="none" stroke="#9A9A9A" stroke-width="1.6"/>
+<path d="M183 60h4 M193 60h4 M186 69h8" stroke="#9A9A9A" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M195 78 L195 86 Q213.1 87 223 93 Q238.9 98 231.25 120 Q234.34 134 228.25 148 L226.75 186 Q223.75 196 217.75 186 L216.25 148 L211.0 118 Q214.75 138 212 158 Q212 172 211 188 Q211.6 230 205.4 246 L203.8 290 L210.8 296 L194.2 296 L195.0 246 Q193.6 225 192 196" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M185 78 L185 86 Q166.9 87 157 93 Q141.1 98 148.75 120 Q145.66 134 151.75 148 L153.25 186 Q156.25 196 162.25 186 L163.75 148 L169.0 118 Q165.25 138 168 158 Q168 172 169 188 Q168.4 230 174.6 246 L176.2 290 L169.2 296 L185.8 296 L185.0 246 Q186.4 225 188 196" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M163 102 Q184 116 190 110 Q196 116 217 102" fill="none" stroke="#9A9A9A" stroke-width="1.2"/>
+<path d="M190 122 V164" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<text x="190" y="320" fill="#9A9A9A" font-size="12" text-anchor="middle" font-family="sans-serif">Mitte (C–A)</text>
+<circle cx="310" cy="62" r="15" fill="none" stroke="#9A9A9A" stroke-width="1.6"/>
+<path d="M303 60h4 M313 60h4 M306 69h8" stroke="#9A9A9A" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M315 78 L315 86 Q339.4 87 352 93 Q371.8 98 361.9 120 Q366.16 134 358.3 148 L356.5 186 Q352.9 196 345.7 186 L343.9 148 L337.6 118 Q337.75 138 333 158 Q333 172 332 188 Q333.4 230 325.7 246 L323.9 290 L330.9 296 L313.1 296 L314.0 246 Q313.9 225 312 196" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M305 78 L305 86 Q280.6 87 268 93 Q248.2 98 258.1 120 Q253.84 134 261.7 148 L263.5 186 Q267.1 196 274.3 186 L276.1 148 L282.4 118 Q282.25 138 287 158 Q287 172 288 188 Q286.6 230 294.3 246 L296.1 290 L289.1 296 L306.9 296 L306.0 246 Q306.1 225 308 196" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M274 102 Q304 116 310 110 Q316 116 346 102" fill="none" stroke="#9A9A9A" stroke-width="1.2"/>
+<path d="M310 122 V164" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<path d="M301 132 h7 M312 132 h7" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<path d="M301 144 h7 M312 144 h7" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<path d="M301 156 h7 M312 156 h7" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<path d="M294 205 q4 18 8 32 M326 205 q-4 18 -8 32" fill="none" stroke="#9A9A9A" stroke-width="1" opacity=".7"/>
+<path d="M310 34 l3 6 h-2 l3 6" fill="none" stroke="#CCFF00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="310" y="320" fill="#9A9A9A" font-size="12" text-anchor="middle" font-family="sans-serif">S+ Elite</text>
+<circle cx="70" cy="382" r="15" fill="none" stroke="#9A9A9A" stroke-width="1.6"/>
+<path d="M63 380h4 M73 380h4 M66 389h8" stroke="#9A9A9A" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M55 382 C53 362 87 362 85 382 C89 400 87 412 82 416 M55 382 C51 400 53 412 58 416" fill="none" stroke="#9A9A9A" stroke-width="1.4"/>
+<path d="M75 398 L75 406 Q85.4 407 92 413 Q103.1 418 98.05 440 Q100.02 454 95.85 468 L94.75 506 Q92.55 516 88.15 506 L87.05 468 L83.2 438 Q89.0 458 88 478 Q95 492 94 508 Q93.8 550 88.75 566 L87.25 610 L94.25 616 L78.25 616 L79.0 566 Q73.3 545 72 516" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M65 398 L65 406 Q54.6 407 48 413 Q36.9 418 41.95 440 Q39.980000000000004 454 44.15 468 L45.25 506 Q47.45 516 51.85 506 L52.95 468 L56.8 438 Q51.0 458 52 478 Q45 492 46 508 Q46.2 550 51.25 566 L52.75 610 L45.75 616 L61.75 616 L61.0 566 Q66.7 545 68 516" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M56 426 q7 9 13 2 M84 426 q-7 9 -13 2" fill="none" stroke="#9A9A9A" stroke-width="1.2"/>
+<text x="70" y="640" fill="#9A9A9A" font-size="12" text-anchor="middle" font-family="sans-serif">Start (F–D)</text>
+<circle cx="190" cy="382" r="15" fill="none" stroke="#9A9A9A" stroke-width="1.6"/>
+<path d="M183 380h4 M193 380h4 M186 389h8" stroke="#9A9A9A" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M175 382 C173 362 207 362 205 382 C209 400 207 412 202 416 M175 382 C171 400 173 412 178 416" fill="none" stroke="#9A9A9A" stroke-width="1.4"/>
+<path d="M195 398 L195 406 Q208.2 407 216 413 Q229.2 418 222.6 440 Q225.84 454 220.2 468 L219.0 506 Q216.6 516 211.8 506 L210.6 468 L206.4 438 Q209.25 458 207 478 Q216 492 215 508 Q215.6 550 209.4 566 L207.8 610 L214.8 616 L198.2 616 L199.0 566 Q193.6 545 192 516" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M185 398 L185 406 Q171.8 407 164 413 Q150.8 418 157.4 440 Q154.16 454 159.8 468 L161.0 506 Q163.4 516 168.2 506 L169.4 468 L173.6 438 Q170.75 458 173 478 Q164 492 165 508 Q164.4 550 170.6 566 L172.2 610 L165.2 616 L181.8 616 L181.0 566 Q186.4 545 188 516" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M176 426 q7 9 13 2 M204 426 q-7 9 -13 2" fill="none" stroke="#9A9A9A" stroke-width="1.2"/>
+<path d="M190 442 V484" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<text x="190" y="640" fill="#9A9A9A" font-size="12" text-anchor="middle" font-family="sans-serif">Mitte (C–A)</text>
+<circle cx="310" cy="382" r="15" fill="none" stroke="#9A9A9A" stroke-width="1.6"/>
+<path d="M303 380h4 M313 380h4 M306 389h8" stroke="#9A9A9A" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M295 382 C293 362 327 362 325 382 C329 400 327 412 322 416 M295 382 C291 400 293 412 298 416" fill="none" stroke="#9A9A9A" stroke-width="1.4"/>
+<path d="M315 398 L315 406 Q331.7 407 341 413 Q357.2 418 348.7 440 Q353.16 454 345.9 468 L344.5 506 Q341.7 516 336.1 506 L334.7 468 L329.8 438 Q330.5 458 327 478 Q337 492 336 508 Q337.4 550 330.05 566 L328.35 610 L335.35 616 L318.15 616 L319.0 566 Q313.9 545 312 516" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M305 398 L305 406 Q288.3 407 279 413 Q262.8 418 271.3 440 Q266.84 454 274.1 468 L275.5 506 Q278.3 516 283.9 506 L285.3 468 L290.2 438 Q289.5 458 293 478 Q283 492 284 508 Q282.6 550 289.95 566 L291.65 610 L284.65 616 L301.85 616 L301.0 566 Q306.1 545 308 516" fill="none" stroke="#9A9A9A" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M296 426 q7 9 13 2 M324 426 q-7 9 -13 2" fill="none" stroke="#9A9A9A" stroke-width="1.2"/>
+<path d="M310 442 V484" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<path d="M301 452 h7 M312 452 h7" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<path d="M301 464 h7 M312 464 h7" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<path d="M301 476 h7 M312 476 h7" stroke="#9A9A9A" stroke-width="1" opacity=".8"/>
+<path d="M290 525 q4 18 12 32 M330 525 q-4 18 -12 32" fill="none" stroke="#9A9A9A" stroke-width="1" opacity=".7"/>
+<path d="M310 354 l3 6 h-2 l3 6" fill="none" stroke="#CCFF00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="310" y="640" fill="#9A9A9A" font-size="12" text-anchor="middle" font-family="sans-serif">S+ Elite</text></svg>

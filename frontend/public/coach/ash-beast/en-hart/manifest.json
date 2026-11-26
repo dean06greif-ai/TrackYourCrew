@@ -1,0 +1,131 @@
+{
+ "model": "gpt-4o-mini-tts",
+ "voice": "ash",
+ "style": "beast",
+ "clips": {
+  "on": {
+   "file": "on.mp3",
+   "text": "Coach is on. You don't get to be comfortable today."
+  },
+  "go": {
+   "file": "go.mp3",
+   "text": "Go! Move!"
+  },
+  "half": {
+   "file": "half.mp3",
+   "text": "Halfway. Your mind wants to quit? Shut it down and keep moving!"
+  },
+  "goal": {
+   "file": "goal.mp3",
+   "text": "Goal. Done. Nobody handed you that. You took it."
+  },
+  "left30": {
+   "file": "left30.mp3",
+   "text": "30 seconds. It hurts? Good. Don't you dare slow down!"
+  },
+  "left10": {
+   "file": "left10.mp3",
+   "text": "10 seconds. It hurts? Good. Don't you dare slow down!"
+  },
+  "el30": {
+   "file": "el30.mp3",
+   "text": "30 seconds. Is that all you've got?"
+  },
+  "el90": {
+   "file": "el90.mp3",
+   "text": "One minute 30. Keep moving, no breaks!"
+  },
+  "el60": {
+   "file": "el60.mp3",
+   "text": "One minute. Stop thinking, keep going!"
+  },
+  "el120": {
+   "file": "el120.mp3",
+   "text": "2 minutes. Still here? Good. Keep pushing!"
+  },
+  "el180": {
+   "file": "el180.mp3",
+   "text": "3 minutes. Still here? Good. Keep pushing!"
+  },
+  "el240": {
+   "file": "el240.mp3",
+   "text": "4 minutes. Still here? Good. Keep pushing!"
+  },
+  "el300": {
+   "file": "el300.mp3",
+   "text": "5 minutes. Still here? Good. Keep pushing!"
+  },
+  "el360": {
+   "file": "el360.mp3",
+   "text": "6 minutes. Still here? Good. Keep pushing!"
+  },
+  "el420": {
+   "file": "el420.mp3",
+   "text": "7 minutes. Still here? Good. Keep pushing!"
+  },
+  "el480": {
+   "file": "el480.mp3",
+   "text": "8 minutes. Still here? Good. Keep pushing!"
+  },
+  "el540": {
+   "file": "el540.mp3",
+   "text": "9 minutes. Still here? Good. Keep pushing!"
+  },
+  "el600": {
+   "file": "el600.mp3",
+   "text": "10 minutes. Still here? Good. Keep pushing!"
+  },
+  "el660": {
+   "file": "el660.mp3",
+   "text": "11 minutes. Still here? Good. Keep pushing!"
+  },
+  "el720": {
+   "file": "el720.mp3",
+   "text": "12 minutes. Still here? Good. Keep pushing!"
+  },
+  "el780": {
+   "file": "el780.mp3",
+   "text": "13 minutes. Still here? Good. Keep pushing!"
+  },
+  "el840": {
+   "file": "el840.mp3",
+   "text": "14 minutes. Still here? Good. Keep pushing!"
+  },
+  "el900": {
+   "file": "el900.mp3",
+   "text": "15 minutes. Still here? Good. Keep pushing!"
+  },
+  "el960": {
+   "file": "el960.mp3",
+   "text": "16 minutes. Still here? Good. Keep pushing!"
+  },
+  "el1020": {
+   "file": "el1020.mp3",
+   "text": "17 minutes. Still here? Good. Keep pushing!"
+  },
+  "el1080": {
+   "file": "el1080.mp3",
+   "text": "18 minutes. Still here? Good. Keep pushing!"
+  },
+  "el1140": {
+   "file": "el1140.mp3",
+   "text": "19 minutes. Still here? Good. Keep pushing!"
+  },
+  "el1200": {
+   "file": "el1200.mp3",
+   "text": "20 minutes. Still here? Good. Keep pushing!"
+  },
+  "n2": {
+   "file": "n2.mp3",
+   "text": "Two!"
+  },
+  "n3": {
+   "file": "n3.mp3",
+   "text": "Three!"
+  },
+  "n1": {
+   "file": "n1.mp3",
+   "text": "One!"
+  }
+ }
+}

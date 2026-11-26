@@ -1,0 +1,108 @@
+{
+ "packs": [
+  {
+   "id": "ash-beast",
+   "voice": "ash",
+   "style": "beast",
+   "label": "Ash · Beast",
+   "langs": [
+    "de",
+    "de-hart",
+    "en",
+    "en-hart"
+   ]
+  },
+  {
+   "id": "nova-power",
+   "voice": "nova",
+   "style": "power",
+   "label": "Nova · Power",
+   "langs": [
+    "de",
+    "en"
+   ]
+  },
+  {
+   "id": "marin-power",
+   "voice": "marin",
+   "style": "power",
+   "label": "Marin · Power",
+   "langs": [
+    "de",
+    "en"
+   ]
+  },
+  {
+   "id": "ballad-power",
+   "voice": "ballad",
+   "style": "power",
+   "label": "Ballad · Power",
+   "langs": [
+    "de",
+    "en"
+   ]
+  },
+  {
+   "id": "fable-power",
+   "voice": "fable",
+   "style": "power",
+   "label": "Fable · Power",
+   "langs": [
+    "de",
+    "en"
+   ]
+  },
+  {
+   "id": "cedar-power",
+   "voice": "cedar",
+   "style": "power",
+   "label": "Cedar · Power",
+   "langs": [
+    "de",
+    "en"
+   ]
+  },
+  {
+   "id": "onyx-coach",
+   "voice": "onyx",
+   "style": "coach",
+   "label": "Onyx · Coach",
+   "langs": [
+    "de",
+    "en"
+   ]
+  },
+  {
+   "id": "ash-coach",
+   "voice": "ash",
+   "style": "coach",
+   "label": "Ash · Coach",
+   "langs": [
+    "de",
+    "en"
+   ]
+  },
+  {
+   "id": "cedar-coach",
+   "voice": "cedar",
+   "style": "coach",
+   "label": "Cedar · Coach",
+   "langs": [
+    "de",
+    "en"
+   ]
+  },
+  {
+   "id": "onyx-hart",
+   "voice": "onyx",
+   "style": "hart",
+   "label": "Onyx · Hart",
+   "langs": [
+    "de",
+    "de-hart",
+    "en",
+    "en-hart"
+   ]
+  }
+ ]
+}

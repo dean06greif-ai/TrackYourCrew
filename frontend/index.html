@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#0A0A0A" />
+        <meta name="description" content="TrackYourCrew – weekly goals, progression and streaks with your crew." />
+        <!-- ICO nur als Rückfall (32x32); Browser mit SVG-Unterstützung nehmen das scharfe SVG -->
+        <!-- Nur das SVG verlinken: Chrome/Edge/Firefox nehmen es und zeichnen es bei jeder
+             Bildschirm-Skalierung scharf (mit verlinkter ICO nahm Chrome die 32-px-Version und
+             rechnete sie z. B. auf 20 px herunter -> unscharf). Ältere Browser/Safari holen sich
+             von selbst /favicon.ico (enthält 16–256 px inkl. 20/24/40 für Windows-Skalierung). -->
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-title" content="TrackYourCrew" />
+        <title>TrackYourCrew</title>
+        <!-- Vorschau beim Teilen (WhatsApp, Telegram, iMessage …). Bild-URL muss absolut sein:
+             zeigt auf die Ziel-Domain (render.yaml). -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="TrackYourCrew" />
+        <meta property="og:title" content="TrackYourCrew – train with your crew" />
+        <meta property="og:description" content="A little more every week. Your crew sees live who delivers. Streaks, ranks, duels – join in with one tap." />
+        <meta property="og:image" content="https://trackyourcrew.de/og-image.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://trackyourcrew.de/og-image.jpg" />
+        <script>
+            // Sprache so früh wie möglich setzen (gespeicherte Wahl, sonst Browser-Sprache),
+            // damit schon die erste Anzeige in der richtigen Sprache ist.
+            (function () {
+                try {
+                    var supported = ["en", "de", "es", "fr"];
+                    var stored = localStorage.getItem("tyc_lang");
+                    var list = stored ? [stored] : (navigator.languages || [navigator.language || "en"]);
+                    for (var i = 0; i < list.length; i++) {
+                        var code = String(list[i] || "").slice(0, 2).toLowerCase();
+                        if (supported.indexOf(code) !== -1) { document.documentElement.lang = code; return; }
+                    }
+                } catch (e) {}
+            })();
+        </script>
+    </head>
+    <body>
+        <noscript>Please enable JavaScript to use TrackYourCrew.</noscript>
+        <div id="root"></div>
+        <script type="module" src="/src/index.jsx"></script>
+    </body>
+</html>

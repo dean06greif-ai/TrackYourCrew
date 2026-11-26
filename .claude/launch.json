@@ -1,0 +1,40 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "tools\\local-frontend.bat"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "backend-dev",
+      "runtimeExecutable": "backend\\.venv\\Scripts\\python.exe",
+      "runtimeArgs": [
+        "backend\\dev_server.py"
+      ],
+      "port": 5000
+    },
+    {
+      "name": "backend-dev-alt",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "set DEV_PORT=5055&& set DEV_FRONTEND_URL=http://localhost:3055&& backend\\.venv\\Scripts\\python.exe backend\\dev_server.py"
+      ],
+      "port": 5055
+    },
+    {
+      "name": "frontend-alt",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd frontend&& set REACT_APP_BACKEND_URL=http://localhost:5055&& set PORT=3055&& npm start"
+      ],
+      "port": 3055
+    }
+  ]
+}

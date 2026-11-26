@@ -1,0 +1,38 @@
+<svg viewBox="0 0 300 680" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="680" fill="#0A0A0A"/>
+  <defs>
+    <g id="half" fill="none" stroke="#A8A8A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M162 104 C163 114 165 120 170 126 C190 132 210 134 222 142 C240 150 246 172 244 192 C246 214 250 236 248 252 C252 272 254 292 252 312 C252 326 254 340 252 352 C256 366 252 384 244 388 C236 390 232 380 232 368 C230 356 232 346 234 336 C234 316 230 296 228 276 C226 262 226 246 222 232 C220 216 216 202 212 192 C214 212 212 236 206 256 C200 276 196 292 198 308 C202 326 206 338 206 352 C210 380 210 410 204 440 C202 460 200 474 202 488 C210 512 212 540 204 570 C200 590 198 606 200 618 C206 628 214 634 210 642 L170 642 C166 634 170 622 172 612 C168 590 164 566 166 540 C168 516 170 500 168 486 C164 460 160 430 156 404 C154 394 152 390 150 390"/>
+      <g stroke-width="1.4" stroke="#8C8C8C">
+        <path d="M156 134 C176 131 196 135 212 144"/>
+        <path d="M152 160 C170 155 196 158 214 176 C204 197 182 204 156 200"/>
+        <path d="M214 176 C222 190 228 204 232 216"/>
+        <path d="M226 238 C236 250 238 264 234 278"/>
+        <path d="M150 206 V318"/>
+        <path d="M153 222 C162 219 171 221 178 226"/>
+        <path d="M153 248 C162 245 172 247 180 252"/>
+        <path d="M153 274 C162 271 172 273 178 278"/>
+        <path d="M153 298 C160 300 168 305 172 314"/>
+        <path d="M190 232 C185 256 185 280 192 302"/>
+        <path d="M182 362 C190 392 194 420 190 450"/>
+        <path d="M168 442 C176 458 184 466 194 470"/>
+        <path d="M180 486 C186 481 194 483 197 491"/>
+        <path d="M197 522 C205 542 205 562 199 582"/>
+        <path d="M236 300 C240 318 242 334 240 346"/>
+      </g>
+      <g stroke-width="1.6" stroke="#6E6E6E">
+        <path d="M198 334 C182 338 166 340 150 340"/>
+        <path d="M207 420 C196 424 184 425 172 422"/>
+        <path d="M206 352 C208 380 208 400 207 420"/>
+        <path d="M170 422 C166 410 160 400 150 396"/>
+      </g>
+    </g>
+  </defs>
+  <use href="#half"/>
+  <use href="#half" transform="translate(300 0) scale(-1 1)"/>
+  <ellipse cx="150" cy="66" rx="31" ry="40" fill="none" stroke="#A8A8A8" stroke-width="2"/>
+  <path d="M136 64 h9 M155 64 h9 M143 88 h14" stroke="#8C8C8C" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M138 104 C137 114 135 120 130 126" fill="none" stroke="#A8A8A8" stroke-width="2"/>
+  <path d="M162 104 C163 114 165 120 170 126" fill="none" stroke="#A8A8A8" stroke-width="2"/>
+  <path d="M150 8 l5 10 h-4 l5 10" fill="none" stroke="#CCFF00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

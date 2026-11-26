@@ -1,0 +1,5 @@
+# Nur für Entwicklung und Tests (nicht für das Deployment nötig).
+# Installieren mit: pip install -r requirements.txt -r requirements-dev.txt
+pytest==9.0.3
+mongomock-motor>=0.0.36
+ruff>=0.6

@@ -1,0 +1,12 @@
+# Bewusst schmal: nur echte Fehler (unbenutzte Importe/Variablen, Syntax).
+# server.py ist seit 2026-11-25 aufgeteilt (W1); Stil-Regeln bei Bedarf schrittweise einschalten.
+target-version = "py311"
+line-length = 160
+extend-exclude = ["tests/legacy_emergent"]
+
+[lint]
+select = ["F", "E9"]
+
+[lint.per-file-ignores]
+# server.py exportiert die Namen der Module weiter (Tests, dev_server)
+"server.py" = ["F401"]

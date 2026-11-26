@@ -1,0 +1,82 @@
+# Render Blueprint: Backend (API) + Website aus einem Repo.
+# Anleitung: docs/DEPLOYMENT.md. Geheime Werte (sync: false) trägst du einmalig im
+# Render-Dashboard ein, sie stehen nie im Repo.
+services:
+  # ---------- Backend: FastAPI ----------
+  - type: web
+    name: trackyourcrew-api
+    runtime: python
+    region: frankfurt
+    plan: free            # "starter" = schläft nie ein (kostenpflichtig)
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /api/health
+    domains:
+      - api.trackyourcrew.de
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11    # getestet mit 3.11 und 3.15
+      - key: MONGO_URI
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://trackyourcrew.de
+      - key: BACKEND_PUBLIC_URL
+        value: https://api.trackyourcrew.de
+      - key: CORS_ORIGINS
+        value: https://trackyourcrew.de,https://www.trackyourcrew.de
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      # Erinnerungen per Push (optional): Schlüssel einmalig mit `python tools/gen-vapid.py` erzeugen
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:admin@trackyourcrew.de
+      # Wecker für Erinnerungen (optional): externer Cron ruft POST /api/cron/reminders mit Header X-Cron-Secret
+      - key: CRON_SECRET
+        generateValue: true
+
+  # ---------- Website: React (statisch, schläft nie) ----------
+  - type: web
+    name: trackyourcrew-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    domains:
+      - trackyourcrew.de
+      - www.trackyourcrew.de
+    routes:
+      # Alle Seiten (/dashboard, /settings …) liefert die React-App aus
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # Gebaute Dateien (Vite: /assets/) haben Hashes im Namen -> dürfen lange gecacht werden
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.1
+      - key: REACT_APP_BACKEND_URL
+        value: https://api.trackyourcrew.de

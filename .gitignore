@@ -1,0 +1,30 @@
+# Secrets - NIE committen
+.env
+.env.*
+!.env.example
+.vercel
+
+# Abhängigkeiten und Build-Ergebnisse
+node_modules/
+frontend/build/
+backend/.venv/
+backend/venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Lokales
+.cache/
+_archiv/
+*.msi
+*.swp
+.DS_Store
+Thumbs.db
+
+# Playwright-Screenshots/Logs (nur zum Testen)
+.playwright-mcp/
+
+# Claude Code: lokale Einstellungen
+.claude/settings.local.json
+.claude/worktrees/

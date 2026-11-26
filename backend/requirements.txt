@@ -1,0 +1,16 @@
+# Laufzeit-Abhängigkeiten des Backends (direkt importiert oder zur Laufzeit nötig).
+# Getestet mit Python 3.11 und 3.15. Entwicklungswerkzeuge: requirements-dev.txt
+fastapi==0.110.1        # Start/Ende über lifespan (W7 erledigt) – Update auf neuere Versionen jetzt möglich
+starlette==0.37.2
+uvicorn==0.54.0
+websockets==17.4
+motor==3.7.1
+pymongo==4.20.1
+dnspython==2.9.2        # nötig für mongodb+srv:// (Atlas)
+httpx==0.28.1
+pydantic==2.14.4
+python-dotenv==1.2.4
+google-auth==2.63.1
+requests==2.34.2        # Transport für google-auth
+cryptography==50.0.2   # Web Push (Verschlüsselung + VAPID), kam bisher nur über google-auth
+tzdata==2026.6         # Zeitzonen für Erinnerungen (Windows hat keine eingebaute Datenbank)
