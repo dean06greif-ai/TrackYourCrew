@@ -64,6 +64,28 @@ describe("Sprachbefehle", () => {
   });
 });
 
+describe("Sprachbefehle in allen 4 Sprachen (unabhängig von der App-Sprache)", () => {
+  test.each([
+    // start
+    ["Starte die Stoppuhr", "start"], ["start the stopwatch", "start"], ["empieza el cronómetro", "start"], ["lance le chrono", "start"],
+    ["inicia", "start"], ["démarre", "start"], ["let's go", "start"],
+    // pause
+    ["pausiere die Stoppuhr", "pause"], ["pause", "pause"], ["pausa", "pause"], ["mets en pause", "pause"], ["wait", "pause"],
+    // weiter
+    ["weiter", "resume"], ["mach weiter", "resume"], ["resume", "resume"], ["continue", "resume"], ["reanudar", "resume"], ["reprends", "resume"],
+    // stopp
+    ["Stopp", "stop"], ["stop the timer", "stop"], ["detener", "stop"], ["arrête", "stop"],
+    // eintragen
+    ["eintragen", "save"], ["save it", "save"], ["guarda", "save"], ["enregistre", "save"],
+    // von vorn
+    ["von vorne", "restart"], ["start over", "restart"], ["otra vez", "restart"], ["recommence", "restart"],
+    // abbrechen
+    ["brich ab", "cancel"], ["cancel", "cancel"], ["cancela", "cancel"], ["annule", "cancel"],
+  ])("%s -> %s", (text, cmd) => {
+    expect(matchVoiceCommand(text)).toBe(cmd);
+  });
+});
+
 describe("Sprachcoach", () => {
   const cues = (a, b, t) => coachCues(a, b, t).map((c) => c.type + (c.n ?? c.s ?? ""));
   test("mit Ziel: Halbzeit, noch 30/10, 3-2-1, geschafft", () => {

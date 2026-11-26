@@ -128,6 +128,7 @@ const VERB_KIND = [
   { kind: "schwimm", re: /^(swam|swim|swimming|geschwommen|schwimmen|nade|nadado|nadar|nage|nager)$/ },
   { kind: "liege", re: /^(pushups?|push|pompes?|liegestutz)$/ },
   { kind: "klimm", re: /^(pullups?|chinups?|klimmzug|tractions?|dominadas?)$/ },
+  { kind: "gym", re: /^(salle|gimnasio|gimnasios|gym|fitness|fitnessstudio|muckibude)$/ },
 ];
 
 // ── Tage ────────────────────────────────────────────────────────────────

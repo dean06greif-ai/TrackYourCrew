@@ -200,7 +200,7 @@ export function useVoiceConfirm() {
 // ── Stoppuhr per Sprache vom Dashboard aus ───────────────────────────────
 // „starte die Stoppuhr (für Plank)“: Stoppuhr-Wort ODER Name einer Stoppuhr-Übung + Befehl.
 export const SW_EVENT = "tyc:sw";
-const SW_WORD = /\b(stoppuhr|stopuhr|uhr|timer|stopwatch|clock|cron[oó]metro|chrono|chronom[eè]tre)\b/i;
+const SW_WORD = /\b(stoppuhr|stopuhr|uhr|timer|stopwatch|clock|cron[oó]metro|temporizador|reloj|chrono|chronom[eè]tre|minuteur|minuterie)\b/i;
 export const mentionsStopwatch = (text) => SW_WORD.test(String(text || ""));
 
 // Entscheidet für das Dashboard-Mikro: null (kein Stoppuhr-Befehl) | {cmd, key} | {cmd, ask: true} | {cmd, active: true}

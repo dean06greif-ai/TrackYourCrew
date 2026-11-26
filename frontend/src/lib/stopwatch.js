@@ -44,11 +44,13 @@ export function adjustSeconds(sec, delta) {
 // Alle 4 Sprachen gelten immer. Es zählt der Befehl, der im Satz zuletzt kommt
 // („starte … neu“ = neu starten); bei Gleichstand gewinnt die obere Zeile.
 const COMMANDS = [
-  ["cancel", /\b(abbrechen|abbruch|brich ab|breche ab|brech ab|verwerfen|vergiss es|cancel|cancelar|annuler|annule)\b/g],
-  ["restart", /\b(von vorn|von vorne|neu starten|neustart|nochmal|noch mal|neu|reset|zurucksetzen|restart|again|de nuevo|reiniciar|recommence|recommencer)\b/g],
-  ["save", /\b(eintragen|speichern|ubernehmen|save|done|guardar|listo|enregistrer|valider)\b/g],
-  ["stop", /\b(stopp|stoppe|stoppen|stop|halt|anhalten|ende|aus|para|parar|alto|arrete|arreter)\b/g],
-  ["start", /\b(start|starte|starten|los|go|begin|beginne|beginnen|empieza|empezar|comienza|commence|partez|vas y)\b/g],
+  ["cancel", /\b(abbrechen|abbruch|brich ab|breche ab|brech ab|verwerfen|vergiss es|cancel|forget it|discard|cancelar|cancela|descartar|descarta|olvidalo|annuler|annule|oublie)\b/g],
+  ["restart", /\b(von vorn|von vorne|neu starten|neustart|nochmal|noch mal|neu|reset|zurucksetzen|restart|start over|again|de nuevo|otra vez|reiniciar|reinicia|recommence|recommencer|a nouveau|redemarre|redemarrer)\b/g],
+  ["save", /\b(eintragen|trag ein|trag es ein|speichern|speicher|ubernehmen|save|log it|record it|done|guardar|guarda|registrar|registra|anotar|anota|listo|enregistrer|enregistre|valider|valide|sauvegarde|sauvegarder)\b/g],
+  ["pause", /\b(pause|pausiere|pausieren|pausier|warte|hold on|wait|pausa|pausar|pausala|espera|mets en pause|attends)\b/g],
+  ["resume", /\b(weiter|weitermachen|mach weiter|fortsetzen|fortfahren|resume|continue|keep going|unpause|continuar|continua|reanudar|reanuda|sigue|seguir|reprendre|reprends|continuer)\b/g],
+  ["stop", /\b(stopp|stoppe|stoppen|stop|halt|anhalten|ende|aus|beenden|beende|end|finish|para|parar|alto|detener|deten|termina|terminar|arrete|arreter|termine)\b/g],
+  ["start", /\b(start|starte|starten|los|leg los|go|begin|beginne|beginnen|lets go|empieza|empezar|comienza|comenzar|inicia|iniciar|arranca|vamos|commence|commencer|lance|lancer|demarre|demarrer|partez|vas y|c est parti|allez)\b/g],
 ];
 
 function norm(s) {
@@ -62,7 +64,7 @@ function norm(s) {
     .trim();
 }
 
-// Erkannter Text -> "start" | "stop" | "restart" | "save" | "cancel" | null
+// Erkannter Text -> "start" | "stop" | "pause" | "resume" | "restart" | "save" | "cancel" | null
 export function matchVoiceCommand(text) {
   const t = norm(text);
   if (!t) return null;

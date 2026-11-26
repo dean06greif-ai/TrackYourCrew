@@ -32,6 +32,27 @@ describe("Zahlwörter", () => {
   });
 });
 
+describe("alle 4 Sprachen, egal welche App-Sprache", () => {
+  const E = [...EX, { key: "gym", name: "Gym", unit: "×", type: "activity" }];
+  test.each([
+    ["today I did 20 push-ups and ran 5 km, that's it", ["push", "lauf"], "day", true],
+    ["hoy hice 20 flexiones y corrí 5 km, listo", ["push", "lauf"], "day", true],
+    ["aujourd'hui j'ai fait 20 pompes et couru 5 km, c'est tout", ["push", "lauf"], "day", true],
+    ["I did another 10 push-ups", ["push"], "add", false],
+    ["otras 10 flexiones", ["push"], "add", false],
+    ["encore 10 pompes", ["push"], "add", false],
+    ["en total 120 flexiones", ["push"], "set", false],
+    ["au total 120 pompes", ["push"], "set", false],
+    ["hoy fui al gimnasio", ["gym"], "add", false],
+    ["aujourd'hui je suis allé à la salle", ["gym"], "add", false],
+  ])("%s", (text, keys, mode, done) => {
+    const r = parseVoiceLog(text, E, 3);
+    expect(r.items.map((i) => i.key)).toEqual(keys);
+    if (keys[0] !== "gym") expect(r.items[0].mode).toBe(mode);
+    expect(r.done).toBe(done);
+  });
+});
+
 describe("unscharfe Zuordnung (nur eigene Übungen)", () => {
   const MINE = [
     { key: "kb", name: "Kniebeugen", unit: "" },

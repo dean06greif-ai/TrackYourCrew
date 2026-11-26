@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Timer, Stop, X, Microphone, MicrophoneSlash, CaretLeft, CaretRight, Check, Play, SpeakerHigh, SpeakerSlash, ArrowCounterClockwise } from "@phosphor-icons/react";
+import { Timer, Stop, Pause, X, Microphone, MicrophoneSlash, CaretLeft, CaretRight, Check, Play, SpeakerHigh, SpeakerSlash, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { useI18n, translate, LANGUAGES } from "../i18n";
 import { useMicEnabled } from "../lib/mic";
 import { useVoiceChannel, useSilenceTimeout, cleanSpeech, useGlobalVoice, setGlobalVoice, SW_EVENT } from "../lib/voiceHub";
@@ -26,6 +26,25 @@ function readStart(id) {
     return Number.isFinite(v) && v > 0 ? v : 0;
   } catch {
     return 0;
+  }
+}
+
+// Pausiert (Dean 2026-11-26): bisher gelaufene Sekunden, eigener Schlüssel; übersteht Neuladen
+function readPaused(id) {
+  try {
+    const raw = window.localStorage.getItem(PREFIX + id + "_p");
+    const v = Number(raw);
+    return raw != null && Number.isFinite(v) && v >= 0 ? v : null;
+  } catch {
+    return null;
+  }
+}
+function writePaused(id, v) {
+  try {
+    if (v != null) window.localStorage.setItem(PREFIX + id + "_p", String(v));
+    else window.localStorage.removeItem(PREFIX + id + "_p");
+  } catch {
+    /* egal */
   }
 }
 
@@ -205,6 +224,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
   // Harte Ansagen (eigene, freche Sätze) – an jeder Stimme umschaltbar
   const [hard, setHard] = useState(() => readLS(HARD_KEY) === "1");
   const [start, setStart] = useState(() => readStart(id));
+  const [paused, setPaused] = useState(() => readPaused(id)); // Sekunden oder null
   const [now, setNow] = useState(Date.now());
   const [count, setCount] = useState(0); // 3,2,1 während des Countdowns, sonst 0
   const [review, setReview] = useState(null); // gestoppte Sekunden zum Nachjustieren
@@ -300,6 +320,8 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
   reviewRef.current = review;
   const countRef = useRef(count);
   countRef.current = count;
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   const coachRef = useRef(coach);
   coachRef.current = coach;
 
@@ -325,7 +347,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
 
   // Coach-Ansagen während die Uhr läuft
   useEffect(() => {
-    if (!start) { lastSecRef.current = 0; return; }
+    if (!start) { if (pausedRef.current == null) lastSecRef.current = 0; return; }
     const prev = lastSecRef.current;
     lastSecRef.current = sec;
     if (!coachRef.current || sec <= prev) return;
@@ -350,6 +372,8 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
   const go = useCallback(() => {
     window.clearTimeout(countTimer.current);
     setReview(null);
+    writePaused(id, null);
+    setPaused(null);
     writeStart(id, 0);
     setStart(0);
     const step = (n) => {
@@ -369,17 +393,46 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
 
   const stop = useCallback(() => {
     const st = startRef.current;
-    if (!st) return;
+    const p = pausedRef.current;
+    if (!st && p == null) return;
     writeStart(id, 0);
     setStart(0);
+    writePaused(id, null);
+    setPaused(null);
     beep(440);
-    setReview(Math.round((Date.now() - st) / 1000));
+    setReview(Math.round(st ? (Date.now() - st) / 1000 : p));
+  }, [id]);
+  // Pause: Zeit anhalten, später genau dort weiter
+  const pause = useCallback(() => {
+    const st = startRef.current;
+    if (!st) return;
+    const el = (Date.now() - st) / 1000;
+    lastSecRef.current = el;
+    writeStart(id, 0);
+    setStart(0);
+    writePaused(id, el);
+    setPaused(el);
+    beep(520, 0.12);
+  }, [id]);
+  const resume = useCallback(() => {
+    const p = pausedRef.current;
+    if (p == null) return;
+    const s = Date.now() - p * 1000;
+    lastSecRef.current = p;
+    writePaused(id, null);
+    setPaused(null);
+    writeStart(id, s);
+    setStart(s);
+    setNow(Date.now());
+    beep(880, 0.12);
   }, [id]);
   const discard = useCallback(() => {
     window.clearTimeout(countTimer.current);
     setCount(0);
     writeStart(id, 0);
     setStart(0);
+    writePaused(id, null);
+    setPaused(null);
     setReview(null);
   }, [id]);
   const save = useCallback(() => {
@@ -392,12 +445,24 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
 
   const onVoice = useCallback((cmd) => {
     const running = !!startRef.current || countRef.current > 0;
-    if (cmd === "start") { if (!running) go(); }
+    const isPaused = pausedRef.current != null;
+    if (cmd === "start" || cmd === "resume") { if (isPaused) resume(); else if (!running && cmd === "start") go(); }
+    else if (cmd === "pause") pause();
     else if (cmd === "stop") { if (countRef.current > 0) discard(); else stop(); }
     else if (cmd === "restart") go();
-    else if (cmd === "save") save();
+    else if (cmd === "save") {
+      // „eintragen“ während sie läuft/pausiert: anhalten und gleich eintragen
+      const st = startRef.current;
+      if (st || isPaused) {
+        const secs = Math.round(st ? (Date.now() - st) / 1000 : pausedRef.current);
+        discard();
+        beep(440);
+        const add = secondsToUnit(secs, unit);
+        if (add > 0) onAdd(add);
+      } else save();
+    }
     else if (cmd === "cancel") { beep(330); discard(); }
-  }, [go, stop, save, discard]);
+  }, [go, stop, save, discard, pause, resume, unit, onAdd]);
   const onMicError = useCallback((code) => { setListening(false); setMicError(code); }, []);
   // Dashboard-Mikro an: dann zählt dieses als an, die Befehle kommen vom Dashboard (Ereignis tyc:sw)
   const globalOn = useGlobalVoice();
@@ -407,7 +472,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
     const h = (e) => {
       const d = e.detail || {};
       // id = Test-ID des Eingabefelds „input-<key>“ (siehe Dashboard)
-      if (d.key ? id === `input-${d.key}` : (d.active && (startRef.current || countRef.current > 0 || reviewRef.current != null))) onVoice(d.cmd);
+      if (d.key ? id === `input-${d.key}` : (d.active && (startRef.current || countRef.current > 0 || reviewRef.current != null || pausedRef.current != null))) onVoice(d.cmd);
     };
     window.addEventListener(SW_EVENT, h);
     return () => window.removeEventListener(SW_EVENT, h);
@@ -460,7 +525,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
     <>
       {micOn && (
         <p className="text-[10px] text-ink-3 mt-1.5 leading-relaxed" data-testid={`${id}-stopwatch-voicehint`}>
-          {review != null ? t("sw.voiceHintReview") : start || count ? t("sw.voiceHintRunning") : t("sw.voiceHintIdle")}
+          {review != null ? t("sw.voiceHintReview") : paused != null ? t("sw.voiceHintPaused") : start || count ? t("sw.voiceHintRunning") : t("sw.voiceHintIdle")}
           {heard && <span className="text-ink-2"> · {t("sw.heard", { text: heard.trim().slice(0, 40) })}</span>}
         </p>
       )}
@@ -580,6 +645,36 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
     );
   }
 
+  // Pausiert
+  if (paused != null) {
+    return (
+      <div className="mt-2" data-testid={`${id}-stopwatch-paused`}>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 font-anton text-xl tabular-nums opacity-70" style={{ color }}>
+            <Pause size={16} weight="fill" /> {formatClock(paused)}
+          </span>
+          <span className="hidden sm:inline text-[10px] uppercase tracking-widest text-ink-3 animate-pulse">{t("sw.paused")}</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            {tools}
+            <button type="button" onClick={resume} aria-label={t("sw.resume")} title={t("sw.resume")} data-testid={`${id}-stopwatch-resume`}
+              className={`${iconBtn} border-[#CCFF00]/60 text-[#CCFF00] hover:bg-[#CCFF00]/10`}>
+              <Play size={12} weight="fill" />
+            </button>
+            <button type="button" onClick={stop} data-testid={`${id}-stopwatch-stop`} aria-label={t("sw.stop")} title={t("sw.stop")}
+              className="inline-flex items-center justify-center gap-1.5 h-8 w-8 sm:w-auto sm:px-3 whitespace-nowrap bg-[#CCFF00] text-black font-bold uppercase tracking-widest text-[10px] hover:bg-[#D4FF33] transition-colors">
+              <Stop size={12} weight="fill" /> <span className="hidden sm:inline">{t("sw.stop")}</span>
+            </button>
+            <button type="button" onClick={discard} aria-label={t("sw.cancel")} title={t("sw.cancel")} data-testid={`${id}-stopwatch-discard`}
+              className={`${iconBtn} border-[#333] text-ink-3 hover:text-white hover:border-[#555]`}>
+              <X size={12} weight="bold" />
+            </button>
+          </div>
+        </div>
+        {status}
+      </div>
+    );
+  }
+
   // Läuft
   if (start) {
     return (
@@ -590,9 +685,13 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
           </span>
           <div className="ml-auto flex items-center gap-1.5">
             {tools}
-            <button type="button" onClick={stop} data-testid={`${id}-stopwatch-stop`}
-              className="inline-flex items-center gap-1.5 h-8 px-3 whitespace-nowrap bg-[#CCFF00] text-black font-bold uppercase tracking-widest text-[10px] hover:bg-[#D4FF33] transition-colors">
-              <Stop size={12} weight="fill" /> {t("sw.stop")}
+            <button type="button" onClick={pause} aria-label={t("sw.pause")} title={t("sw.pause")} data-testid={`${id}-stopwatch-pause`}
+              className={`${iconBtn} border-[#333] text-ink-2 hover:text-white hover:border-[#555]`}>
+              <Pause size={12} weight="fill" />
+            </button>
+            <button type="button" onClick={stop} data-testid={`${id}-stopwatch-stop`} aria-label={t("sw.stop")} title={t("sw.stop")}
+              className="inline-flex items-center justify-center gap-1.5 h-8 w-8 sm:w-auto sm:px-3 whitespace-nowrap bg-[#CCFF00] text-black font-bold uppercase tracking-widest text-[10px] hover:bg-[#D4FF33] transition-colors">
+              <Stop size={12} weight="fill" /> <span className="hidden sm:inline">{t("sw.stop")}</span>
             </button>
             <button type="button" onClick={discard} aria-label={t("sw.cancel")} title={t("sw.cancel")} data-testid={`${id}-stopwatch-discard`}
               className={`${iconBtn} border-[#333] text-ink-3 hover:text-white hover:border-[#555]`}>

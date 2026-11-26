@@ -36,6 +36,13 @@ describe("routeStopwatch", () => {
     expect(run("stopp", [plank, wall])).toEqual({ cmd: "stop", active: true });
     expect(run("Stoppuhr speichern", [plank, wall])).toEqual({ cmd: "save", active: true });
   });
+  it("Pause/Weiter gelten der laufenden Stoppuhr, in jeder Sprache", () => {
+    expect(run("pause", [plank, wall])).toEqual({ cmd: "pause", active: true });
+    expect(run("weiter", [plank, wall])).toEqual({ cmd: "resume", active: true });
+    expect(run("reanudar", [plank, wall])).toEqual({ cmd: "resume", active: true });
+    expect(run("lance le chrono pour Plank", [plank, wall])).toEqual({ cmd: "start", key: "p" });
+    expect(run("start the stopwatch", [plank])).toEqual({ cmd: "start", key: "p" });
+  });
   it("ohne Stoppuhr-Übungen nichts", () => {
     expect(run("starte die Stoppuhr", [])).toBeNull();
   });
