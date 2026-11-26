@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Timer, Stop, Pause, X, Microphone, MicrophoneSlash, CaretLeft, CaretRight, Check, Play, SpeakerHigh, SpeakerSlash, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { useI18n, translate, LANGUAGES } from "../i18n";
 import { useMicEnabled } from "../lib/mic";
+import { duckDuring } from "../lib/audioSession";
 import { useVoiceChannel, useSilenceTimeout, cleanSpeech, useGlobalVoice, setGlobalVoice, SW_EVENT, kickVoice } from "../lib/voiceHub";
 import {
   formatClock, secondsToUnit, adjustSeconds, matchVoiceCommand, speechLang, coachCues, coachTargetSeconds,
@@ -121,6 +122,7 @@ function speak(text, langTag, interrupt = false) {
     u.rate = 1.12;   // zügig, energisch
     u.pitch = 0.9;   // etwas tiefer, ruhig-neutral
     u.volume = 1;
+    duckDuring(u); // iPhone: eigene Musik leiser statt gestoppt
     window.speechSynthesis.speak(u);
   } catch {
     /* egal */

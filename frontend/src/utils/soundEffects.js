@@ -420,7 +420,7 @@ export function playChallengePop() {
   const ctx = soundEffects.audioContext;
   const now = ctx.currentTime;
   const out = ctx.createGain();
-  out.gain.value = 0.8;
+  out.gain.value = 1.0;
   out.connect(ctx.destination);
   voice(ctx, out, { f0: 160, f1: 50, t0: now, dur: 0.35, vol: 0.6, attack: 0.004 });
   [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
@@ -436,7 +436,7 @@ export function playChallengeAccept() {
   const ctx = soundEffects.audioContext;
   const now = ctx.currentTime;
   const out = ctx.createGain();
-  out.gain.value = 0.8;
+  out.gain.value = 1.7; // gleich laut wie die anderen Sounds
   out.connect(ctx.destination);
   voice(ctx, out, { type: "square", f0: 1800, t0: now, dur: 0.04, vol: 0.08, attack: 0.002 });
   voice(ctx, out, { type: "triangle", f0: 880, t0: now + 0.02, dur: 0.25, vol: 0.25 });

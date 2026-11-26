@@ -2,6 +2,8 @@
 // Ansage ohne Verzögerung (anders als die Sprachausgabe des Geräts). Fehlen die Dateien,
 // liefert play…() false und die Stoppuhr nimmt die Gerätestimme.
 
+import { duckOthers, releaseOthers } from "./audioSession";
+
 let ctx = null;
 const packs = {}; // "<paket>/<sprache>" -> { ready: Promise<boolean>, buffers: Map }
 let indexPromise = null;
@@ -117,6 +119,9 @@ export function playCoachClip(packId, lang, id, interrupt = false) {
     src.buffer = clip.buf;
     src.connect(c.destination);
     src.start(startAt, clip.offset, clip.dur);
+    // iPhone: eigene Musik währenddessen leiser statt gestoppt
+    duckOthers();
+    src.onended = () => releaseOthers();
     current = src;
     endAt = startAt + clip.dur;
     return true;

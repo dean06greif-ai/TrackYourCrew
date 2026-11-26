@@ -51,6 +51,10 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
 - **Ränge F–S+** (`frontend/src/lib/ranks.js`, Tabelle `docs/RANG-TABELLE.md`): nur aus dem Serverwert `best_goals`
   (bester Wochenwert, gedeckelt aufs Wochenziel) -> auf allen Geräten gleich. Übungsart wird
   am Namen erkannt, Einheiten umgerechnet. Browser speichert nur "Rang-Up schon gezeigt".
+- **Workout-Modus (Intervall-Timer, 2026-11-26):** Knopf neben „Fortschritt eintragen“, `components/Workout.jsx` (Logik `lib/workout.js`):
+  Vorlagen/Arbeit/Pause/Runden, Wdh. je Runde per Tippen oder Sprache, Zeit-Übungen zählen die Arbeitszeit selbst, Ende -> `applyVoiceItems`.
+  Live für die Crew: `PUT/DELETE /api/me/live` (nur im Speicher, `LIVE_TTL_S` 120 s, Lebenszeichen alle 45 s), Board-Feld `live`, WS `live_workout`.
+- **Eigene Musik nicht unterbrechen:** `lib/audioSession.js` (Safari ≥ iOS 17: „transient“ = andere Musik leiser während Coach/Ansagen).
 - **Herausforderung = Ready-Check (2026-11-26):** Eingeladene haben `CHALLENGE_ACCEPT_SECONDS` (60 s, +5 s Kulanz), danach
   Teilnehmer-Status `missed` (`_expire_invites`); `expires_in` im Challenge-Objekt. Fenster `components/ChallengeReadyCheck.jsx`
   (ablaufender Balken, eigene Sounds `playChallengePop/Accept` in utils/soundEffects – keine fremden Aufnahmen). Angenommen = verbindlich.

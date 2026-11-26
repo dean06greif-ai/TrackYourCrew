@@ -377,7 +377,75 @@ async def _board_entry(u: dict, viewer_id: str, week: Optional[int] = None) -> d
         "best_weeklies": {k: round(v, 2) for k, v in best_weeklies.items()},
         "milestones": _milestones_out(u),
         "is_online": u["user_id"] in manager.online_user_ids(),
+        # Workout-Modus läuft gerade (Intervall-Timer) -> Crew sieht „LIVE · Runde 3/8 · 34“
+        "live": _live_of(u["user_id"]) if not week else None,
     }
+
+
+# -------------------- Live-Training (Workout-Modus, Dean 2026-11-26) --------------------
+# Nur im Speicher: verschwindet nach dem Training oder spätestens LIVE_TTL_S nach dem letzten Lebenszeichen.
+LIVE_WORKOUTS: dict = {}
+LIVE_TTL_S = 120
+LIVE_PHASES = ("countdown", "work", "rest", "done")
+
+
+def _live_of(user_id: str):
+    import time
+    lw = LIVE_WORKOUTS.get(user_id)
+    if not lw or time.time() - lw["_t"] > LIVE_TTL_S:
+        return None
+    return {k: v for k, v in lw.items() if not k.startswith("_")}
+
+
+class LiveWorkout(BaseModel):
+    exercise_key: str
+    round: int = 0
+    rounds: int = 1
+    phase: str = "work"
+    reps: float = 0
+
+    @field_validator("phase")
+    @classmethod
+    def _phase(cls, v):
+        if v not in LIVE_PHASES:
+            raise ValueError("invalid phase")
+        return v
+
+    @field_validator("round", "rounds")
+    @classmethod
+    def _rounds(cls, v):
+        if not 0 <= v <= 200:
+            raise ValueError("invalid round")
+        return v
+
+    @field_validator("reps")
+    @classmethod
+    def _reps(cls, v):
+        if not (0 <= v <= 1_000_000):
+            raise ValueError("invalid reps")
+        return round(v, 2)
+
+
+@api_router.put("/me/live")
+async def set_live_workout(payload: LiveWorkout, user: User = Depends(get_current_user)):
+    import time
+    g = await _load_goals(user.user_id)
+    ex = next((e for e in g.get("exercises", []) if e["key"] == payload.exercise_key), None)
+    if not ex or _exercise_status(ex) != "active":
+        raise HTTPException(status_code=404, detail="Übung nicht gefunden")
+    lw = {"exercise_key": ex["key"], "exercise_name": ex["name"], "unit": ex.get("unit", ""),
+          "round": min(payload.round, payload.rounds), "rounds": payload.rounds, "phase": payload.phase,
+          "reps": payload.reps, "_t": time.time()}
+    LIVE_WORKOUTS[user.user_id] = lw
+    await _notify(user.user_id, {"type": "live_workout", "user_id": user.user_id, "live": _live_of(user.user_id)})
+    return {"live": _live_of(user.user_id)}
+
+
+@api_router.delete("/me/live")
+async def end_live_workout(user: User = Depends(get_current_user)):
+    if LIVE_WORKOUTS.pop(user.user_id, None) is not None:
+        await _notify(user.user_id, {"type": "live_workout", "user_id": user.user_id, "live": None})
+    return {"ok": True}
 
 
 @api_router.get("/board")

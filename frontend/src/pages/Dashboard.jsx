@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lightning, SignOut, Gear, Plus, Pulse, Flame, Trophy, ChartBar, UserPlus, Trash, X, Pause } from "@phosphor-icons/react";
+import { Lightning, SignOut, Gear, Plus, Pulse, Flame, Trophy, ChartBar, UserPlus, Trash, X, Pause, Timer } from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import UserCard from "../components/UserCard";
@@ -32,6 +32,8 @@ import { VoiceLogButton, VoiceLogPanel, VoiceSaved } from "../components/VoiceLo
 import { GlobalMicButton, useGlobalVoiceRouter } from "../components/GlobalVoice";
 import LegalLinks from "../components/LegalLinks";
 import ChallengeReadyCheck from "../components/ChallengeReadyCheck";
+import Workout from "../components/Workout";
+import { unlockAudio } from "../lib/coachAudio";
 import { isNetworkError, queueEntry, readOutbox, writeOutbox, mergeDays, alreadyApplied, sumsFromDays, saveSnapshot, loadSnapshot, useOnline, useOutboxCount } from "../lib/offline";
 import { useVoiceConfirm, setGlobalVoice } from "../lib/voiceHub";
 import { ActivityLogRow, ActivityDayButton } from "../components/ActivityLog";
@@ -296,6 +298,7 @@ export default function Dashboard() {
   const handleLogProgressRef = useRef(null);
   // Spracheingabe (Dean 2026-11-26): erkannte Einträge zum Tag + zur Wochensumme addieren, dann normal speichern
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [workoutOpen, setWorkoutOpen] = useState(false);
   const [voiceInitial, setVoiceInitial] = useState(null); // erkannte Einträge zum Prüfen („Erst bestätigen“)
   const [voiceHeard, setVoiceHeard] = useState("");
   const [voiceAsk, setVoiceAsk] = useState("");
@@ -924,6 +927,9 @@ export default function Dashboard() {
       if (msg.to_user_id === user?.user_id && msg.from_user_id !== user?.user_id && msg.event !== "withdrawn" && msg.event !== "created") {
         toast(t(`chal.live.${msg.event}`, { name: msg.from_name || "" }), { id: `ch-${msg.id}-${msg.event}`, duration: 3000 });
       }
+    } else if (msg.type === "live_workout") {
+      // Workout-Modus eines Crew-Mitglieds: nur dessen Karte anpassen, kein Board-Neuladen
+      setBoard((prev) => (prev?.users ? { ...prev, users: prev.users.map((u) => (u.user_id === msg.user_id ? { ...u, live: msg.live } : u)) } : prev));
     } else if (msg.type === "emoji") {
       // Live bekommen: Animation auf der eigenen Karte + kurzer Hinweis, sofort als gesehen merken
       if (user?.user_id) {
@@ -939,7 +945,7 @@ export default function Dashboard() {
         updateOnlineUsers(msg.online_user_ids);
       }
     }
-  }, [flashUser, fetchBoard, refreshUser, triggerCelebration, updateOnlineUsers, user?.user_id, fetchFriends, fetchFriendRequests, t, pushBurst]);
+  }, [flashUser, fetchBoard, refreshUser, triggerCelebration, updateOnlineUsers, user?.user_id, fetchFriends, fetchFriendRequests, t, pushBurst, setBoard]);
 
   useWebSocket({
     user,
@@ -1577,6 +1583,18 @@ export default function Dashboard() {
             >
               <Plus size={18} weight="bold" /> {t("log.open")}
             </button>
+            {/* Workout-Modus (Intervall-Timer) */}
+            <button
+              type="button"
+              onClick={() => { unlockAudio(); setWorkoutOpen(true); }}
+              title={t("wo.title")}
+              aria-label={t("wo.title")}
+              data-testid="open-workout"
+              className="shrink-0 w-12 md:w-auto md:px-5 flex items-center justify-center gap-2 border border-[#CCFF00]/60 text-[#CCFF00] hover:bg-[#CCFF00]/10 transition-colors"
+            >
+              <Timer size={20} weight="bold" />
+              <span className="hidden md:inline text-xs uppercase tracking-widest font-bold">{t("wo.title")}</span>
+            </button>
             <GlobalMicButton />
             </div>
             {globalVoiceOn && (
@@ -2107,6 +2125,8 @@ export default function Dashboard() {
           }}
         />
       )}
+
+      <Workout open={workoutOpen} onClose={() => setWorkoutOpen(false)} exercises={me?.exercises || []} onLog={applyVoiceItems} />
 
       <InstallSheet
         open={!!installSheet}
