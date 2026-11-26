@@ -573,7 +573,8 @@ function synthChallengeDecline() {
 
 // ── Herausforderung mit den Sounds von Deans Kumpel (public/sounds/, Dean 2026-11-26) ─────
 // Einmal laden + dekodieren; fehlen sie (offline, alter Cache), springen die erzeugten Sounds ein.
-const SFX = { pop: "/sounds/challenge-pop.mp3", accept: "/sounds/challenge-accept.mp3", decline: "/sounds/challenge-decline.mp3" };
+// hum = nur das tiefe Brummen als nahtlose Schleife (WAV, damit beim Wiederholen keine Lücke entsteht)
+const SFX = { pop: "/sounds/challenge-hum.wav", accept: "/sounds/challenge-accept.mp3", decline: "/sounds/challenge-decline.mp3" };
 const sfxBuffers = {};
 let sfxLoading = null;
 export function preloadChallengeSounds() {
@@ -600,9 +601,8 @@ function playBuffer(ctx, buf, out, t) {
   src.start(t);
   return src;
 }
-const POP_EVERY_S = 5.3; // Abstand der Wiederholungen (Ausklang überlappt leicht)
 
-// Läuft die ganze Annahme-Phase: Sound wiederholt sich nahtlos. Rückgabe { stop(), setUrgent() }.
+// Läuft die ganze Annahme-Phase: tiefes Brummen als Endlos-Schleife. Rückgabe { stop(), setUrgent() }.
 export function startChallengeLoop() {
   if (!sfxBuffers.pop) {
     // Datei noch nicht da: kurz warten (max. 1,5 s) statt die ganze Phase den Ersatz-Sound zu spielen
@@ -624,24 +624,21 @@ export function startChallengeLoop() {
   if (!soundEffects.ensureRunning()) return { stop() {}, setUrgent() {} };
   const ctx = soundEffects.audioContext;
   const out = ctx.createGain();
-  out.gain.value = 1;
+  out.gain.setValueAtTime(0.0001, ctx.currentTime);
+  out.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.25); // sanft einblenden
   out.connect(ctx.destination);
-  let next = ctx.currentTime + 0.03;
-  const plan = () => {
-    while (next < ctx.currentTime + 0.5) {
-      playBuffer(ctx, buf, out, next);
-      next += POP_EVERY_S;
-    }
-  };
-  plan();
-  const iv = window.setInterval(plan, 200);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.loop = true; // Endlos-Schleife ohne Lücke, bis Annehmen/Ablehnen/Ablauf
+  src.connect(out);
+  src.start();
   return {
-    setUrgent() { /* Originalsound bleibt unverändert */ },
+    setUrgent() { /* bleibt gleichmäßig */ },
     stop() {
-      window.clearInterval(iv);
       try {
+        out.gain.cancelScheduledValues(ctx.currentTime);
         out.gain.setTargetAtTime(0, ctx.currentTime, 0.06);
-        window.setTimeout(() => { try { out.disconnect(); } catch { /* egal */ } }, 600);
+        window.setTimeout(() => { try { src.stop(); out.disconnect(); } catch { /* egal */ } }, 600);
       } catch { /* egal */ }
     },
   };
