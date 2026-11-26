@@ -575,7 +575,7 @@ function synthChallengeDecline() {
 // Einmal laden + dekodieren; fehlen sie (offline, alter Cache), springen die erzeugten Sounds ein.
 // hum = nur das tiefe Brummen als nahtlose Schleife (WAV, damit beim Wiederholen keine Lücke entsteht).
 // ?v= bei jeder Änderung einer Datei hochzählen (sonst liefert der Service-Worker die alte aus dem Speicher)
-const SFX = { pop: "/sounds/challenge-hum.wav?v=2", accept: "/sounds/challenge-accept.mp3?v=2", decline: "/sounds/challenge-decline.mp3?v=2" };
+const SFX = { pop: "/sounds/challenge-hum.wav?v=3", accept: "/sounds/challenge-accept.mp3?v=2", decline: "/sounds/challenge-decline.mp3?v=2" };
 const sfxBuffers = {};
 let sfxLoading = null;
 export function preloadChallengeSounds() {
