@@ -414,31 +414,247 @@ function voice(ctx, out, { type = "sine", f0, f1, t0, dur, vol, attack = 0.01 })
   o.stop(t0 + dur + 0.05);
 }
 
-// Herausforderung kommt rein: tiefer Schlag + aufsteigender, heller Akkord (Spannung)
-export function playChallengePop() {
-  if (!soundEffects.ensureRunning()) return;
-  const ctx = soundEffects.audioContext;
-  const now = ctx.currentTime;
-  const out = ctx.createGain();
-  out.gain.value = 1.0;
-  out.connect(ctx.destination);
-  voice(ctx, out, { f0: 160, f1: 50, t0: now, dur: 0.35, vol: 0.6, attack: 0.004 });
-  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
-    voice(ctx, out, { type: "triangle", f0: f, t0: now + 0.06 + i * 0.07, dur: 0.9 - i * 0.08, vol: 0.22 });
-    voice(ctx, out, { type: "sine", f0: f * 2, t0: now + 0.06 + i * 0.07, dur: 0.5, vol: 0.05 });
-  });
-  voice(ctx, out, { type: "sawtooth", f0: 220, f1: 880, t0: now + 0.02, dur: 0.4, vol: 0.05 });
+// Klangwelt (Dean 2026-11-26, nach Vorbild „tief, warm, lang ausklingend“, aber eigene Töne):
+// weicher, dumpfer Schlag + zwei warme, leicht schwebende Töne. Bewusst leise (dezent auch bei voller Lautstärke).
+function softNoise(ctx, out, t0, dur, vol, fFrom, fTo, type = "lowpass") {
+  const len = Math.ceil(ctx.sampleRate * dur);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const f = ctx.createBiquadFilter();
+  f.type = type;
+  f.frequency.setValueAtTime(fFrom, t0);
+  f.frequency.exponentialRampToValueAtTime(fTo, t0 + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + dur * 0.3);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f).connect(g).connect(out);
+  src.start(t0);
+  src.stop(t0 + dur);
+}
+function bell(ctx, out, f, t0, dur, vol, attack = 0.02) {
+  // zwei leicht verstimmte Sinus-Töne = sanftes Schweben
+  [0, 2.5].forEach((det) => voice(ctx, out, { type: "sine", f0: f + det, t0, dur, vol: vol / 2, attack }));
+  voice(ctx, out, { type: "sine", f0: f * 2.01, t0, dur: dur * 0.4, vol: vol * 0.12, attack });
 }
 
-// Angenommen: kurzer Klick + heller, bestätigender Doppelton
-export function playChallengeAccept() {
+// Tiefe Trommel (Taiko-artig): Sinus-Bauch + gedämpftes Rauschen für das Fell
+function drum(ctx, out, t0, vol, pitch = 92) {
+  voice(ctx, out, { f0: pitch, f1: pitch * 0.6, t0, dur: 0.7, vol: vol * 0.8, attack: 0.004 });
+  voice(ctx, out, { type: "triangle", f0: pitch * 2.1, f1: pitch * 1.3, t0, dur: 0.35, vol: vol * 0.45, attack: 0.003 });
+  voice(ctx, out, { type: "sine", f0: pitch * 3.6, f1: pitch * 2.4, t0, dur: 0.18, vol: vol * 0.18, attack: 0.002 });
+  softNoise(ctx, out, t0, 0.22, vol * 0.5, 2600, 300);
+}
+// gehaltener Ton mit langsamem Ein-/Ausblenden (Fläche)
+function pad(ctx, out, f, t0, dur, vol) {
+  [0, 1.8].forEach((det) => {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.setValueAtTime(f + det, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol / 2, t0 + dur * 0.35);
+    g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(out);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+  });
+}
+
+// Herausforderung: Schleife für die ganze Annahme-Phase (Dean 2026-11-26). Klangwelt wie das Vorbild
+// (tiefe Trommeln, Brummen, warme Töne in D), eigener Rhythmus. setUrgent(true) = letzte Sekunden dichter.
+// Bewusst leise gemischt. Rückgabe: { stop(), setUrgent(bool) }.
+const LOOP_S = 3.2;
+const NOTE = { D2: 73.42, A2: 110, D3: 146.83, G3: 196, A3: 220, D4: 293.66, F4: 349.23, A4: 440, D5: 587.33, F5: 698.46 };
+function challengeBar(ctx, out, t, n, urgent) {
+  // Trommeln: Schlag – Nachschlag … Doppel – (leise)
+  drum(ctx, out, t, 0.55);
+  drum(ctx, out, t + 0.34, 0.32, 84);
+  drum(ctx, out, t + 1.2, 0.45);
+  drum(ctx, out, t + 1.42, 0.3, 80);
+  drum(ctx, out, t + 2.3, 0.22, 76);
+  if (urgent) [0.8, 1.8, 2.6, 2.95].forEach((d) => drum(ctx, out, t + d, 0.22, 100));
+  // Brummen + Fläche: abwechselnd D und G
+  pad(ctx, out, NOTE.D2, t, LOOP_S + 0.4, 0.1);
+  pad(ctx, out, n % 2 ? NOTE.G3 : NOTE.D3, t + 0.1, LOOP_S, 0.07);
+  pad(ctx, out, NOTE.A3, t + 0.2, LOOP_S, 0.04);
+  // warme Glocken-Töne oben, jeder zweite Takt
+  if (n % 2 === 0) {
+    bell(ctx, out, NOTE.D4, t + 0.02, 2.2, 0.18, 0.03);
+    bell(ctx, out, NOTE.F5, t + 0.05, 1.8, 0.3, 0.05);
+    bell(ctx, out, 1174.66, t + 0.06, 1.2, 0.12, 0.05); // Glanz oben
+  } else {
+    bell(ctx, out, NOTE.A3, t + 1.2, 1.8, 0.1, 0.03);
+    bell(ctx, out, NOTE.D5, t + 1.22, 1.5, 0.24, 0.04);
+    bell(ctx, out, 1396.91, t + 1.25, 0.9, 0.08, 0.05);
+  }
+  if (urgent) bell(ctx, out, NOTE.D5, t + 2.6, 0.5, 0.05, 0.01);
+}
+
+function synthChallengeLoop() {
+  if (!soundEffects.ensureRunning()) return { stop() {}, setUrgent() {} };
+  const ctx = soundEffects.audioContext;
+  const out = ctx.createGain();
+  out.gain.value = 0.5;
+  out.connect(ctx.destination);
+  let urgent = false;
+  let n = 0;
+  let next = ctx.currentTime + 0.05;
+  const plan = () => {
+    while (next < ctx.currentTime + 0.6) {
+      challengeBar(ctx, out, next, n, urgent);
+      next += urgent ? LOOP_S * 0.85 : LOOP_S;
+      n += 1;
+    }
+  };
+  plan();
+  const iv = window.setInterval(plan, 150);
+  return {
+    setUrgent(v) { urgent = !!v; },
+    stop() {
+      window.clearInterval(iv);
+      try {
+        out.gain.setTargetAtTime(0, ctx.currentTime, 0.08); // kurz ausblenden
+        window.setTimeout(() => { try { out.disconnect(); } catch { /* egal */ } }, 800);
+      } catch { /* egal */ }
+    },
+  };
+}
+
+// Für Hörproben: Schleife für `seconds` vorab einplanen (z. B. OfflineAudioContext)
+export function renderChallengeLoop(ctx, seconds, urgentFrom = Infinity) {
+  const out = ctx.createGain();
+  out.gain.value = 0.5;
+  out.connect(ctx.destination);
+  let t = 0.05;
+  for (let n = 0; t < seconds; n++) {
+    const urgent = t >= urgentFrom;
+    challengeBar(ctx, out, t, n, urgent);
+    t += urgent ? LOOP_S * 0.85 : LOOP_S;
+  }
+}
+
+// Kurzer Einzel-Sound beim Erscheinen (für Stellen ohne Schleife)
+export function playChallengePop() {
+  const loop = startChallengeLoop();
+  window.setTimeout(() => loop.stop(), LOOP_S * 1000);
+}
+
+// Angenommen: tiefer Schlag + warmer Ton D4 mit Quinte, kurz
+function synthChallengeAccept() {
   if (!soundEffects.ensureRunning()) return;
   const ctx = soundEffects.audioContext;
   const now = ctx.currentTime;
   const out = ctx.createGain();
-  out.gain.value = 1.7; // gleich laut wie die anderen Sounds
+  out.gain.value = 0.15; // dezent
   out.connect(ctx.destination);
-  voice(ctx, out, { type: "square", f0: 1800, t0: now, dur: 0.04, vol: 0.08, attack: 0.002 });
-  voice(ctx, out, { type: "triangle", f0: 880, t0: now + 0.02, dur: 0.25, vol: 0.25 });
-  [1318.5, 1760].forEach((f, i) => voice(ctx, out, { type: "sine", f0: f, t0: now + 0.12 + i * 0.03, dur: 0.6, vol: 0.18 }));
+  voice(ctx, out, { f0: 64, f1: 44, t0: now, dur: 0.9, vol: 1.1, attack: 0.004 }); // tiefer Schlag
+  voice(ctx, out, { type: "triangle", f0: 130, f1: 90, t0: now, dur: 0.3, vol: 0.25, attack: 0.003 });
+  softNoise(ctx, out, now, 0.28, 1.6, 3200, 7500, "highpass"); // heller Anschlag
+  bell(ctx, out, NOTE.D4, now + 0.01, 1.3, 0.3, 0.01);
+  bell(ctx, out, NOTE.A4, now + 0.1, 1.1, 0.1, 0.01);
+}
+
+// Abgelehnt/verpasst: gedämpfter Schlag + Ton nach unten
+function synthChallengeDecline() {
+  if (!soundEffects.ensureRunning()) return;
+  const ctx = soundEffects.audioContext;
+  const now = ctx.currentTime;
+  const out = ctx.createGain();
+  out.gain.value = 0.5;
+  out.connect(ctx.destination);
+  drum(ctx, out, now, 0.45, 76);
+  voice(ctx, out, { type: "sine", f0: NOTE.D4, f1: NOTE.A3, t0: now + 0.02, dur: 0.9, vol: 0.12, attack: 0.02 });
+  voice(ctx, out, { type: "sine", f0: NOTE.A3, f1: NOTE.D3, t0: now + 0.15, dur: 1.0, vol: 0.08, attack: 0.03 });
+}
+
+// ── Herausforderung mit den Sounds von Deans Kumpel (public/sounds/, Dean 2026-11-26) ─────
+// Einmal laden + dekodieren; fehlen sie (offline, alter Cache), springen die erzeugten Sounds ein.
+const SFX = { pop: "/sounds/challenge-pop.mp3", accept: "/sounds/challenge-accept.mp3", decline: "/sounds/challenge-decline.mp3" };
+const sfxBuffers = {};
+let sfxLoading = null;
+export function preloadChallengeSounds() {
+  if (sfxLoading) return sfxLoading;
+  // Stiller Hilfs-Kontext nur zum Dekodieren: der echte Audio-Kontext entsteht erst beim ersten Antippen (iOS)
+  const Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const ctx = Off ? new Off(1, 1, 44100) : null;
+  if (!ctx || typeof fetch !== "function") return Promise.resolve();
+  sfxLoading = Promise.all(Object.entries(SFX).map(async ([k, url]) => {
+    try {
+      const data = await (await fetch(url)).arrayBuffer();
+      sfxBuffers[k] = await new Promise((res, rej) => {
+        const p = ctx.decodeAudioData(data, res, rej); // Safari kennt nur die Rückruf-Form
+        if (p && p.catch) p.catch(rej);
+      });
+    } catch { /* dann eben der erzeugte Sound */ }
+  }));
+  return sfxLoading;
+}
+function playBuffer(ctx, buf, out, t) {
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(out);
+  src.start(t);
+  return src;
+}
+const POP_EVERY_S = 5.3; // Abstand der Wiederholungen (Ausklang überlappt leicht)
+
+// Läuft die ganze Annahme-Phase: Sound wiederholt sich nahtlos. Rückgabe { stop(), setUrgent() }.
+export function startChallengeLoop() {
+  if (!sfxBuffers.pop) {
+    // Datei noch nicht da: kurz warten (max. 1,5 s) statt die ganze Phase den Ersatz-Sound zu spielen
+    let inner = null;
+    let stopped = false;
+    const ready = preloadChallengeSounds();
+    const fallback = window.setTimeout(() => { if (!stopped && !inner) inner = synthChallengeLoop(); }, 1500);
+    ready.then(() => {
+      if (stopped || inner) return;
+      window.clearTimeout(fallback);
+      inner = sfxBuffers.pop ? startChallengeLoop() : synthChallengeLoop();
+    });
+    return {
+      setUrgent(v) { inner?.setUrgent(v); },
+      stop() { stopped = true; window.clearTimeout(fallback); inner?.stop(); },
+    };
+  }
+  const buf = sfxBuffers.pop;
+  if (!soundEffects.ensureRunning()) return { stop() {}, setUrgent() {} };
+  const ctx = soundEffects.audioContext;
+  const out = ctx.createGain();
+  out.gain.value = 1;
+  out.connect(ctx.destination);
+  let next = ctx.currentTime + 0.03;
+  const plan = () => {
+    while (next < ctx.currentTime + 0.5) {
+      playBuffer(ctx, buf, out, next);
+      next += POP_EVERY_S;
+    }
+  };
+  plan();
+  const iv = window.setInterval(plan, 200);
+  return {
+    setUrgent() { /* Originalsound bleibt unverändert */ },
+    stop() {
+      window.clearInterval(iv);
+      try {
+        out.gain.setTargetAtTime(0, ctx.currentTime, 0.06);
+        window.setTimeout(() => { try { out.disconnect(); } catch { /* egal */ } }, 600);
+      } catch { /* egal */ }
+    },
+  };
+}
+
+export function playChallengeAccept() {
+  if (!sfxBuffers.accept) return synthChallengeAccept();
+  if (!soundEffects.ensureRunning()) return;
+  playBuffer(soundEffects.audioContext, sfxBuffers.accept, soundEffects.audioContext.destination, soundEffects.audioContext.currentTime);
+}
+
+export function playChallengeDecline() {
+  if (!sfxBuffers.decline) return synthChallengeDecline();
+  if (!soundEffects.ensureRunning()) return;
+  playBuffer(soundEffects.audioContext, sfxBuffers.decline, soundEffects.audioContext.destination, soundEffects.audioContext.currentTime);
 }

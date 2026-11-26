@@ -10,7 +10,7 @@ import { formatAmount } from "../lib/amount";
 import { exerciseLabel, detectExerciseKind } from "../lib/exercises";
 import ExerciseIcon from "./ExerciseIcon";
 import { useChallenges, CHALLENGES_EVENT } from "./Challenges";
-import { playChallengePop, playChallengeAccept } from "../utils/soundEffects";
+import { startChallengeLoop, playChallengeAccept, playChallengeDecline, preloadChallengeSounds } from "../utils/soundEffects";
 
 const sameUnit = (a, b) => (a || "").trim().toLowerCase().replace(/\.$/, "") === (b || "").trim().toLowerCase().replace(/\.$/, "");
 
@@ -31,8 +31,19 @@ export default function ChallengeReadyCheck({ board, meId }) {
     setCur({ c, deadline: Date.now() + c.expires_in * 1000 });
     setPhase("ask");
     setPick("");
-    playChallengePop();
   }, [list, cur]);
+
+  // Sounds gleich beim Öffnen des Dashboards laden (dann startet der Sound beim Herausfordern sofort)
+  useEffect(() => { preloadChallengeSounds(); }, []);
+
+  // Sound läuft die ganze Annahme-Phase, in den letzten 10 s drängender; endet sofort danach
+  const loop = useRef(null);
+  const curId = cur?.c.id;
+  useEffect(() => {
+    if (!curId) return undefined;
+    loop.current = startChallengeLoop();
+    return () => { loop.current?.stop(); loop.current = null; };
+  }, [curId]);
 
   // Balken: 10× pro Sekunde, bei 0 -> verpasst
   useEffect(() => {
@@ -41,9 +52,11 @@ export default function ChallengeReadyCheck({ board, meId }) {
     return () => window.clearInterval(iv);
   }, [cur, phase]);
   const left = cur ? Math.max(0, cur.deadline - now) : 0;
+  useEffect(() => { loop.current?.setUrgent(left > 0 && left < 10000); }, [left]);
   useEffect(() => {
     if (!cur || phase !== "ask" || left > 0) return;
     handled.current.add(cur.c.id);
+    playChallengeDecline();
     const from = cur.c.participants.find((p) => p.user_id === cur.c.creator_id)?.name || "";
     toast(t("chal.rc.missed", { name: from }), { id: `rc-missed-${cur.c.id}`, duration: 4000 });
     setCur(null);
@@ -73,6 +86,7 @@ export default function ChallengeReadyCheck({ board, meId }) {
   const accept = async () => {
     if (!chosen || phase !== "ask") return;
     setPhase("busy");
+    loop.current?.stop();
     try {
       await api.post(`/challenges/${c.id}/accept`, { to_key: chosen });
       playChallengeAccept();
@@ -84,6 +98,8 @@ export default function ChallengeReadyCheck({ board, meId }) {
     }
   };
   const decline = async () => {
+    loop.current?.stop();
+    playChallengeDecline();
     setPhase("busy");
     try { await api.post(`/challenges/${c.id}/decline`); } catch { /* egal: verfällt sonst */ }
     close();
