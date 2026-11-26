@@ -41,6 +41,17 @@ let running = false;
 let restartTimer = 0;
 let netFails = 0;
 let local = false;
+let gotResult = false;   // in diesem Lauf schon etwas gehört?
+let sawFinal = false;    // liefert der Browser Endergebnisse? (Safari oft nicht)
+let committed = "";      // Safari: schon als „fertig“ gemeldeter Anfang des wachsenden Texts
+let pending = null;      // letztes Zwischenergebnis ohne Endergebnis
+let quietTimer = 0;
+let kickTimer = 0;
+
+// Apple (Safari am Mac, alle Browser am iPhone): Erkennung muss direkt im Antippen starten,
+// Endergebnisse kommen oft gar nicht -> Sprechpause zählt als Satzende (Dean 2026-11-26)
+const APPLE = typeof navigator !== "undefined" && /Apple/.test(navigator.vendor || "");
+const SAFARI_QUIET_MS = 1200;
 
 const emit = (fn) => subs.forEach((s) => { try { fn(s); } catch { /* ein Abnehmer darf die anderen nicht stören */ } });
 const fail = (code) => {
@@ -48,22 +59,25 @@ const fail = (code) => {
   emit((s) => s.onError?.(code));
 };
 
-async function startRec() {
-  if (running) return;
-  const SR = Rec();
-  if (!SR) return fail("unsupported");
-  running = true;
-  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) return fail("insecure");
-  try {
-    // fragt zuverlässig nach dem Mikrofon (Erlauben-Dialog), Spur gleich wieder schließen
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach((tr) => tr.stop());
-  } catch (e) {
-    return fail(e?.name === "NotFoundError" ? "audio-capture" : "not-allowed");
-  }
-  if (!running) return;
+// Zwischenergebnis ohne den schon gemeldeten Anfang (Safari wiederholt den ganzen Text)
+const fresh = (t) => {
+  const full = String(t || "");
+  if (committed && full.startsWith(committed)) return full.slice(committed.length).trim();
+  return full.trim();
+};
+// noch offenes Zwischenergebnis als fertigen Satz melden (Safari, oder Browser endet ohne Endergebnis)
+function flushPending(newSession) {
+  window.clearTimeout(quietTimer);
+  if (pending && pending.texts[0]) {
+    const texts = pending.texts;
+    committed = newSession ? "" : pending.full;
+    pending = null;
+    emit((s) => s.onResult?.(texts, true));
+  } else if (newSession) committed = "";
+}
+
+function makeRec(SR) {
   const r = new SR();
-  rec = r;
   r.lang = speechLang(lang);
   if (local && "processLocally" in r) r.processLocally = true;
   r.continuous = true;
@@ -71,10 +85,27 @@ async function startRec() {
   r.maxAlternatives = 3;
   r.onresult = (e) => {
     netFails = 0;
+    gotResult = true;
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const res = e.results[i];
-      const texts = Array.from({ length: res.length || 1 }, (_, k) => res[k]?.transcript || "");
-      emit((s) => s.onResult?.(texts, !!res.isFinal));
+      const raw = Array.from({ length: res.length || 1 }, (_, k) => res[k]?.transcript || "");
+      if (res.isFinal) {
+        sawFinal = true;
+        window.clearTimeout(quietTimer);
+        const texts = raw.map(fresh);
+        pending = null;
+        committed = "";
+        if (texts[0]) emit((s) => s.onResult?.(texts, true));
+        continue;
+      }
+      if (committed && !raw[0].startsWith(committed)) committed = ""; // neuer Text (Safari hat neu begonnen)
+      const texts = raw.map(fresh);
+      pending = { texts, full: raw[0] };
+      if (texts[0]) emit((s) => s.onResult?.(texts, false));
+      if (APPLE && !sawFinal) {
+        window.clearTimeout(quietTimer);
+        quietTimer = window.setTimeout(() => flushPending(false), SAFARI_QUIET_MS);
+      }
     }
   };
   r.onerror = async (e) => {
@@ -92,32 +123,75 @@ async function startRec() {
       if (netFails >= 3) fail("network");
       return;
     }
+    if (e.error === "aborted" || e.error === "no-speech") return;
+    // Safari verweigert einen Neustart ohne Antippen: einfach still beenden (kein „kein Zugriff“)
+    if (e.error === "not-allowed" && gotResult) { flushPending(true); fail("stopped"); return; }
     if (["not-allowed", "service-not-allowed", "audio-capture", "language-not-supported"].includes(e.error)) fail(e.error);
   };
   r.onend = () => {
     if (!running || rec !== r) return;
+    flushPending(true); // Gesagtes nicht verlieren, wenn der Browser die Sitzung beendet
     // Browser beendet nach Pausen von selbst – weiter zuhören
     restartTimer = window.setTimeout(() => {
       if (!running || rec !== r) return;
-      if ((local && !r.processLocally) || r.lang !== speechLang(lang)) { rec = null; running = false; startRec(); return; }
+      if ((local && !r.processLocally) || r.lang !== speechLang(lang)) { rec = makeRec(SR); try { rec.start(); } catch { /* egal */ } return; }
       try { r.start(); } catch { /* läuft schon */ }
     }, netFails ? 800 : 250);
   };
-  try { r.start(); } catch { /* egal */ }
+  return r;
+}
+
+async function startRec() {
+  if (running) return;
+  const SR = Rec();
+  if (!SR) return fail("unsupported");
+  if (!window.isSecureContext) return fail("insecure");
+  running = true;
+  gotResult = false;
+  committed = "";
+  pending = null;
+  if (!APPLE) {
+    // Chrome & Co.: vorher nach dem Mikrofon fragen (zeigt den Erlauben-Dialog zuverlässig, Spur gleich zu).
+    // Apple NICHT: dort muss start() direkt im Antippen passieren, die Erkennung fragt selbst.
+    if (!navigator.mediaDevices?.getUserMedia) return fail("insecure");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((tr) => tr.stop());
+    } catch (e) {
+      return fail(e?.name === "NotFoundError" ? "audio-capture" : "not-allowed");
+    }
+    if (!running) return;
+  }
+  rec = makeRec(SR);
+  try { rec.start(); } catch { /* egal */ }
 }
 
 function stopRec() {
   running = false;
   window.clearTimeout(restartTimer);
+  window.clearTimeout(quietTimer);
+  pending = null;
+  committed = "";
   const r = rec;
   rec = null;
   try { r?.abort(); } catch { /* egal */ }
 }
 
+// Im Klick auf einen Mikro-Knopf aufrufen: startet die Erkennung sofort (Safari verlangt das).
+// Meldet sich danach kein Abnehmer an (Knopf ausgeschaltet), wird sie wieder beendet.
+export function kickVoice(appLang) {
+  if (appLang) lang = appLang;
+  startRec();
+  window.clearTimeout(kickTimer);
+  kickTimer = window.setTimeout(() => { if (!subs.size) stopRec(); }, 2500);
+}
+
 // Anmelden: gibt die Abmelde-Funktion zurück. Sprache gilt für alle (die App hat nur eine).
+let idleTimer = 0;
 export function joinVoice(handlers, appLang) {
   const id = nextId++;
   subs.set(id, handlers);
+  window.clearTimeout(idleTimer);
   if (appLang && appLang !== lang) {
     lang = appLang;
     if (rec) { try { rec.stop(); } catch { /* onend startet mit neuer Sprache */ } }
@@ -125,7 +199,10 @@ export function joinVoice(handlers, appLang) {
   startRec();
   return () => {
     subs.delete(id);
-    if (!subs.size) stopRec();
+    // kurz warten: wechselt nur der Abnehmer (z. B. Stoppuhr -> Dashboard), läuft die Erkennung weiter
+    // (Safari erlaubt einen Neustart ohne Antippen oft nicht)
+    window.clearTimeout(idleTimer);
+    if (!subs.size) idleTimer = window.setTimeout(() => { if (!subs.size) stopRec(); }, 400);
   };
 }
 

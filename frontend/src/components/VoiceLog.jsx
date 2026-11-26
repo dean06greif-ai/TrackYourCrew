@@ -9,7 +9,7 @@ import { useI18n } from "../i18n";
 import { parseVoiceLog, isDone } from "../lib/voiceLog";
 import { matchVoiceCommand } from "../lib/stopwatch";
 import { useMicEnabled } from "../lib/mic";
-import { useVoiceChannel, useSilenceTimeout, cleanSpeech, mentionsStopwatch } from "../lib/voiceHub";
+import { useVoiceChannel, useSilenceTimeout, cleanSpeech, mentionsStopwatch, kickVoice } from "../lib/voiceHub";
 import { exerciseLabel } from "../lib/exercises";
 import { formatAmount } from "../lib/amount";
 import ExerciseIcon from "./ExerciseIcon";
@@ -19,13 +19,13 @@ const SILENCE_MS = 2500;
 const PANEL_TIMEOUT_MS = 30000; // Eintragen per Sprache: nach 30 s Stille aus (Dean 2026-11-26)
 
 export function VoiceLogButton({ active, onClick }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const allowed = useMicEnabled();
   if (!allowed) return null;
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => { if (!active) kickVoice(lang); onClick(e); }}
       aria-pressed={active}
       title={t("voice.button")}
       aria-label={t("voice.button")}
@@ -89,6 +89,8 @@ export function VoiceLogPanel({ exercises, todayIdx, dayNames, onApply, onClose,
     window.clearTimeout(silenceRef.current);
     if (r.items.length) silenceRef.current = window.setTimeout(() => finish(all), SILENCE_MS);
   }, (code) => {
+    // Safari beendet manchmal still: dann einfach auswerten, was schon gehört wurde
+    if (code === "stopped") { finish(); return; }
     stoppedRef.current = true;
     setError(code);
     setPhase("error");

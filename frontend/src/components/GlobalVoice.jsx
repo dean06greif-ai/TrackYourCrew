@@ -10,8 +10,9 @@ import { useMicEnabled } from "../lib/mic";
 import { speechLang, isTimeUnit } from "../lib/stopwatch";
 import { parseVoiceLog, findSpokenExercise } from "../lib/voiceLog";
 import { isActivity } from "../lib/activities";
+import { toast } from "sonner";
 import {
-  useVoiceChannel, useSilenceTimeout, useGlobalVoice, setGlobalVoice, cleanSpeech, routeStopwatch, SW_EVENT,
+  useVoiceChannel, useSilenceTimeout, useGlobalVoice, setGlobalVoice, cleanSpeech, routeStopwatch, SW_EVENT, kickVoice,
 } from "../lib/voiceHub";
 
 const GLOBAL_TIMEOUT_MS = 10000;
@@ -20,14 +21,14 @@ const SILENCE_MS = 2500;
 const ASK_MS = 8000;
 
 export function GlobalMicButton({ className = "" }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const allowed = useMicEnabled();
   const on = useGlobalVoice();
   if (!allowed) return null;
   return (
     <button
       type="button"
-      onClick={(e) => { setGlobalVoice(!on); e.currentTarget.blur(); }}
+      onClick={(e) => { if (!on) kickVoice(lang); setGlobalVoice(!on); e.currentTarget.blur(); }}
       aria-pressed={on}
       title={on ? t("voice.globalOff") : t("voice.globalOn")}
       aria-label={on ? t("voice.globalOff") : t("voice.globalOn")}
@@ -134,6 +135,13 @@ export function useGlobalVoiceRouter({ exercises, todayIdx, formOpen, panelOpen,
     window.clearTimeout(v.quiet);
     if (isFinal) decide(texts[0], true);
     else v.quiet = window.setTimeout(() => decide(texts[0], false), QUIET_MS);
-  }, () => off());
+  }, (code) => {
+    off();
+    // Fehler verständlich melden (z. B. Vivaldi/Brave ohne Spracherkennung, Mikro nicht erlaubt)
+    if (code !== "stopped") {
+      const known = ["insecure", "not-allowed", "service-not-allowed", "audio-capture", "network", "language-not-supported"];
+      toast.error(t(`sw.err.${known.includes(code) ? code : "generic"}`), { id: "voice-error", duration: 6000 });
+    }
+  });
   return on;
 }

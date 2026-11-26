@@ -26,7 +26,7 @@ import { usePercentiles } from "../hooks/usePercentiles";
 import ChallengesSection, { CHALLENGES_EVENT } from "../components/Challenges";
 import { tourEvent, tourNeed, TOUR_EVENT } from "../lib/tour";
 import InstallSheet from "../components/InstallSheet";
-import { countVisit, currentPlatform, markLogged, readInstallState, shouldAutoShow, snoozedState, writeInstallState } from "../lib/install";
+import { countVisit, currentPlatform, markLogged, readInstallState, shouldAutoShow, writeInstallState } from "../lib/install";
 import { amountParts } from "../lib/amount";
 import { VoiceLogButton, VoiceLogPanel, VoiceSaved } from "../components/VoiceLog";
 import { GlobalMicButton, useGlobalVoiceRouter } from "../components/GlobalVoice";
@@ -635,7 +635,7 @@ export default function Dashboard() {
   }, [user, fetchFriendRequests]);
 
   // "Als App installieren" (Plan 10): dezent, nie beim ersten Besuch, nie während
-  // Einführung/Tour, "Später" = 14 Tage Ruhe, "Nicht mehr zeigen" = nie.
+  // Einführung/Tour – und nur EINMAL (Dean 2026-11-26), danach nur noch über die Einstellungen.
   const [installSheet, setInstallSheet] = useState(null); // Plattform oder null
   useEffect(() => {
     if (!user) return undefined;
@@ -645,7 +645,12 @@ export default function Dashboard() {
     const platform = currentPlatform();
     const busy = user.onboarding_done === false || (Number.isInteger(user.tour_step) && user.tour_step >= 0);
     let timer;
-    if (!busy && shouldAutoShow(platform, state)) timer = setTimeout(() => setInstallSheet(platform), 2500);
+    if (!busy && shouldAutoShow(platform, state)) {
+      timer = setTimeout(() => {
+        writeInstallState({ ...readInstallState(), never: true }); // gezeigt = erledigt
+        setInstallSheet(platform);
+      }, 2500);
+    }
     return () => { clearTimeout(timer); window.removeEventListener(TOUR_EVENT, onTour); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.user_id]);
@@ -2102,8 +2107,6 @@ export default function Dashboard() {
       <InstallSheet
         open={!!installSheet}
         platform={installSheet}
-        onLater={() => { writeInstallState(snoozedState(readInstallState())); setInstallSheet(null); }}
-        onNever={() => { writeInstallState({ ...readInstallState(), never: true }); setInstallSheet(null); }}
         onClose={() => setInstallSheet(null)}
       />
 

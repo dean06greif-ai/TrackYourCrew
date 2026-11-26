@@ -577,11 +577,11 @@ export default function UserCard({ entry, isMe, flash, canBoost, onBoost, onCanc
                   ))}
                 </div>
                 </>)}
-                {(updated_at || (!isMe && (onSendEmoji || onChallenge))) && (
+                {(updated_at || isMe || onSendEmoji || onChallenge) && (
                   // „Stand“-Zeile; auf Karten der anderen rechts dezent: Emoji schicken + Herausfordern
                   <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#1A1A1A] min-h-[2.25rem]">
                     <p className="text-[10px] uppercase tracking-widest text-ink-3 min-w-0 truncate flex-1">
-                      {updated_at ? `${t("card.lastSync")} · ${new Date(updated_at).toLocaleString(locale, { dateStyle: "short", timeStyle: "short" })}` : ""}
+                      {updated_at ? `${t("card.lastSync")} · ${new Date(updated_at).toLocaleString(locale, { dateStyle: "short", timeStyle: "short" })}` : isMe ? `${t("card.lastSync")} · ${t("card.noEntries")}` : ""}
                     </p>
                     {!isMe && (
                       <div className="flex items-center gap-1 shrink-0 -my-1" data-testid={`card-actions-${entry.user_id}`}>

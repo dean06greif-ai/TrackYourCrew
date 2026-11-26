@@ -55,8 +55,8 @@ function Benefits({ t }) {
 }
 
 // Blatt von unten (Plan 10). platform: "ios" | "android" | "inapp".
-// forced = aus den Einstellungen geöffnet: nur "Schließen", kein "Später"/"Nicht mehr zeigen".
-export default function InstallSheet({ open, platform, forced = false, onLater, onNever, onClose }) {
+// Kommt von selbst nur einmal (Dean 2026-11-26) -> nur noch ein „Schließen“, kein „Später/Nicht mehr zeigen“
+export default function InstallSheet({ open, platform, onClose }) {
   const { t } = useI18n();
   const [canPrompt, setCanPrompt] = useState(canPromptInstall());
   useEffect(() => onPromptAvailable(setCanPrompt), []);
@@ -66,19 +66,10 @@ export default function InstallSheet({ open, platform, forced = false, onLater, 
     if (outcome === "accepted") onClose?.("installed");
   };
 
-  const footer = forced ? (
+  const footer = (
     <div className="flex gap-2.5 mt-4">
       <button type="button" onClick={() => onClose?.("closed")} className="flex-1 border border-[#222] text-ink-2 uppercase tracking-[0.18em] text-[11px] font-bold py-3 hover:border-[#444]" data-testid="install-close">
         {t("common.close")}
-      </button>
-    </div>
-  ) : (
-    <div className="flex gap-2.5 mt-4">
-      <button type="button" onClick={onNever} className="flex-1 text-ink-3 uppercase tracking-[0.18em] text-[11px] font-bold py-3 hover:text-white" data-testid="install-never">
-        {t("install.never")}
-      </button>
-      <button type="button" onClick={onLater} className="flex-1 border border-[#222] text-ink-2 uppercase tracking-[0.18em] text-[11px] font-bold py-3 hover:border-[#444]" data-testid="install-later">
-        {t("install.later")}
       </button>
     </div>
   );
@@ -134,7 +125,7 @@ export default function InstallSheet({ open, platform, forced = false, onLater, 
     <AnimatePresence>
       {open && body && (
         <motion.div className="fixed inset-0 z-[70]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} data-testid="install-sheet">
-          <div className="absolute inset-0 bg-black/60" onClick={() => (forced ? onClose?.("closed") : onLater?.())} />
+          <div className="absolute inset-0 bg-black/60" onClick={() => onClose?.("closed")} />
           <motion.div
             role="dialog"
             aria-modal="true"

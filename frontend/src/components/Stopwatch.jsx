@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Timer, Stop, Pause, X, Microphone, MicrophoneSlash, CaretLeft, CaretRight, Check, Play, SpeakerHigh, SpeakerSlash, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { useI18n, translate, LANGUAGES } from "../i18n";
 import { useMicEnabled } from "../lib/mic";
-import { useVoiceChannel, useSilenceTimeout, cleanSpeech, useGlobalVoice, setGlobalVoice, SW_EVENT } from "../lib/voiceHub";
+import { useVoiceChannel, useSilenceTimeout, cleanSpeech, useGlobalVoice, setGlobalVoice, SW_EVENT, kickVoice } from "../lib/voiceHub";
 import {
   formatClock, secondsToUnit, adjustSeconds, matchVoiceCommand, speechLang, coachCues, coachTargetSeconds,
 } from "../lib/stopwatch";
@@ -463,7 +463,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
     }
     else if (cmd === "cancel") { beep(330); discard(); }
   }, [go, stop, save, discard, pause, resume, unit, onAdd]);
-  const onMicError = useCallback((code) => { setListening(false); setMicError(code); }, []);
+  const onMicError = useCallback((code) => { setListening(false); if (code !== "stopped") setMicError(code); }, []);
   // Dashboard-Mikro an: dann zählt dieses als an, die Befehle kommen vom Dashboard (Ereignis tyc:sw)
   const globalOn = useGlobalVoice();
   const micOn = listening || globalOn;
@@ -496,7 +496,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
   const mic = SpeechRec && micAllowed ? (
     <button
       type="button"
-      onClick={() => { setMicError(null); setHeard(""); if (globalOn) { setGlobalVoice(false); setListening(false); } else setListening((l) => !l); }}
+      onClick={() => { setMicError(null); setHeard(""); if (globalOn) { setGlobalVoice(false); setListening(false); } else { if (!listening) kickVoice(lang); setListening((l) => !l); } }}
       aria-pressed={micOn}
       title={micOn ? t("sw.voiceOff") : t("sw.voiceOn")}
       aria-label={micOn ? t("sw.voiceOff") : t("sw.voiceOn")}

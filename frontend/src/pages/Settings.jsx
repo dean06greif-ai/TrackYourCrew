@@ -1151,7 +1151,7 @@ export default function Settings() {
               )}
             </div>
 )}
-            <InstallSheet open={installOpen} platform={installPlatformName} forced onClose={() => setInstallOpen(false)} />
+            <InstallSheet open={installOpen} platform={installPlatformName} onClose={() => setInstallOpen(false)} />
 
             {/* Crew: Einladungslink + Anfragen empfangen (Plan 4b) */}
             <div className="space-y-4 mb-10" data-testid="crew-settings">
