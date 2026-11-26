@@ -1255,7 +1255,8 @@ export default function Dashboard() {
     scheduleLiveSave();
   };
 
-  const applyVoiceItems = (items) => {
+  // opts.silent: ohne Toast und ohne das Formular zu schließen (Workout „Live eintragen“ je Runde)
+  const applyVoiceItems = (items, opts = {}) => {
     const round2 = (n) => Math.round(n * 100) / 100;
     const today = getTodayIdx();
     const newDays = JSON.parse(JSON.stringify(logDays || {}));
@@ -1299,8 +1300,8 @@ export default function Dashboard() {
     setLogDays(newDays);
     setLogForm(newForm);
     setVoiceOpen(false);
-    voiceSummaryRef.current = rows;
-    voiceSaveRef.current = true;
+    voiceSummaryRef.current = opts.silent ? null : rows;
+    voiceSaveRef.current = opts.silent ? "silent" : true;
     tourEvent("voice-logged");
   };
   // Dashboard-Mikro (eine gemeinsame Erkennung): Einträge bei geschlossenem Formular, Stoppuhr-Befehle immer
@@ -1326,8 +1327,9 @@ export default function Dashboard() {
   // nach dem Übernehmen mit dem neuen Stand speichern (Tage + Summe sind dann bereits konsistent)
   useEffect(() => {
     if (!voiceSaveRef.current) return;
+    const silent = voiceSaveRef.current === "silent";
     voiceSaveRef.current = false;
-    handleLogProgressRef.current?.();
+    handleLogProgressRef.current?.({ silent });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logDays, logForm]);
 

@@ -3,7 +3,7 @@
 // Wiederholungen je Runde per Tippen oder Sprache, Summe live -> am Ende „Eintragen“.
 // Während des Trainings sieht die Crew auf der Karte „LIVE · Runde 3/8 · 34“ (PUT /me/live).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { X, Play, Pause, Stop, Minus, Plus, Microphone, MicrophoneSlash, Check, Timer } from "@phosphor-icons/react";
+import { X, Play, Pause, Stop, Minus, Plus, Microphone, MicrophoneSlash, Check, Timer, PencilSimple, SpeakerHigh, SpeakerSlash, Lightning } from "@phosphor-icons/react";
 import { api } from "../lib/api";
 import { useI18n } from "../i18n";
 import { speechLang, isTimeUnit, secondsToUnit, formatClock, matchVoiceCommand } from "../lib/stopwatch";
@@ -11,12 +11,20 @@ import { exerciseLabel } from "../lib/exercises";
 import { formatAmount } from "../lib/amount";
 import { useMicEnabled } from "../lib/mic";
 import { useVoiceChannel, cleanSpeech, kickVoice } from "../lib/voiceHub";
-import { getAudioCtx, unlockAudio } from "../lib/coachAudio";
+import { getAudioCtx, unlockAudio, loadPackIndex, loadCoachClips, playCoachClip } from "../lib/coachAudio";
+import { clipId, cueText } from "../lib/coachClips";
+import { translate, LANGUAGES } from "../i18n";
 import { duckDuring } from "../lib/audioSession";
-import { PRESETS, buildPhases, phaseAt, parseRepsSpeech, clampInt, sum, totalSeconds } from "../lib/workout";
+import { PRESETS, buildPhases, phaseAt, parseRepsSpeech, clampInt, sum, totalSeconds, COUNTDOWN_S } from "../lib/workout";
 import ExerciseIcon from "./ExerciseIcon";
 
 const KEY = "tyc_workout";
+const PREFS_KEY = "tyc_workout_prefs"; // { coach: bool, live: bool, steps: [n,n,n] }
+const DEFAULT_STEPS = [5, 10, 15];
+const readPrefs = () => { try { return { coach: true, live: false, steps: [], ...JSON.parse(window.localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { coach: true, live: false, steps: [] }; } };
+const writePrefs = (v) => { try { window.localStorage.setItem(PREFS_KEY, JSON.stringify(v)); } catch { /* egal */ } };
+// Coach-Stimme wie bei der Stoppuhr (gleiche Auswahl): KI-Aufnahme, sonst Gerätestimme
+const readLS = (k) => { try { return window.localStorage.getItem(k) || ""; } catch { return ""; } };
 const readLast = () => { try { return JSON.parse(window.localStorage.getItem(KEY) || "{}") || {}; } catch { return {}; } };
 const writeLast = (v) => { try { window.localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* egal */ } };
 
@@ -49,14 +57,18 @@ function say(text, lang) {
   } catch { /* egal */ }
 }
 
+const speechLangOf = (l) => l;
+
 function Stepper({ label, value, onChange, min, max, step = 5, suffix = "s", testid }) {
+  // Handy: Zahl oben, − und + darunter (nebeneinander wäre bei 3 Stellen zu eng); ab sm alles in einer Zeile
+  const btn = "h-8 sm:w-10 sm:h-10 flex-1 sm:flex-none border border-[#333] text-ink-2 flex items-center justify-center";
   return (
-    <div className="border border-[#222] bg-[#121212] p-3">
+    <div className="border border-[#222] bg-[#121212] p-2 sm:p-3">
       <p className="text-[10px] uppercase tracking-widest text-ink-3">{label}</p>
-      <div className="flex items-center justify-between mt-1">
-        <button type="button" onClick={() => onChange(clampInt(value - step, min, max))} className="w-10 h-10 border border-[#333] text-ink-2 flex items-center justify-center" aria-label="-" data-testid={`${testid}-minus`}><Minus size={16} weight="bold" /></button>
-        <span className="font-anton text-3xl tabular-nums" data-testid={testid}>{value}<span className="text-sm text-ink-3 ml-0.5">{suffix}</span></span>
-        <button type="button" onClick={() => onChange(clampInt(value + step, min, max))} className="w-10 h-10 border border-[#333] text-ink-2 flex items-center justify-center" aria-label="+" data-testid={`${testid}-plus`}><Plus size={16} weight="bold" /></button>
+      <div className="grid grid-cols-2 gap-1.5 mt-1 sm:flex sm:items-center sm:justify-between">
+        <span className="col-span-2 text-center font-anton text-3xl tabular-nums whitespace-nowrap sm:order-2" data-testid={testid}>{value}<span className="text-sm text-ink-3 ml-0.5">{suffix}</span></span>
+        <button type="button" onClick={() => onChange(clampInt(value - step, min, max))} className={`${btn} sm:order-1`} aria-label="-" data-testid={`${testid}-minus`}><Minus size={14} weight="bold" /></button>
+        <button type="button" onClick={() => onChange(clampInt(value + step, min, max))} className={`${btn} sm:order-3`} aria-label="+" data-testid={`${testid}-plus`}><Plus size={14} weight="bold" /></button>
       </div>
     </div>
   );
@@ -64,6 +76,34 @@ function Stepper({ label, value, onChange, min, max, step = 5, suffix = "s", tes
 
 export default function Workout({ open, onClose, exercises = [], onLog }) {
   const { t, lang, locale } = useI18n();
+  const [prefs, setPrefsState] = useState(() => readPrefs());
+  const setPrefs = (patch) => setPrefsState((p) => { const n = { ...p, ...patch }; writePrefs(n); return n; });
+  const steps = DEFAULT_STEPS.map((d, i) => Number(prefs.steps?.[i]) > 0 ? Number(prefs.steps[i]) : d);
+  const [editSteps, setEditSteps] = useState(false);
+  const savedRef = useRef(0); // Live eintragen: schon gespeicherte Menge
+  // Coach: Sprache + Stimme wie bei der Stoppuhr
+  const cLangPref = readLS("tyc_sw_coach_lang");
+  const cLang = LANGUAGES.some((l) => l.code === cLangPref) ? cLangPref : lang;
+  const ct = useCallback((key, vars) => translate(cLang, key, vars), [cLang]);
+  const coachPack = useRef("");
+  useEffect(() => {
+    if (!open) return;
+    const choice = readLS("tyc_sw_coach_voice");
+    if (choice === "device") { coachPack.current = ""; return; }
+    loadPackIndex().then((list) => {
+      const mine = list.filter((p) => (p.langs || []).includes(cLang));
+      const id = choice.startsWith("pack:") ? choice.slice(5) : "";
+      const pk = mine.find((p) => p.id === id) || mine[0];
+      coachPack.current = pk?.id || "";
+      if (pk) loadCoachClips(pk.id, cLang);
+    });
+  }, [open, cLang]);
+  const cue = (c) => {
+    if (!prefs.coach) return;
+    if (coachPack.current && playCoachClip(coachPack.current, cLang, clipId(c), true)) return;
+    say(cueText(c, ct, false), speechLangOf(cLang));
+  };
+  const sayCoach = (text) => { if (prefs.coach) say(text, speechLangOf(cLang)); };
   const micAllowed = useMicEnabled();
   const list = useMemo(() => exercises.filter((e) => e.type !== "activity" && !e.paused), [exercises]);
   const last = useMemo(() => (open ? readLast() : {}), [open]);
@@ -90,6 +130,15 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     setRounds(last.rounds ?? 8);
     setMic(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const b = document.body.style.overflow;
+    const h = document.documentElement.style.overscrollBehavior;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+    return () => { document.body.style.overflow = b; document.documentElement.style.overscrollBehavior = h; };
   }, [open]);
 
   const ex = list.find((e) => e.key === exKey);
@@ -122,7 +171,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
       if (lastAnnounce.current !== "done") {
         lastAnnounce.current = "done";
         beep(990, 0.4);
-        say(t("wo.say.done"), lang);
+        sayCoach(ct("wo.say.done"));
         setStage("summary");
       }
       return;
@@ -133,22 +182,52 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     const fresh = !lastAnnounce.current.startsWith(`${pos.index}:`);
     lastAnnounce.current = k;
     if (fresh) {
-      if (pos.phase.type === "work") {
+      if (pos.phase.type === "countdown") {
+        sayCoach(ct("wo.say.round", { n: 1, of: rounds }));
+      } else if (pos.phase.type === "work") {
         beep(1200, 0.25);
-        say(pos.phase.round === rounds ? t("wo.say.last") : t("wo.say.go"), lang);
+        cue({ type: "go" });
         if (timeEx) setReps((r) => { const n = [...r]; n[pos.phase.round - 1] = n[pos.phase.round - 1] ?? 0; return n; });
       } else if (pos.phase.type === "rest") {
         beep(500, 0.3);
-        say(t("wo.say.rest"), lang);
+        const nextRound = pos.phase.round + 1;
+        sayCoach(nextRound === rounds ? ct("wo.say.restLast") : ct("wo.say.restNext", { n: nextRound, of: rounds }));
       }
     }
-    if (sec <= 3 && sec >= 1 && (!fresh || pos.phase.type === "countdown")) beep(pos.phase.type === "countdown" ? 880 : 700, 0.1);
+    // 3-2-1: im Countdown und am Ende jeder Phase (Coach zählt mit, dazu Piep)
+    if (sec <= 3 && sec >= 1 && (!fresh || pos.phase.type === "countdown") && pos.phase.dur > 3) {
+      beep(pos.phase.type === "countdown" ? 880 : 700, 0.1);
+      cue({ type: "count", n: sec });
+    } else if (sec <= 3 && sec >= 1 && pos.phase.type === "countdown") {
+      beep(880, 0.1);
+      cue({ type: "count", n: sec });
+    }
     // Zeit-Übung: geleistete Arbeitszeit der Runde automatisch eintragen
     if (timeEx && pos.phase.type === "work") {
       const done = pos.phase.dur - pos.left;
       setReps((r) => { const n = [...r]; n[pos.phase.round - 1] = secondsToUnit(Math.round(done), ex.unit); return n; });
     }
+    // cue/sayCoach/ct ändern sich je Render; doppelte Ansagen verhindert lastAnnounce
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pos.index, pos.left, pos.done, pos.phase, stage, pausedAt, rounds, lang, t, timeEx, ex]);
+
+  // Option „Live eintragen“: bei jedem Rundenwechsel (und am Ende) das Neue sofort speichern
+  const flushLive = useCallback(() => {
+    if (!prefs.live || !ex) return;
+    const delta = Math.round((total - savedRef.current) * 100) / 100;
+    if (delta <= 0) return;
+    savedRef.current += delta;
+    onLog?.([{ key: ex.key, amount: delta, day: (new Date().getDay() + 6) % 7, mode: "add" }], { silent: true });
+  }, [prefs.live, ex, total, onLog]);
+  const lastRound = useRef(0);
+  useEffect(() => {
+    if (stage === "run" && curRound !== lastRound.current) {
+      if (lastRound.current) flushLive();
+      lastRound.current = curRound;
+    }
+    if (stage === "summary") flushLive();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [curRound, stage]);
 
   // Live-Status an die Crew (gebündelt), am Ende entfernen
   const liveTimer = useRef(0);
@@ -194,6 +273,8 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     unlockAudio();
     writeLast({ exKey, work, rest, rounds });
     setReps(Array.from({ length: rounds }, () => 0));
+    savedRef.current = 0;
+    lastRound.current = 0;
     lastAnnounce.current = "";
     const s = Date.now();
     setStartAt(s);
@@ -222,7 +303,9 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     setPausedAt(0);
   }
   const log = () => {
-    if (ex && total > 0) onLog?.([{ key: ex.key, amount: total, day: (new Date().getDay() + 6) % 7, mode: "add" }]);
+    const rest = Math.round((total - savedRef.current) * 100) / 100;
+    if (ex && rest > 0) onLog?.([{ key: ex.key, amount: rest, day: (new Date().getDay() + 6) % 7, mode: "add" }]);
+    savedRef.current = total;
     onClose?.();
   };
 
@@ -231,10 +314,11 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
   const phaseColor = pos.phase.type === "rest" ? "#3BA0FF" : pos.phase.type === "countdown" ? "#FFD700" : "#CCFF00";
   const phaseLabel = pausedAt ? t("wo.paused") : t(`wo.phase.${pos.phase.type}`);
   const pct = pos.phase.dur ? Math.max(0, Math.min(100, (pos.left / pos.phase.dur) * 100)) : 0;
-  const remainingAll = Math.max(0, totalSeconds(phases) - elapsed);
+  const trainSeconds = totalSeconds(phases) - COUNTDOWN_S; // 3-2-1 zählt nicht zur Dauer
+  const remainingAll = Math.max(0, trainSeconds - Math.max(0, elapsed - COUNTDOWN_S));
 
   return (
-    <div className="fixed inset-0 z-[55] bg-[#0A0A0A] overflow-y-auto" data-testid="workout">
+    <div className="fixed inset-0 z-[55] bg-[#0A0A0A] overflow-y-auto overscroll-contain" data-testid="workout">
       <div className="max-w-xl mx-auto px-4 pt-4 pb-10" style={{ paddingBottom: "calc(40px + env(safe-area-inset-bottom))" }}>
         <div className="flex items-center gap-3 mb-4">
           <Timer size={22} weight="bold" className="text-[#CCFF00]" />
@@ -277,7 +361,22 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
                   <Stepper label={t("wo.rest")} value={rest} onChange={setRest} min={0} max={600} testid="wo-rest" />
                   <Stepper label={t("wo.rounds")} value={rounds} onChange={setRounds} min={1} max={50} step={1} suffix="×" testid="wo-rounds" />
                 </div>
-                <p className="text-xs text-ink-3">{t("wo.totalTime", { time: formatClock(totalSeconds(phases)) })}</p>
+                <p className="text-xs text-ink-3">{t("wo.totalTime", { time: formatClock(totalSeconds(phases) - COUNTDOWN_S) })}</p>
+                <button type="button" onClick={() => { unlockAudio(); setPrefs({ coach: !prefs.coach }); }} aria-pressed={prefs.coach} data-testid="wo-coach"
+                  className={`w-full flex items-center gap-3 border p-3 text-left ${prefs.coach ? "border-[#CCFF00]/60 text-white" : "border-[#222] text-ink-2"}`}>
+                  {prefs.coach ? <SpeakerHigh size={18} weight="fill" className="text-[#CCFF00]" /> : <SpeakerSlash size={18} weight="bold" />}
+                  <span className="text-sm flex-1">{t("wo.coach")}</span>
+                  <span className="text-[10px] uppercase tracking-widest">{prefs.coach ? t("common.on") : t("common.off")}</span>
+                </button>
+                <button type="button" onClick={() => setPrefs({ live: !prefs.live })} aria-pressed={prefs.live} data-testid="wo-live"
+                  className={`w-full flex items-center gap-3 border p-3 text-left ${prefs.live ? "border-[#00FF66]/60 text-white" : "border-[#222] text-ink-2"}`}>
+                  <Lightning size={18} weight={prefs.live ? "fill" : "bold"} className={prefs.live ? "text-[#00FF66]" : ""} />
+                  <span className="flex-1 min-w-0">
+                    <span className="text-sm block">{t("wo.live")}</span>
+                    <span className="text-[11px] text-ink-3 block">{prefs.live ? t("wo.liveOn") : t("wo.liveOff")}</span>
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest">{prefs.live ? t("common.on") : t("common.off")}</span>
+                </button>
                 {micAllowed && (
                   <button type="button" onClick={() => setMic((m) => !m)} aria-pressed={mic} data-testid="wo-mic"
                     className={`w-full flex items-center gap-3 border p-3 text-left ${mic ? "border-[#FF3B30] text-white" : "border-[#222] text-ink-2"}`}>
@@ -319,8 +418,19 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
                 {!timeEx && <button type="button" onClick={() => setRoundAmount(curRound, (v) => v + 1)} className="w-14 h-14 bg-[#CCFF00] text-black flex items-center justify-center" data-testid="wo-plus"><Plus size={22} weight="bold" /></button>}
               </div>
               {!timeEx && (
-                <div className="flex justify-center gap-2 mt-3">
-                  {[5, 10, 15].map((n) => <button key={n} type="button" onClick={() => setRoundAmount(curRound, (v) => v + n)} className="px-3 py-1.5 border border-[#333] text-xs text-ink-2" data-testid={`wo-add-${n}`}>+{n}</button>)}
+                <div className="flex justify-center items-center gap-2 mt-3">
+                  {editSteps ? DEFAULT_STEPS.map((d, i) => (
+                    <input key={i} type="number" inputMode="decimal" min="0" placeholder={String(d)}
+                      value={prefs.steps?.[i] ?? ""}
+                      onChange={(e) => { const n = [...(prefs.steps || [])]; n[i] = e.target.value === "" ? undefined : Number(e.target.value); setPrefs({ steps: n }); }}
+                      className="w-14 px-2 py-1.5 bg-[#0A0A0A] border border-[#CCFF00]/50 text-center text-xs text-white placeholder:text-ink-3 outline-none" data-testid={`wo-step-${i}`} aria-label={`+${d}`} />
+                  )) : steps.map((n, i) => (
+                    <button key={i} type="button" onClick={() => setRoundAmount(curRound, (v) => v + n)} className="px-3 py-1.5 border border-[#333] text-xs text-ink-2" data-testid={`wo-add-${i}`}>+{n}</button>
+                  ))}
+                  <button type="button" onClick={() => setEditSteps((e) => !e)} aria-pressed={editSteps} aria-label={t("log.stepsTitle")} title={t("log.stepsTitle")}
+                    className={`w-8 h-8 flex items-center justify-center ${editSteps ? "text-black bg-[#FFD700]" : "text-[#FFD700]"}`} data-testid="wo-edit-steps">
+                    {editSteps ? <Check size={14} weight="bold" /> : <PencilSimple size={14} weight="bold" />}
+                  </button>
                 </div>
               )}
               {mic && <p className="text-[11px] text-ink-3 text-center mt-3" data-testid="wo-heard">{heard ? `„${heard.slice(0, 60)}“` : t("wo.voiceHint")}</p>}
@@ -353,14 +463,15 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
           <div className="space-y-4 text-center">
             <p className="text-xs uppercase tracking-[0.3em] text-[#CCFF00] mt-4">{t("wo.summary")}</p>
             <p className="font-anton text-6xl text-[#CCFF00] tabular-nums" data-testid="wo-sum">{fmt(total)}</p>
+            {prefs.live && <p className="text-xs text-[#00FF66]" data-testid="wo-live-saved">{t("wo.liveSaved")}</p>}
             <p className="text-sm text-ink-2 flex items-center justify-center gap-2"><span style={{ color: ex.color }} className="flex"><ExerciseIcon icon={ex.icon} size={16} /></span>{exerciseLabel(ex)}</p>
             <div className="flex flex-wrap justify-center gap-1.5">
               {reps.map((v, i) => <span key={i} className="text-[11px] px-2 py-1 border border-[#333] text-ink-2 tabular-nums">R{i + 1} {fmt(v || 0)}</span>)}
             </div>
             <div className="flex gap-3 pt-2">
-              <button type="button" onClick={onClose} className="border border-[#333] text-ink-2 uppercase tracking-widest text-xs px-5 py-4" data-testid="wo-discard">{t("voice.discard")}</button>
-              <button type="button" onClick={log} disabled={total <= 0} className="flex-1 bg-[#CCFF00] text-black font-bold uppercase tracking-[0.2em] py-4 flex items-center justify-center gap-2 glow-lime disabled:opacity-50" data-testid="wo-log">
-                <Check size={18} weight="bold" /> {t("voice.apply")}
+              {!prefs.live && <button type="button" onClick={onClose} className="border border-[#333] text-ink-2 uppercase tracking-widest text-xs px-5 py-4" data-testid="wo-discard">{t("voice.discard")}</button>}
+              <button type="button" onClick={log} disabled={!prefs.live && total <= 0} className="flex-1 bg-[#CCFF00] text-black font-bold uppercase tracking-[0.2em] py-4 flex items-center justify-center gap-2 glow-lime disabled:opacity-50" data-testid="wo-log">
+                <Check size={18} weight="bold" /> {prefs.live ? t("wo.done") : t("voice.apply")}
               </button>
             </div>
           </div>
