@@ -1810,16 +1810,16 @@ export default function Settings() {
 
           <div
             ref={tableScrollRef}
-            className="overflow-y-auto overflow-x-auto max-h-[420px] md:max-h-[460px] scrollbar-dark"
+            className="overflow-y-auto overflow-x-auto max-h-[420px] md:max-h-[460px] scrollbar-dark pr-3 md:pr-4"
             style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
             data-testid="progression-scroll"
           >
-            <table className="w-full table-fixed text-xs md:text-sm border-collapse" style={{ minWidth: `${48 + tableExercises.length * 64}px` }} data-testid="progression-table">
+            <table className="w-full table-fixed text-xs md:text-sm border-collapse" style={{ minWidth: `${44 + tableExercises.length * 58}px` }} data-testid="progression-table">
               <thead className="sticky top-0 z-10 bg-[#121212]">
-                <tr className="text-[10px] md:text-[10px] uppercase tracking-wider md:tracking-widest text-ink-3 border-b border-[#1A1A1A]">
+                <tr className="text-[9px] md:text-[10px] uppercase tracking-normal md:tracking-widest text-ink-3 border-b border-[#1A1A1A]">
                   <th className="py-2 pr-1 md:pr-4 text-left w-12 md:w-16 bg-[#121212]">{t("common.week")}</th>
                   {tableExercises.map((ex) => (
-                    <th key={ex.key} className="py-2 px-1 md:px-4 truncate text-center bg-[#121212]" style={{ color: ex.color }}>{exerciseLabel(ex)}</th>
+                    <th key={ex.key} className={`py-2 px-0.5 md:px-4 text-center bg-[#121212] truncate ${exerciseLabel(ex).length > 10 ? "text-[8px] md:text-[10px]" : ""}`} style={{ color: ex.color }}>{exerciseLabel(ex)}</th>
                   ))}
                 </tr>
               </thead>
