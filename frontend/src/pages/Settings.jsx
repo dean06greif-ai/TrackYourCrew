@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FloppyDisk, ArrowCounterClockwise, Lightning, Plus, Trash, X, Camera, User, Flame, Copy, Check, PencilSimple, DotsSixVertical, DotsThreeVertical, Pause, Play, FlagCheckered, ChatCircleText, CaretDown } from "@phosphor-icons/react";
+import { ArrowLeft, Lightbulb, FloppyDisk, ArrowCounterClockwise, Lightning, Plus, Trash, X, Camera, User, Flame, Copy, Check, PencilSimple, DotsSixVertical, DotsThreeVertical, Pause, Play, FlagCheckered, CaretDown } from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import { api, avatarSrc, shrinkImage } from "../lib/api";
 import ExerciseIcon from "../components/ExerciseIcon";
@@ -15,15 +15,15 @@ import { currentPlatform } from "../lib/install";
 import { iconForExercise, exerciseLabel, splitVariant } from "../lib/exercises";
 import { suggestForName, variantStartSuggestion } from "../lib/suggest";
 import GearPicker from "../components/GearPicker";
-import FeedbackDialog from "../components/FeedbackDialog";
 import { useI18n, LANGUAGES, formatNumber } from "../i18n";
 import { toast } from "sonner";
 
-import { formatAmount } from "../lib/amount";
+import { formatAmount, amountParts } from "../lib/amount";
+import { isTimeUnit } from "../lib/stopwatch";
+import { parseUnit } from "../lib/ranks";
 import { micEnabled, setMicEnabled, speechSupported } from "../lib/mic";
 import { voiceConfirm, setVoiceConfirm } from "../lib/voiceHub";
-import { ACTIVITY_IDEAS, ACTIVITY_UNIT, isActivity, typeOf } from "../lib/activities";
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { ACTIVITY_IDEAS, EXERCISE_IDEAS, ACTIVITY_UNIT, isActivity, typeOf } from "../lib/activities";
 // Muss mit EXERCISE_PALETTE in backend/server.py übereinstimmen.
 const EXERCISE_PALETTE = ["#CCFF00", "#FF3B30", "#00F0FF", "#FF8800", "#A855F7", "#22FF77", "#FF1493"];
 // Vorschlag fürs Ziel einer neuen Übung (grau im Feld, gilt wenn man nichts einträgt)
@@ -61,29 +61,25 @@ const assignColors = (list) => {
 const statusOf = (stateForEx) => stateForEx?.status || "active";
 const STATUS_ORDER = { active: 0, paused: 1, completed: 2 };
 
-const isDistanceUnit = (unit) => {
-  const u = (unit || "").toLowerCase();
-  return u.includes("km") || u === "m" || u.includes("mi");
-};
+// Entfernung (km, m, Meilen) – über die Einheiten-Erkennung, damit „min“ nicht als Meilen gilt
+const isDistanceUnit = (unit) => (parseUnit(unit) || {}).kind === "distance";
 
 const fmtNum = (v, unit) => {
   const n = Number(v) || 0;
-  const u = (unit || "").toLowerCase();
-  return u.includes("km") || u === "m" || u.includes("mi") ? Math.round(n * 10) / 10 : Math.round(n);
+  return isDistanceUnit(unit) ? Math.round(n * 10) / 10 : Math.round(n);
 };
 
 export default function Settings() {
   const { user, loading, setUser } = useAuth();
   const { t, lang, setLang, locale } = useI18n();
-  const [showFeedback, setShowFeedback] = useState(false);
   const navigate = useNavigate();
 
-  const [savingProfile, setSavingProfile] = useState(false);
+  const [, setSavingProfile] = useState(false);
   const [micOn, setMicOn] = useState(() => micEnabled());
   const [confirmOn, setConfirmOn] = useState(() => voiceConfirm());
   // Übungen / Aktivitäten (Dean 2026-11-26): zwei Abschnitte in einer Liste
   const [section, setSection] = useState("exercise");
-  const [ideaIdx, setIdeaIdx] = useState(0);
+  const [ideasOpen, setIdeasOpen] = useState(false);
   const sectionPicked = useRef(false);
   const [profileName, setProfileName] = useState("");
   const [profilePic, setProfilePic] = useState("");
@@ -171,11 +167,17 @@ export default function Settings() {
   }, [menuFor]);
   useEffect(() => {
     if (!loading && !user) navigate("/");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading, navigate]);
+  // Profil-Felder einmal je Konto füllen (nicht nach jedem automatischen Speichern – sonst
+  // gingen Buchstaben verloren, die man währenddessen tippt)
+  useEffect(() => {
     if (user) {
       setProfileName(user.name || "");
       setProfilePic(user.picture || "");
     }
-  }, [user, loading, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.user_id]);
 
   // Beim Öffnen der Settings IMMER ganz oben starten – ohne sichtbaren
   // Sprung/Flash in der Mitte. useLayoutEffect feuert synchron VOR dem
@@ -328,18 +330,32 @@ export default function Settings() {
   // So ist klar, dass er nur Name und Bild speichert – die Schalter darunter speichern sofort.
   const profileDirty = !!user && ((profileName || "").trim() !== (user.name || "") || (profilePic || "") !== (user.picture || ""));
 
+  // Profil speichert automatisch (Dean 2026-11-26): kurz nach der letzten Änderung, ohne Knopf
   const saveProfile = async () => {
     setSavingProfile(true);
     try {
       const { data } = await api.put("/profile", { name: profileName, picture: profilePic });
-      setUser({ ...user, name: data.name, picture: data.picture });
-      toast.success(t("settings.profileSaved"), { duration: 2500 });
+      setUser((u) => ({ ...u, name: data.name, picture: data.picture }));
+      toast.success(t("settings.profileSaved"), { id: "profile-saved", duration: 1500 });
     } catch (e) {
       toast.error(e.response?.data?.detail || t("common.updateFailed"), { duration: 2500 });
     } finally {
       setSavingProfile(false);
     }
   };
+
+  const saveProfileRef = useRef(saveProfile);
+  saveProfileRef.current = saveProfile;
+  const profilePending = useRef(false);
+  useEffect(() => {
+    profilePending.current = profileDirty && !!(profileName || "").trim();
+    if (!profilePending.current) return undefined;
+    const tm = window.setTimeout(() => { profilePending.current = false; saveProfileRef.current(); }, 900);
+    return () => window.clearTimeout(tm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileName, profilePic]);
+  // Seite verlassen, bevor gespeichert wurde: sofort speichern
+  useEffect(() => () => { if (profilePending.current) saveProfileRef.current(); }, []);
 
   // ===== Übungen bearbeiten =====
   const isNew = (ex) => !originalExercises.some((o) => o.key === ex.key);
@@ -423,11 +439,12 @@ export default function Settings() {
       type: "activity",
     } : {
       key: `new_${Date.now().toString(36)}`, // Server vergibt den endgültigen Schlüssel
-      name: "", // grau „Neue Übung“ als Platzhalter – einfach drüberschreiben
-      unit: "",
-      icon: "squat",
-      base_value: NEW_GOAL_DEFAULT,
-      goal_input: "", // grau „10“ als Platzhalter
+      name: idea ? t(`idea.${idea.key}.name`) : "", // grau „Neue Übung“ als Platzhalter – einfach drüberschreiben
+      unit: idea ? idea.unit : "",
+      icon: idea ? idea.icon : "squat",
+      iconManual: !!idea,
+      base_value: idea ? idea.base : NEW_GOAL_DEFAULT,
+      goal_input: idea ? String(idea.base) : "", // grau „10“ als Platzhalter
       progression_pct: 5,
     };
     // Neue Übung ans Ende der aktiven Übungen (vor Pausierte/Abgeschlossene).
@@ -1073,17 +1090,6 @@ export default function Settings() {
               <p className="font-anton text-xl text-ink-3">{user.email}</p>
             </div>
 
-            <button
-              onClick={saveProfile}
-              disabled={savingProfile}
-              data-testid="save-profile-button"
-              data-dirty={profileDirty ? "1" : "0"}
-              className="w-full md:w-auto justify-center bg-[#CCFF00] hover:bg-[#D4FF33] text-black font-bold uppercase tracking-widest py-3 px-6 flex items-center gap-2 transition-all hover:-translate-y-0.5 glow-lime disabled:opacity-60"
-            >
-              <FloppyDisk size={16} weight="bold" />
-              {savingProfile ? t("common.saving") : t("settings.saveProfile")}
-            </button>
-
             {/* Weitere Einstellungen: eingeklappt, damit die Seite ruhig bleibt (Dean, 2026-11-24) */}
             <div className="border border-[#222] mt-6" data-testid="more-settings">
               <button
@@ -1274,7 +1280,8 @@ export default function Settings() {
       <section className="max-w-5xl mx-auto px-6 py-10">
         <p className="text-xs uppercase tracking-[0.3em] text-[#CCFF00] mb-3">{t("settings.goalsKicker")}</p>
         <h2 className="font-anton text-4xl md:text-5xl leading-none tracking-tight mb-3">{t("settings.goalsTitle")}</h2>
-        <div className="flex border border-[#222] w-full max-w-sm mb-5" role="tablist" data-testid="section-tabs">
+        <div className="flex items-stretch gap-2 w-full max-w-sm mb-5">
+        <div className="flex flex-1 border border-[#222]" role="tablist" data-testid="section-tabs">
           {["exercise", "activity"].map((sec) => (
             <button
               key={sec}
@@ -1288,6 +1295,18 @@ export default function Settings() {
               {t(sec === "activity" ? "settings.tabActivities" : "settings.tabExercises")}
             </button>
           ))}
+        </div>
+          {/* Ideen hinter der Glühbirne (Dean 2026-11-26) */}
+          <button
+            type="button"
+            onClick={() => setIdeasOpen(true)}
+            title={t("settings.ideas")}
+            aria-label={t("settings.ideas")}
+            data-testid="ideas-button"
+            className="shrink-0 w-11 border border-[#333] text-[#FFD700] hover:border-[#FFD700] hover:bg-[#FFD700]/10 flex items-center justify-center transition-colors"
+          >
+            <Lightbulb size={18} weight="fill" />
+          </button>
         </div>
         <p className="text-ink-2 max-w-xl leading-relaxed mb-6 text-pretty">
           {section === "activity" ? t("settings.activitiesText") : t("settings.goalsText", { n: DELOAD_AFTER_MISSES })}
@@ -1500,7 +1519,7 @@ export default function Settings() {
                 <div className="grid grid-cols-[1fr_1fr_auto] gap-3 items-start">
                   <div className="flex flex-col items-center">
                     <label className="text-[10px] uppercase tracking-widest text-ink-3 mb-1 h-4 flex items-center gap-1" htmlFor={`goal-${ex.key}`}>
-                      {inStartWeek ? t("settings.startValue") : t("settings.goalNow")}
+                      {t("settings.value")}
                     </label>
                     <input
                       id={`goal-${ex.key}`}
@@ -1598,40 +1617,50 @@ export default function Settings() {
           )}
         </div>
 
-        {/* Ideen zum Durchblättern (nur Aktivitäten) */}
-        {section === "activity" && (() => {
-          const idea = ACTIVITY_IDEAS[ideaIdx % ACTIVITY_IDEAS.length];
-          const name = t(`idea.${idea.key}.name`);
-          const have = exercises.some((ex) => isActivity(ex) && (ex.name || "").trim().toLowerCase() === name.toLowerCase());
+        {/* Ideen-Fenster: je nach Bereich Übungen oder Aktivitäten */}
+        {ideasOpen && (() => {
+          const list = section === "activity" ? ACTIVITY_IDEAS : EXERCISE_IDEAS;
+          const full = notDoneCount >= MAX_EXERCISES;
           return (
-            <div className="border border-[#333] bg-gradient-to-br from-[#161616] to-[#0E0E0E] p-4 mb-8 max-w-xl" data-testid="activity-ideas">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-[0.3em] text-[#CCFF00]">💡 {t("settings.ideas")}</p>
-                <div className="flex gap-1.5">
-                  <button type="button" onClick={() => setIdeaIdx((i) => (i + ACTIVITY_IDEAS.length - 1) % ACTIVITY_IDEAS.length)} className="w-8 h-8 border border-[#333] text-ink-2 hover:text-[#CCFF00] hover:border-[#CCFF00] flex items-center justify-center" aria-label={t("common.back")} data-testid="idea-prev"><CaretLeft size={14} weight="bold" /></button>
-                  <button type="button" onClick={() => setIdeaIdx((i) => (i + 1) % ACTIVITY_IDEAS.length)} className="w-8 h-8 border border-[#333] text-ink-2 hover:text-[#CCFF00] hover:border-[#CCFF00] flex items-center justify-center" aria-label={t("common.next")} data-testid="idea-next"><CaretRight size={14} weight="bold" /></button>
+            <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setIdeasOpen(false)} data-testid="ideas-dialog">
+              <div role="dialog" aria-modal="true" className="w-full sm:max-w-lg max-h-[85vh] flex flex-col bg-[#0E0E0E] border border-[#333] sm:border-[#FFD700]/40" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-3 p-4 border-b border-[#222]">
+                  <Lightbulb size={20} weight="fill" className="text-[#FFD700] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-anton text-2xl leading-none tracking-tight">{t("settings.ideas")}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-ink-3 mt-1">{t(section === "activity" ? "settings.tabActivities" : "settings.tabExercises")}</p>
+                  </div>
+                  <button type="button" onClick={() => setIdeasOpen(false)} className="w-9 h-9 border border-[#333] text-ink-2 hover:text-white flex items-center justify-center" aria-label={t("common.close")} data-testid="ideas-close"><X size={16} weight="bold" /></button>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 mt-3">
-                <span className="w-11 h-11 border border-[#CCFF00] text-[#CCFF00] flex items-center justify-center shrink-0"><ExerciseIcon icon={idea.icon} size={22} /></span>
-                <div className="min-w-0">
-                  <p className="font-anton text-xl leading-tight">{name} · {t("settings.timesPerWeek", { n: idea.per })}</p>
-                  <p className="text-xs text-ink-2 mt-0.5">{t(`idea.${idea.key}.text`)}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <button
-                  type="button"
-                  onClick={() => addExercise("activity", idea)}
-                  disabled={have || notDoneCount >= MAX_EXERCISES}
-                  className="bg-[#CCFF00] text-black font-bold uppercase tracking-widest text-[11px] px-3 py-2 flex items-center gap-1.5 hover:bg-[#D4FF33] disabled:bg-[#2A2A2A] disabled:text-ink-3"
-                  data-testid="idea-take"
-                >
-                  {have ? <><Check size={14} weight="bold" /> {t("settings.ideaHave")}</> : <><Plus size={14} weight="bold" /> {t("settings.ideaTake")}</>}
-                </button>
-                <div className="flex gap-1">
-                  {ACTIVITY_IDEAS.map((it, i) => <span key={it.key} className={`w-1.5 h-1.5 ${i === ideaIdx % ACTIVITY_IDEAS.length ? "bg-[#CCFF00]" : "bg-[#333]"}`} />)}
-                </div>
+                <ul className="overflow-y-auto p-3 space-y-2" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+                  {list.map((idea) => {
+                    const name = t(`idea.${idea.key}.name`);
+                    const have = exercises.some((ex) => typeOf(ex) === section && (ex.name || "").trim().toLowerCase() === name.toLowerCase());
+                    const goal = section === "activity"
+                      ? t("settings.timesPerWeek", { n: idea.per })
+                      : `${formatAmount(idea.base, idea.unit, locale)} / ${t("common.week")}`;
+                    return (
+                      <li key={idea.key} className="flex items-center gap-3 border border-[#222] bg-[#121212] p-3" data-testid={`idea-${idea.key}`}>
+                        <span className="w-10 h-10 border border-[#CCFF00]/60 text-[#CCFF00] flex items-center justify-center shrink-0"><ExerciseIcon icon={idea.icon} size={20} /></span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-anton text-lg leading-tight">{name} <span className="text-ink-3 font-sans text-xs tracking-wide">· {goal}</span></p>
+                          <p className="text-xs text-ink-2 mt-0.5 leading-snug">{t(`idea.${idea.key}.text`)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { addExercise(section, idea); setIdeasOpen(false); }}
+                          disabled={have || full}
+                          title={have ? t("settings.ideaHave") : t("settings.ideaTake")}
+                          aria-label={have ? t("settings.ideaHave") : t("settings.ideaTake")}
+                          className="shrink-0 w-10 h-10 bg-[#CCFF00] text-black hover:bg-[#D4FF33] disabled:bg-[#2A2A2A] disabled:text-ink-3 flex items-center justify-center"
+                          data-testid={`idea-take-${idea.key}`}
+                        >
+                          {have ? <Check size={16} weight="bold" /> : <Plus size={16} weight="bold" />}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </div>
           );
@@ -1785,17 +1814,27 @@ export default function Settings() {
             style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
             data-testid="progression-scroll"
           >
-            <table className="w-full text-xs md:text-sm border-collapse" data-testid="progression-table">
+            <table className="w-full table-fixed text-xs md:text-sm border-collapse" style={{ minWidth: `${48 + tableExercises.length * 64}px` }} data-testid="progression-table">
               <thead className="sticky top-0 z-10 bg-[#121212]">
                 <tr className="text-[10px] md:text-[10px] uppercase tracking-wider md:tracking-widest text-ink-3 border-b border-[#1A1A1A]">
-                  <th className="py-2 pr-1 md:pr-4 text-left w-16 bg-[#121212]">{t("common.week")}</th>
+                  <th className="py-2 pr-1 md:pr-4 text-left w-12 md:w-16 bg-[#121212]">{t("common.week")}</th>
                   {tableExercises.map((ex) => (
                     <th key={ex.key} className="py-2 px-1 md:px-4 truncate text-center bg-[#121212]" style={{ color: ex.color }}>{exerciseLabel(ex)}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="font-anton">
-                {rows.map(({ week, cells }) => {
+                {(() => {
+                  // Zahl + Einheit je Zelle (Zeiten als Uhrzeit „1:00 min“); je Übung gleich breite,
+                  // rechtsbündige Zahlen -> die Werte stehen sauber untereinander (Dean 2026-11-26)
+                  const partsOf = (cell, ex) => (isDistanceUnit(ex.unit)
+                    ? { num: Number(fmtNum(cell.goal, ex.unit)).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), unit: ex.unit }
+                    : amountParts(isTimeUnit(ex.unit) ? Number(cell.goal) : fmtNum(cell.goal, ex.unit), ex.unit, locale));
+                  const colChars = tableExercises.map((ex, ci) => rows.reduce((m, r) => {
+                    const c = r.cells[ci];
+                    return c && c.status !== "pre_existence" && c.status !== "paused" ? Math.max(m, partsOf(c, ex).num.length) : m;
+                  }, 1));
+                  return rows.map(({ week, cells }) => {
                   const isCurrent = week === currentWeek;
                   const isPast = week < currentWeek;
                   return (
@@ -1823,9 +1862,9 @@ export default function Settings() {
                           <td key={ex.key} className={`py-2 px-1 md:px-4 ${missed ? "text-[#FF3B30]" : "text-white"}`} data-testid={`progression-cell-${week}-${ex.key}`}>
                             <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full">
                               <span className="flex justify-end pr-1" />
-                              <span className={`tabular-nums leading-none ${missed ? "line-through decoration-2" : ""}`}>{isDistanceUnit(ex.unit) ? Number(fmtNum(cell.goal, ex.unit)).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : formatNumber(fmtNum(cell.goal, ex.unit), locale)}</span>
+                              <span className={`tabular-nums leading-none text-right ${missed ? "line-through decoration-2" : ""}`} style={{ minWidth: `${colChars[ci]}ch` }}>{partsOf(cell, ex).num}</span>
                               <div className="flex items-center gap-1 pl-1 min-w-0">
-                                {ex.unit && <span className={`text-[10px] md:text-xs leading-none ${missed ? "text-[#FF3B30]" : "text-ink-3"}`}>{ex.unit}</span>}
+                                {partsOf(cell, ex).unit && <span className={`text-[10px] md:text-xs leading-none ${missed ? "text-[#FF3B30]" : "text-ink-3"}`}>{partsOf(cell, ex).unit}</span>}
                                 {boosted && <Flame size={11} weight="fill" className="text-[#FF8800]" />}
                                 {cell.voided_boost && <Flame size={11} weight="fill" className="text-ink-3" />}
                               </div>
@@ -1835,27 +1874,16 @@ export default function Settings() {
                       })}
                     </tr>
                   );
-                })}
+                  });
+                })()}
               </tbody>
             </table>
           </div>
         </div>
         )}
 
-        {/* Feedback und Neustart nebeneinander (am Handy untereinander) */}
+        {/* Neustart (Feedback gibt es unten auf dem Dashboard, Dean 2026-11-26) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch" data-testid="bottom-cards">
-        <div className="border border-[#CCFF00]/30 bg-[#121212] p-5 flex flex-col items-start" data-testid="feedback-row">
-          <p className="font-anton text-lg tracking-tight mb-1">{t("settings.feedbackTitle")}</p>
-          <p className="text-xs text-ink-2 mb-4 leading-relaxed">{t("settings.feedbackText")}</p>
-          <button
-            onClick={() => setShowFeedback(true)}
-            data-testid="open-feedback"
-            className="mt-auto border border-[#CCFF00]/50 text-[#CCFF00] hover:bg-[#CCFF00] hover:text-black py-2.5 px-5 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
-          >
-            <ChatCircleText size={14} weight="fill" /> {t("settings.feedbackButton")}
-          </button>
-        </div>
-
         <div className="border border-[#2A1414] bg-[#0E0A0A] p-5 flex flex-col items-start">
           <p className="font-anton text-lg tracking-tight mb-1">{t("settings.restartTitle")}</p>
           <p className="text-xs text-ink-2 mb-4 leading-relaxed">
@@ -1870,7 +1898,6 @@ export default function Settings() {
           </button>
         </div>
         </div>
-        <FeedbackDialog open={showFeedback} onClose={() => setShowFeedback(false)} />
       </section>
 
       {showResetConfirm && (

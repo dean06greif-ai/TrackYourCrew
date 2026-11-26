@@ -251,7 +251,7 @@ export default function Login() {
           <h2 className="font-anton text-5xl lg:text-6xl leading-none tracking-tight mb-4">
             PUSH HARDER.<br />EVERY. SINGLE. WEEK.
           </h2>
-          <p className="text-ink-2 text-base leading-relaxed">
+          <p className="text-ink-2 text-base leading-relaxed whitespace-pre-line">
             {t("login.heroText")}
           </p>
         </div>
@@ -319,7 +319,7 @@ export default function Login() {
               ))}
             </ul>
           </div>
-          <LegalLinks className="mt-10 text-[10px] uppercase tracking-[0.3em] text-ink-3" />
+          <LegalLinks className="mt-12 text-[10px] tracking-wide text-ink-3 opacity-50 hover:opacity-90 transition-opacity" />
         </div>
       </div>
 

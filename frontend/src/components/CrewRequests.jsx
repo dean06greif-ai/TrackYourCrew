@@ -85,8 +85,11 @@ export function InviteBox({ handle, compact = false, tour = false, embedded = fa
         <LinkSimple size={16} weight="bold" className="text-[#CCFF00] shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] uppercase tracking-[0.3em] text-ink-3">{t("crew.invite")}</p>
-          <code ref={linkRef} className="block truncate select-all text-xs text-ink-2 font-mono mt-0.5" title={url} data-testid="invite-link">
-            {linkText}
+          {/* Einstellungen: voller Link, darf umbrechen (Dean 2026-11-26) */}
+          <code ref={linkRef} className="block break-words select-all text-xs text-ink-2 font-mono mt-0.5 leading-5" title={url} data-testid="invite-link">
+            {url.split("/").map((part, i, arr) => (
+              <span key={i}>{part}{i < arr.length - 1 && <>/<wbr /></>}</span>
+            ))}
           </code>
         </div>
         <button

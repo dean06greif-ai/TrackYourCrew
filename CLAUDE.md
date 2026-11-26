@@ -45,7 +45,7 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
 - **Aktivitäten** (seit 2026-11-26, Feld `type: "activity"` an der Übung, `lib/activities.js`): z. B. „Gym 2× pro Woche“.
   Ziel = Mal pro Woche (1–7, `base_value`), Einheit „×“, erledigter Tag = Tageswert 1. Keine Steigerung, kein Abzug,
   kein Formverlust, kein Boost, keine Variante, kein Ziel-Vorschlag, kein Rang; eigene Obergrenze 7. Einstellungen:
-  Umschalter Übungen/Aktivitäten + Ideen-Karte; Karte `card/ActivityRow.jsx` (Kästchen); Eintragen `ActivityLog.jsx`
+  Umschalter Übungen/Aktivitäten + Glühbirne -> Ideen-Fenster (ACTIVITY_IDEAS / EXERCISE_IDEAS); Karte `card/ActivityRow.jsx` (Kästchen); Eintragen `ActivityLog.jsx`
   (Tage abhaken); Sprache „heute war ich im Gym“. Ranking/Meilensteine/Prozent/Challenges/Radar/Insights nur Übungen.
 - **Streak:** aufeinanderfolgende Wochen, in denen alle aktiven Übungen und Aktivitäten geschafft sind.
 - **Ränge F–S+** (`frontend/src/lib/ranks.js`, Tabelle `docs/RANG-TABELLE.md`): nur aus dem Serverwert `best_goals`
@@ -83,7 +83,7 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
   „Fortschritt eintragen“ (`components/GlobalVoice.jsx`, 10 s Stille = aus) schaltet Formular- (30 s) und Stoppuhr-Mikro (60 s) mit;
   „starte die Stoppuhr (für X)“ -> Ereignis `tyc:sw`, sonst Rückfrage „Für welche Übung?“. „fertig“ trägt direkt ein,
   Einstellung „Erst bestätigen“ (localStorage `tyc_voice_confirm`) zeigt vorher die Prüfen-Ansicht.
-- **Speichern:** Profil (Name/Bild) per Knopf „Profil speichern“ (immer neongelb, wie früher – Dean 2026-11-26); Schalter speichern sofort; Übungen per Leiste unten (Dean 2026-11-26: so lassen).
+- **Speichern:** Profil (Name/Bild) speichert automatisch 0,9 s nach der letzten Änderung (kein Knopf, Dean 2026-11-26); Schalter speichern sofort; Übungen per Leiste unten (Dean 2026-11-26: so lassen).
 - **Sprachcoach (Stoppuhr):** Ansagen mit fester ID in `lib/coachClips.js`; KI-Stimmen als Pakete `<stimme>-<stil>`
   in `public/coach/<paket>/<lang>/` + `packs.json` (erzeugt mit `node tools/gen-coach-voice.mjs`, Deans 10 Stimmen, Standard `de,en`; `ash-beast` voreingestellt;
   harte Ansagen `coach.hard.*` in `<lang>-hart` bei Stilen hart/beast, Schalter „Hart“; Coach-Sprache wählbar, Standard App-Sprache;
