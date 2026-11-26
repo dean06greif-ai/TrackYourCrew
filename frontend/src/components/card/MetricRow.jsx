@@ -52,7 +52,7 @@ export function MetricRow({ exercise, value, canBoost, onBoost, onCancelBoost, i
     onClick: (e) => { if (!e.target.closest("button")) setTip((v) => !v); },
   } : {};
   return (
-    <div {...tipProps} className={`relative space-y-2 ${pace > 0 ? "cursor-help" : ""} ${boosted ? "px-3 -mx-3 py-2 -my-2 border border-[#FF8800]/30 bg-[#FF8800]/[0.04]" : ""}`} data-testid={`metric-${exercise.key}`}>
+    <div {...tipProps} className={`relative space-y-2 ${boosted ? "px-3 -mx-3 py-2 -my-2 border border-[#FF8800]/30 bg-[#FF8800]/[0.04]" : ""}`} data-testid={`metric-${exercise.key}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <ExerciseIcon icon={exercise.icon} size={16} className="shrink-0" />
