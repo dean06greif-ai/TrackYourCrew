@@ -397,3 +397,48 @@ export function playWeekFailedSound() {
 export function whenAudioReady(fn) {
   soundEffects.whenReady(fn);
 }
+
+// ── Herausforderung (Ready-Check, Dean 2026-11-26) ───────────────────────
+// Eigene Sounds (keine fremden Aufnahmen): erzeugt mit Web Audio.
+function voice(ctx, out, { type = "sine", f0, f1, t0, dur, vol, attack = 0.01 }) {
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t0);
+  if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur * 0.6);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(out);
+  o.start(t0);
+  o.stop(t0 + dur + 0.05);
+}
+
+// Herausforderung kommt rein: tiefer Schlag + aufsteigender, heller Akkord (Spannung)
+export function playChallengePop() {
+  if (!soundEffects.ensureRunning()) return;
+  const ctx = soundEffects.audioContext;
+  const now = ctx.currentTime;
+  const out = ctx.createGain();
+  out.gain.value = 0.8;
+  out.connect(ctx.destination);
+  voice(ctx, out, { f0: 160, f1: 50, t0: now, dur: 0.35, vol: 0.6, attack: 0.004 });
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+    voice(ctx, out, { type: "triangle", f0: f, t0: now + 0.06 + i * 0.07, dur: 0.9 - i * 0.08, vol: 0.22 });
+    voice(ctx, out, { type: "sine", f0: f * 2, t0: now + 0.06 + i * 0.07, dur: 0.5, vol: 0.05 });
+  });
+  voice(ctx, out, { type: "sawtooth", f0: 220, f1: 880, t0: now + 0.02, dur: 0.4, vol: 0.05 });
+}
+
+// Angenommen: kurzer Klick + heller, bestätigender Doppelton
+export function playChallengeAccept() {
+  if (!soundEffects.ensureRunning()) return;
+  const ctx = soundEffects.audioContext;
+  const now = ctx.currentTime;
+  const out = ctx.createGain();
+  out.gain.value = 0.8;
+  out.connect(ctx.destination);
+  voice(ctx, out, { type: "square", f0: 1800, t0: now, dur: 0.04, vol: 0.08, attack: 0.002 });
+  voice(ctx, out, { type: "triangle", f0: 880, t0: now + 0.02, dur: 0.25, vol: 0.25 });
+  [1318.5, 1760].forEach((f, i) => voice(ctx, out, { type: "sine", f0: f, t0: now + 0.12 + i * 0.03, dur: 0.6, vol: 0.18 }));
+}

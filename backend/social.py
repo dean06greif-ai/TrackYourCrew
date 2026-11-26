@@ -88,6 +88,31 @@ async def mark_emojis_seen(payload: EmojiSeen, user: User = Depends(get_current_
 CHALLENGE_KINDS = ("duel", "team")
 CHALLENGE_MAX_INVITES = 5
 CHALLENGE_MAX_OPEN = 5  # je Ersteller und Woche
+# Ready-Check (Dean 2026-11-26): 60 s zum Annehmen, danach „verpasst“ (missed). Angenommen = verbindlich.
+CHALLENGE_ACCEPT_SECONDS = 60
+CHALLENGE_ACCEPT_GRACE = 5  # Netz-Verzögerung beim Antippen kurz vor Schluss
+
+
+def _invite_left(c: dict) -> float:
+    """Sekunden, die zum Annehmen noch bleiben (alte Challenges ohne Zeitpunkt: unbegrenzt)."""
+    try:
+        created = datetime.fromisoformat(c["created_at"])
+    except (KeyError, TypeError, ValueError):
+        return float(CHALLENGE_ACCEPT_SECONDS)
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    return CHALLENGE_ACCEPT_SECONDS - (datetime.now(timezone.utc) - created).total_seconds()
+
+
+async def _expire_invites(c: dict) -> dict:
+    """Offene Einladungen nach Ablauf der Frist auf „missed“ setzen (und speichern)."""
+    if not c.get("participants") or _invite_left(c) + CHALLENGE_ACCEPT_GRACE > 0:
+        return c
+    parts = [dict(p, status="missed") if p["status"] == "invited" else p for p in c["participants"]]
+    if parts != c["participants"]:
+        await db.challenges.update_one({"id": c["id"]}, {"$set": {"participants": parts}})
+        c = dict(c, participants=parts)
+    return c
 
 
 def _this_monday():
@@ -145,6 +170,8 @@ def _challenge_status(c: dict, parts: list, over: bool) -> str:
         return "finished" if over else "active"
     if invited:
         return "expired" if over else "pending"
+    if any(p["status"] == "missed" for p in parts):
+        return "expired"
     return "declined"
 
 
@@ -174,7 +201,10 @@ async def _challenge_out(c: dict, viewer_id: str) -> dict:
     out = {"id": c["id"], "kind": c["kind"], "monday": c["monday"], "status": status,
            "creator_id": c["from_user_id"], "my_status": me["status"] if me else None,
            "ex": ex, "target": c.get("target"), "created_at": c.get("created_at"), "participants": out_parts,
-           "winners": None, "leaders": None, "team_total": None}
+           "winners": None, "leaders": None, "team_total": None,
+           # Ready-Check: so viele Sekunden bleiben noch zum Annehmen (nur für Eingeladene)
+           "accept_seconds": CHALLENGE_ACCEPT_SECONDS,
+           "expires_in": round(max(0.0, _invite_left(c)), 1) if me and me["status"] == "invited" else None}
     if status in ("active", "finished"):
         counted = [p for p in out_parts if p["value"] is not None]
         total = round(sum(p["value"] for p in counted), 2)
@@ -221,6 +251,7 @@ class ChallengeAccept(BaseModel):
 @api_router.get("/challenges")
 async def list_challenges(user: User = Depends(get_current_user)):
     rows = await db.challenges.find(_challenge_query_for(user.user_id), {"_id": 0}).to_list(500)
+    rows = [await _expire_invites(c) for c in rows]
     rows.sort(key=lambda c: (c.get("monday", ""), c.get("created_at", "")), reverse=True)
     return {"challenges": [await _challenge_out(c, user.user_id) for c in rows]}
 
@@ -264,7 +295,7 @@ async def _get_challenge_for(cid: str, user: User) -> dict:
     c = await db.challenges.find_one({"id": cid}, {"_id": 0})
     if not c or user.user_id not in {p["user_id"] for p in _participants(c)}:
         raise HTTPException(status_code=404, detail="Challenge nicht gefunden")
-    return c
+    return await _expire_invites(c)
 
 
 def _set_participant(c: dict, uid: str, **changes) -> list:
@@ -279,6 +310,8 @@ def _set_participant(c: dict, uid: str, **changes) -> list:
 async def accept_challenge(cid: str, payload: ChallengeAccept, user: User = Depends(get_current_user)):
     c = await _get_challenge_for(cid, user)
     me = next(p for p in _participants(c) if p["user_id"] == user.user_id)
+    if me["status"] == "missed":
+        raise HTTPException(status_code=400, detail="Zu spät – die Zeit zum Annehmen ist abgelaufen")
     if me["status"] != "invited" or c["monday"] != _this_monday().isoformat():
         raise HTTPException(status_code=400, detail="Diese Challenge kann nicht mehr angenommen werden")
     g = await _load_goals(user.user_id)

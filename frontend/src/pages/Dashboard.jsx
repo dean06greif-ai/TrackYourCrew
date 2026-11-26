@@ -31,6 +31,7 @@ import { amountParts } from "../lib/amount";
 import { VoiceLogButton, VoiceLogPanel, VoiceSaved } from "../components/VoiceLog";
 import { GlobalMicButton, useGlobalVoiceRouter } from "../components/GlobalVoice";
 import LegalLinks from "../components/LegalLinks";
+import ChallengeReadyCheck from "../components/ChallengeReadyCheck";
 import { isNetworkError, queueEntry, readOutbox, writeOutbox, mergeDays, alreadyApplied, sumsFromDays, saveSnapshot, loadSnapshot, useOnline, useOutboxCount } from "../lib/offline";
 import { useVoiceConfirm, setGlobalVoice } from "../lib/voiceHub";
 import { ActivityLogRow, ActivityDayButton } from "../components/ActivityLog";
@@ -919,7 +920,8 @@ export default function Dashboard() {
       });
     } else if (msg.type === "challenge") {
       window.dispatchEvent(new Event(CHALLENGES_EVENT));
-      if (msg.to_user_id === user?.user_id && msg.from_user_id !== user?.user_id && msg.event !== "withdrawn") {
+      // „fordert dich heraus“ zeigt der Ready-Check selbst (mit Balken + Sound), kein extra Hinweis
+      if (msg.to_user_id === user?.user_id && msg.from_user_id !== user?.user_id && msg.event !== "withdrawn" && msg.event !== "created") {
         toast(t(`chal.live.${msg.event}`, { name: msg.from_name || "" }), { id: `ch-${msg.id}-${msg.event}`, duration: 3000 });
       }
     } else if (msg.type === "emoji") {
@@ -1852,7 +1854,9 @@ export default function Dashboard() {
       </section>
 
       {/* Crew-Challenges (Plan 12e) */}
-      {!me?.starts_on && <ChallengesSection board={board} meId={user.user_id} openFor={challengeFor} onCloseFor={() => setChallengeFor(null)} />}
+      {!me?.starts_on && <ChallengesSection board={board} meId={user.user_id} openFor={challengeFor} onCloseFor={() => setChallengeFor(null)} onlineIds={onlineUserIds} />}
+      {/* Herausforderung bekommen: Ready-Check mit 60-s-Balken */}
+      {!me?.starts_on && <ChallengeReadyCheck board={board} meId={user.user_id} />}
 
       <section className="max-w-7xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">

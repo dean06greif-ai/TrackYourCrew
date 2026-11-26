@@ -51,6 +51,10 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
 - **Ränge F–S+** (`frontend/src/lib/ranks.js`, Tabelle `docs/RANG-TABELLE.md`): nur aus dem Serverwert `best_goals`
   (bester Wochenwert, gedeckelt aufs Wochenziel) -> auf allen Geräten gleich. Übungsart wird
   am Namen erkannt, Einheiten umgerechnet. Browser speichert nur "Rang-Up schon gezeigt".
+- **Herausforderung = Ready-Check (2026-11-26):** Eingeladene haben `CHALLENGE_ACCEPT_SECONDS` (60 s, +5 s Kulanz), danach
+  Teilnehmer-Status `missed` (`_expire_invites`); `expires_in` im Challenge-Objekt. Fenster `components/ChallengeReadyCheck.jsx`
+  (ablaufender Balken, eigene Sounds `playChallengePop/Accept` in utils/soundEffects – keine fremden Aufnahmen). Angenommen = verbindlich.
+  Im Herausfordern-Dialog grüner Punkt = online.
 - **Emojis + Herausfordern auf der Karte:** fremde Karten haben unten Sprechblasen-Knopf (`components/CardActions.jsx`)
   und „Herausfordern“; `POST /api/emoji`, Live-Event `emoji`, verpasste über `/me/emojis/unseen`, Animation `EmojiBurst`.
 - **Prozent-Vergleiche:** nur echte Daten, je Übungsart erst ab `STATS_MIN_USERS` (50) Nutzern (`/me/stat-kinds`,

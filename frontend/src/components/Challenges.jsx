@@ -176,8 +176,10 @@ export function ChallengeRow({ c, meId, onChanged, compact = false, board }) {
 }
 
 // Dialog: eine oder mehrere Personen herausfordern („+“ fügt weitere hinzu)
-function ChallengeDialog({ open, onClose, board, meId, onDone, presetTo }) {
+function ChallengeDialog({ open, onClose, board, meId, onDone, presetTo, onlineIds }) {
   const { t, locale } = useI18n();
+  // Ready-Check: nur wer gerade online ist, kann in 60 s annehmen -> grüner Punkt
+  const isOn = (id) => !!onlineIds?.has?.(id);
   const friends = (board?.users || []).filter((u) => u.user_id !== meId && !u.all_paused);
   const myExercises = ((board?.users || []).find((u) => u.user_id === meId)?.exercises || []).filter((e) => e.type !== "activity");
   const [to, setTo] = useState([]);
@@ -242,6 +244,7 @@ function ChallengeDialog({ open, onClose, board, meId, onDone, presetTo }) {
               <div className="mt-1 flex flex-wrap items-center gap-2" data-testid="challenge-people">
                 {chosen.map((f) => (
                   <span key={f.user_id} className="inline-flex items-center gap-1.5 h-8 border border-[#CCFF00]/60 bg-[#CCFF00]/10 text-white text-sm pl-3 pr-2" data-testid={`challenge-chip-${f.user_id}`}>
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${isOn(f.user_id) ? "bg-[#00FF66]" : "bg-[#444]"}`} title={isOn(f.user_id) ? t("chal.online") : t("chal.offline")} />
                     {f.name}
                     {chosen.length > 1 && (
                       <button type="button" onClick={() => setTo((l) => l.filter((x) => x !== f.user_id))} aria-label={t("chal.removePerson", { name: f.name })} className="text-ink-3 hover:text-white">
@@ -255,7 +258,7 @@ function ChallengeDialog({ open, onClose, board, meId, onDone, presetTo }) {
                     <select autoFocus value="" onChange={(e) => { if (e.target.value) setTo((l) => [...l, e.target.value]); setAdding(false); }} onBlur={() => setAdding(false)}
                       className="h-8 bg-[#0A0A0A] border border-[#333] text-white text-sm px-2" data-testid="challenge-add-select">
                       <option value="">{t("chal.pickPerson")}</option>
-                      {rest.map((f) => <option key={f.user_id} value={f.user_id}>{f.name}</option>)}
+                      {rest.map((f) => <option key={f.user_id} value={f.user_id}>{isOn(f.user_id) ? "● " : ""}{f.name}</option>)}
                     </select>
                   ) : (
                     <button type="button" onClick={() => setAdding(true)} aria-label={t("chal.addPerson")} title={t("chal.addPerson")}
@@ -301,12 +304,12 @@ function ChallengeDialog({ open, onClose, board, meId, onDone, presetTo }) {
 
 // Herausfordern geht über den Knopf auf der Karte der Person (openFor = deren user_id).
 // Der Bereich selbst erscheint nur, wenn es offene, laufende oder gerade beendete Challenges gibt.
-export default function ChallengesSection({ board, meId, openFor = null, onCloseFor }) {
+export default function ChallengesSection({ board, meId, openFor = null, onCloseFor, onlineIds }) {
   const { t } = useI18n();
   const [list, reload] = useChallenges(true);
   const hasFriends = (board?.users || []).some((u) => u.user_id !== meId);
   const dialog = (
-    <ChallengeDialog open={!!openFor} presetTo={openFor} onClose={() => onCloseFor?.()} board={board} meId={meId} onDone={reload} />
+    <ChallengeDialog open={!!openFor} presetTo={openFor} onClose={() => onCloseFor?.()} board={board} meId={meId} onDone={reload} onlineIds={onlineIds} />
   );
   if (!list || !hasFriends) return dialog;
   const now = list.filter((c) => c.status === "pending" || c.status === "active");

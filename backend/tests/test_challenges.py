@@ -153,3 +153,53 @@ class TestChallenges:
         cid = _create(client, a, [b]).json()["id"]
         assert _list(client, c) == []
         assert _accept(client, c, cid).status_code == 404
+
+
+def _age(db, cid, seconds):
+    """Challenge künstlich älter machen (Ready-Check-Frist)."""
+    from datetime import datetime, timezone
+    old = (datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
+    run(db.challenges.update_one({"id": cid}, {"$set": {"created_at": old}}))
+
+
+class TestReadyCheck:
+    """60 Sekunden zum Annehmen (Dean 2026-11-26), danach verpasst; angenommen = verbindlich."""
+
+    def test_restzeit_fuer_eingeladene(self, client, make_user, db):
+        a, b = _crew(make_user, db)
+        _create(client, a, [b])
+        mine, theirs = _list(client, a)[0], _list(client, b)[0]
+        assert mine["expires_in"] is None  # Ersteller muss nichts annehmen
+        assert 55 <= theirs["expires_in"] <= 60 and theirs["accept_seconds"] == 60
+
+    def test_rechtzeitig_annehmen(self, client, make_user, db):
+        a, b = _crew(make_user, db)
+        cid = _create(client, a, [b]).json()["id"]
+        _age(db, cid, 50)
+        assert _accept(client, b, cid).json()["status"] == "active"
+
+    def test_kurz_nach_ablauf_noch_kulanz(self, client, make_user, db):
+        a, b = _crew(make_user, db)
+        cid = _create(client, a, [b]).json()["id"]
+        _age(db, cid, 62)  # Netz-Verzögerung beim Antippen
+        assert _accept(client, b, cid).status_code == 200
+
+    def test_zu_spaet_verpasst(self, client, make_user, db):
+        a, b = _crew(make_user, db)
+        cid = _create(client, a, [b]).json()["id"]
+        _age(db, cid, 70)
+        r = _accept(client, b, cid)
+        assert r.status_code == 400 and "Zu spät" in r.json()["detail"]
+        c = _list(client, a)[0]
+        assert c["status"] == "expired"
+        assert [p["status"] for p in c["participants"] if p["user_id"] == b["user_id"]] == ["missed"]
+        assert _list(client, b)[0]["expires_in"] is None
+
+    def test_angenommen_ist_verbindlich(self, client, make_user, db):
+        a, b = _crew(make_user, db)
+        cid = _create(client, a, [b]).json()["id"]
+        assert _accept(client, b, cid).status_code == 200
+        assert client.post(f"/api/challenges/{cid}/decline", headers=b["headers"]).status_code == 400
+        assert client.delete(f"/api/challenges/{cid}", headers=a["headers"]).status_code == 400
+        _age(db, cid, 3600)  # Frist gilt nur fürs Annehmen
+        assert _list(client, a)[0]["status"] == "active"
