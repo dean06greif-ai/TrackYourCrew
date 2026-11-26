@@ -33,6 +33,7 @@ import { GlobalMicButton, useGlobalVoiceRouter } from "../components/GlobalVoice
 import LegalLinks from "../components/LegalLinks";
 import ChallengeReadyCheck from "../components/ChallengeReadyCheck";
 import Workout from "../components/Workout";
+import MusicButton from "../components/MusicPlayer";
 import { unlockAudio } from "../lib/coachAudio";
 import { isNetworkError, queueEntry, readOutbox, writeOutbox, mergeDays, alreadyApplied, sumsFromDays, saveSnapshot, loadSnapshot, useOnline, useOutboxCount } from "../lib/offline";
 import { useVoiceConfirm, setGlobalVoice } from "../lib/voiceHub";
@@ -1422,7 +1423,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white">
       <header className="border-b border-[#1A1A1A] bg-[#0A0A0A]/80 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between" data-testid="dashboard-header">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-3" data-testid="dashboard-header">
           <div className="flex items-center gap-3">
             <Lightning size={26} weight="fill" className="text-[#CCFF00]" />
             <span className="font-anton text-2xl tracking-widest">TRACKER</span>
@@ -1430,12 +1431,13 @@ export default function Dashboard() {
               <Pulse size={10} weight="fill" /> LIVE
             </span>
           </div>
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1.5 md:gap-3">
+            <MusicButton />
             <button
               onClick={() => setShowInsights(true)}
               data-testid="open-insights"
               aria-label={t("nav.insights")}
-              className="border border-[#222] hover:border-[#CCFF00] hover:text-[#CCFF00] px-3 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
+              className="border border-[#222] hover:border-[#CCFF00] hover:text-[#CCFF00] px-2.5 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
             >
               <ChartBar size={16} weight="duotone" />
               <span className="hidden md:inline">{t("nav.insights")}</span>
@@ -1444,7 +1446,7 @@ export default function Dashboard() {
               onClick={() => setShowRanking(true)}
               data-testid="open-ranking"
               aria-label={t("nav.ranking")}
-              className="border border-[#222] hover:border-[#CCFF00] hover:text-[#CCFF00] px-3 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
+              className="border border-[#222] hover:border-[#CCFF00] hover:text-[#CCFF00] px-2.5 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
             >
               <Trophy size={16} weight="duotone" />
               <span className="hidden md:inline">{t("nav.ranking")}</span>
@@ -1460,7 +1462,7 @@ export default function Dashboard() {
               data-testid="settings-button"
               aria-label={t("nav.settings")}
               data-tour="settings-link"
-              className="border border-[#222] active:border-[#CCFF00] active:text-[#CCFF00] [@media(hover:hover)]:hover:border-[#CCFF00] [@media(hover:hover)]:hover:text-[#CCFF00] focus:outline-none px-3 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
+              className="border border-[#222] active:border-[#CCFF00] active:text-[#CCFF00] [@media(hover:hover)]:hover:border-[#CCFF00] [@media(hover:hover)]:hover:text-[#CCFF00] focus:outline-none px-2.5 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
             >
               <Gear size={16} weight="duotone" />
               <span className="hidden md:inline">{t("nav.settings")}</span>
@@ -1469,7 +1471,7 @@ export default function Dashboard() {
               onClick={logout}
               data-testid="logout-button"
               aria-label={t("nav.logout")}
-              className="border border-[#222] [@media(hover:hover)]:hover:border-[#FF3B30] [@media(hover:hover)]:hover:text-[#FF3B30] active:border-[#FF3B30] active:text-[#FF3B30] focus:border-[#FF3B30] focus:text-[#FF3B30] focus-visible:border-[#FF3B30] focus-visible:text-[#FF3B30] px-3 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
+              className="border border-[#222] [@media(hover:hover)]:hover:border-[#FF3B30] [@media(hover:hover)]:hover:text-[#FF3B30] active:border-[#FF3B30] active:text-[#FF3B30] focus:border-[#FF3B30] focus:text-[#FF3B30] focus-visible:border-[#FF3B30] focus-visible:text-[#FF3B30] px-2.5 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
             >
               <SignOut size={16} weight="duotone" />
               <span className="hidden md:inline">{t("nav.logout")}</span>
@@ -1590,13 +1592,22 @@ export default function Dashboard() {
               title={t("wo.title")}
               aria-label={t("wo.title")}
               data-testid="open-workout"
-              className="shrink-0 w-12 md:w-auto md:px-5 flex items-center justify-center gap-2 border border-[#CCFF00]/60 text-[#CCFF00] hover:bg-[#CCFF00]/10 transition-colors"
+              className="hidden md:flex shrink-0 px-5 items-center justify-center gap-2 border border-[#CCFF00]/60 text-[#CCFF00] hover:bg-[#CCFF00]/10 transition-colors"
             >
               <Timer size={20} weight="bold" />
-              <span className="hidden md:inline text-xs uppercase tracking-widest font-bold">{t("wo.title")}</span>
+              <span className="text-xs uppercase tracking-widest font-bold">{t("wo.title")}</span>
             </button>
             <GlobalMicButton />
             </div>
+            {/* Handy: Workout als schlanke eigene Zeile (neben dem Knopf wäre es zu eng) */}
+            <button
+              type="button"
+              onClick={() => { unlockAudio(); setWorkoutOpen(true); }}
+              data-testid="open-workout-mobile"
+              className="md:hidden w-full flex items-center justify-center gap-2 border border-[#CCFF00]/40 text-[#CCFF00] py-2.5 text-[11px] uppercase tracking-[0.2em] font-bold active:bg-[#CCFF00]/10"
+            >
+              <Timer size={16} weight="bold" /> {t("wo.mobile")}
+            </button>
             {globalVoiceOn && (
               <p className="text-[11px] text-ink-3 leading-relaxed" data-testid="global-voice-status">
                 {voiceAsk ? <span className="text-[#CCFF00]">{voiceAsk}</span> : voiceHeard ? <span className="text-ink-2">„{voiceHeard.slice(0, 80)}“</span> : t("voice.globalHint")}

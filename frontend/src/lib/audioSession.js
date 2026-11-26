@@ -7,27 +7,34 @@ const supported = () => typeof navigator !== "undefined" && !!navigator.audioSes
 let holds = 0;
 let releaseTimer = 0;
 
+// Eigene Workout-Musik (lib/musicPlayer) hört auf „tyc:duck“ und wird leiser
+const signal = (on) => { try { window.dispatchEvent(new CustomEvent("tyc:duck", { detail: on })); } catch { /* egal */ } };
+
 export function duckOthers() {
-  if (!supported()) return;
   holds += 1;
   window.clearTimeout(releaseTimer);
+  signal(true);
+  // Läuft unsere eigene Musik, nicht zusätzlich die Audio-Sitzung umstellen (würde sie unterbrechen)
+  if (!supported() || window.__tycMusicPlaying) return;
   try { if (navigator.audioSession.type !== "transient") navigator.audioSession.type = "transient"; } catch { /* egal */ }
 }
 
 // kurz nachlaufen lassen, damit die Musik bei schnell folgenden Ansagen nicht pumpt
 export function releaseOthers(delay = 400) {
-  if (!supported()) return;
   holds = Math.max(0, holds - 1);
   if (holds) return;
   window.clearTimeout(releaseTimer);
   releaseTimer = window.setTimeout(() => {
-    try { if (!holds) navigator.audioSession.type = "auto"; } catch { /* egal */ }
+    if (holds) return;
+    signal(false);
+    if (!supported()) return;
+    try { if (navigator.audioSession.type === "transient") navigator.audioSession.type = "auto"; } catch { /* egal */ }
   }, delay);
 }
 
 // Für Gerätestimme: Utterance absenken lassen, solange sie spricht
 export function duckDuring(utterance) {
-  if (!supported() || !utterance) return;
+  if (!utterance) return;
   duckOthers();
   let done = false;
   const end = () => { if (!done) { done = true; releaseOthers(); } };

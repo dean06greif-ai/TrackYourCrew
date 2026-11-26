@@ -1,0 +1,344 @@
+{
+ "license": {
+  "name": "CC BY 4.0",
+  "url": "https://creativecommons.org/licenses/by/4.0/"
+ },
+ "playlists": [
+  {
+   "id": "cardio",
+   "file": "/music/01-Cardio-Synthwave.mp3",
+   "duration": 3479.6,
+   "tracks": [
+    {
+     "title": "Initial Commit",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 0.0,
+     "end": 175.41,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Newer Wave",
+     "artist": "Kevin MacLeod",
+     "start": 175.41,
+     "end": 350.01,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2000024"
+    },
+    {
+     "title": "First Push",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 350.01,
+     "end": 494.81,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Voltaic",
+     "artist": "Kevin MacLeod",
+     "start": 494.81,
+     "end": 690.88,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600056"
+    },
+    {
+     "title": "Push to Origin",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 690.88,
+     "end": 890.27,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Brain Dance",
+     "artist": "Kevin MacLeod",
+     "start": 890.27,
+     "end": 1105.18,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2300006"
+    },
+    {
+     "title": "Smooth Rebase",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 1105.18,
+     "end": 1330.21,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Nowhere Land",
+     "artist": "Kevin MacLeod",
+     "start": 1330.21,
+     "end": 1462.28,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600051"
+    },
+    {
+     "title": "Detached Head Pursuit",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 1462.28,
+     "end": 1657.63,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Laser Groove",
+     "artist": "Kevin MacLeod",
+     "start": 1657.63,
+     "end": 1825.71,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700017"
+    },
+    {
+     "title": "Upstream Drift",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 1825.71,
+     "end": 2050.26,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Rising Tide (faster)",
+     "artist": "Kevin MacLeod",
+     "start": 2050.26,
+     "end": 2291.29,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1900011"
+    },
+    {
+     "title": "Nightly Build Sprint",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 2291.29,
+     "end": 2493.08,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Voxel Revolution",
+     "artist": "Kevin MacLeod",
+     "start": 2493.08,
+     "end": 2622.99,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2000025"
+    },
+    {
+     "title": "Merging to Main Branch",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 2622.99,
+     "end": 2808.82,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Thinking Out Loud",
+     "artist": "Kevin MacLeod",
+     "start": 2808.82,
+     "end": 3093.39,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100043"
+    },
+    {
+     "title": "Clean Commit Highway",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 3093.39,
+     "end": 3290.26,
+     "source": "https://neonhusky.dev/free/"
+    },
+    {
+     "title": "Staging Area Sunset",
+     "artist": "Neon Husky (Kristian Arvidsson)",
+     "start": 3290.26,
+     "end": 3479.57,
+     "source": "https://neonhusky.dev/free/"
+    }
+   ]
+  },
+  {
+   "id": "hiit",
+   "file": "/music/02-HIIT-Techno.mp3",
+   "duration": 3743.2,
+   "tracks": [
+    {
+     "title": "Shiny Tech",
+     "artist": "Kevin MacLeod",
+     "start": 0.0,
+     "end": 222.67,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100078"
+    },
+    {
+     "title": "Raving Energy (faster)",
+     "artist": "Kevin MacLeod",
+     "start": 222.67,
+     "end": 466.31,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1900012"
+    },
+    {
+     "title": "The Lift",
+     "artist": "Kevin MacLeod",
+     "start": 466.31,
+     "end": 933.75,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500066"
+    },
+    {
+     "title": "Deep and Dirty",
+     "artist": "Kevin MacLeod",
+     "start": 933.75,
+     "end": 1376.1,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1900021"
+    },
+    {
+     "title": "Club Diver",
+     "artist": "Kevin MacLeod",
+     "start": 1376.1,
+     "end": 1521.79,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200020"
+    },
+    {
+     "title": "Ouroboros",
+     "artist": "Kevin MacLeod",
+     "start": 1521.79,
+     "end": 1683.36,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400007"
+    },
+    {
+     "title": "EDM Detection Mode",
+     "artist": "Kevin MacLeod",
+     "start": 1683.36,
+     "end": 2049.05,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500026"
+    },
+    {
+     "title": "Exit the Premises",
+     "artist": "Kevin MacLeod",
+     "start": 2049.05,
+     "end": 2259.12,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500029"
+    },
+    {
+     "title": "Trips It",
+     "artist": "Kevin MacLeod",
+     "start": 2259.12,
+     "end": 2519.33,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100498"
+    },
+    {
+     "title": "Furious Freak",
+     "artist": "Kevin MacLeod",
+     "start": 2519.33,
+     "end": 2706.47,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600021"
+    },
+    {
+     "title": "In a Heartbeat",
+     "artist": "Kevin MacLeod",
+     "start": 2706.47,
+     "end": 2924.38,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100197"
+    },
+    {
+     "title": "Harmful or Fatal",
+     "artist": "Kevin MacLeod",
+     "start": 2924.38,
+     "end": 3255.12,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100210"
+    },
+    {
+     "title": "Cognitive Dissonance",
+     "artist": "Kevin MacLeod",
+     "start": 3255.12,
+     "end": 3543.17,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100289"
+    },
+    {
+     "title": "Dance Monster",
+     "artist": "Kevin MacLeod",
+     "start": 3543.17,
+     "end": 3743.24,
+     "source": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100272"
+    }
+   ]
+  },
+  {
+   "id": "kraft",
+   "file": "/music/03-Krafttraining-Metal.mp3",
+   "duration": 3711.2,
+   "tracks": [
+    {
+     "title": "Apex",
+     "artist": "Alexander Nakarada",
+     "start": 0.0,
+     "end": 317.33,
+     "source": "https://creatorchords.com/music/apex/"
+    },
+    {
+     "title": "Riffs",
+     "artist": "Alexander Nakarada",
+     "start": 317.33,
+     "end": 559.83,
+     "source": "https://creatorchords.com/music/riffs/"
+    },
+    {
+     "title": "Metal",
+     "artist": "Alexander Nakarada",
+     "start": 559.83,
+     "end": 752.25,
+     "source": "https://creatorchords.com/music/metal/"
+    },
+    {
+     "title": "Catalyst",
+     "artist": "Alexander Nakarada",
+     "start": 752.25,
+     "end": 1105.25,
+     "source": "https://creatorchords.com/music/catalyst/"
+    },
+    {
+     "title": "Battle Metal",
+     "artist": "Alexander Nakarada",
+     "start": 1105.25,
+     "end": 1411.91,
+     "source": "https://creatorchords.com/music/battle-metal/"
+    },
+    {
+     "title": "Psychotic",
+     "artist": "Alexander Nakarada",
+     "start": 1411.91,
+     "end": 1678.14,
+     "source": "https://creatorchords.com/music/psychotic/"
+    },
+    {
+     "title": "Torment",
+     "artist": "Alexander Nakarada",
+     "start": 1678.14,
+     "end": 1926.31,
+     "source": "https://creatorchords.com/music/torment/"
+    },
+    {
+     "title": "Wrath",
+     "artist": "Alexander Nakarada",
+     "start": 1926.31,
+     "end": 2177.17,
+     "source": "https://creatorchords.com/music/wrath/"
+    },
+    {
+     "title": "Stygian Rise",
+     "artist": "Alexander Nakarada",
+     "start": 2177.17,
+     "end": 2432.34,
+     "source": "https://creatorchords.com/music/stygian-rise/"
+    },
+    {
+     "title": "Circuits",
+     "artist": "Alexander Nakarada",
+     "start": 2432.34,
+     "end": 2782.21,
+     "source": "https://creatorchords.com/music/circuits/"
+    },
+    {
+     "title": "Berserker",
+     "artist": "Alexander Nakarada",
+     "start": 2782.21,
+     "end": 3149.18,
+     "source": "https://creatorchords.com/music/berserker/"
+    },
+    {
+     "title": "Hall of the Metal King",
+     "artist": "Alexander Nakarada",
+     "start": 3149.18,
+     "end": 3394.8,
+     "source": "https://creatorchords.com/music/hall-of-the-metal-king/"
+    },
+    {
+     "title": "Sovereign",
+     "artist": "Alexander Nakarada",
+     "start": 3394.8,
+     "end": 3711.23,
+     "source": "https://creatorchords.com/music/sovereign/"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,105 @@
+Workout-Musik – Tracklisten und Credits
+
+Alle aufgeführten Titel stehen unter Creative Commons Namensnennung 4.0 International (CC BY 4.0).
+Lizenz: https://creativecommons.org/licenses/by/4.0/
+Die Titel wurden für die Playlists hintereinander angeordnet. Die Lautstärke wurde angepasst.
+
+Für die Website: Die Trackliste des jeweiligen Mixes mit Urhebern, Quellen, Lizenzlink und dem obigen Bearbeitungshinweis beim Player verlinken oder anzeigen.
+Die Neon-Husky-Titel stammen aus „Contribution Run“. Laut Künstlerangabe wurden sie mit Mureka KI-generiert und von Kristian Arvidsson produziert.
+
+
+Cardio – Synthwave
+00:00  Neon Husky (Kristian Arvidsson) – Initial Commit
+       https://neonhusky.dev/free/
+02:55  Kevin MacLeod – Newer Wave
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2000024
+05:50  Neon Husky (Kristian Arvidsson) – First Push
+       https://neonhusky.dev/free/
+08:14  Kevin MacLeod – Voltaic
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600056
+11:30  Neon Husky (Kristian Arvidsson) – Push to Origin
+       https://neonhusky.dev/free/
+14:50  Kevin MacLeod – Brain Dance
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2300006
+18:25  Neon Husky (Kristian Arvidsson) – Smooth Rebase
+       https://neonhusky.dev/free/
+22:10  Kevin MacLeod – Nowhere Land
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600051
+24:22  Neon Husky (Kristian Arvidsson) – Detached Head Pursuit
+       https://neonhusky.dev/free/
+27:37  Kevin MacLeod – Laser Groove
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700017
+30:25  Neon Husky (Kristian Arvidsson) – Upstream Drift
+       https://neonhusky.dev/free/
+34:10  Kevin MacLeod – Rising Tide (faster)
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1900011
+38:11  Neon Husky (Kristian Arvidsson) – Nightly Build Sprint
+       https://neonhusky.dev/free/
+41:33  Kevin MacLeod – Voxel Revolution
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2000025
+43:42  Neon Husky (Kristian Arvidsson) – Merging to Main Branch
+       https://neonhusky.dev/free/
+46:48  Kevin MacLeod – Thinking Out Loud
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100043
+51:33  Neon Husky (Kristian Arvidsson) – Clean Commit Highway
+       https://neonhusky.dev/free/
+54:50  Neon Husky (Kristian Arvidsson) – Staging Area Sunset
+       https://neonhusky.dev/free/
+
+HIIT – Techno & EDM
+00:00  Kevin MacLeod – Shiny Tech
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100078
+03:42  Kevin MacLeod – Raving Energy (faster)
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1900012
+07:46  Kevin MacLeod – The Lift
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500066
+15:33  Kevin MacLeod – Deep and Dirty
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1900021
+22:56  Kevin MacLeod – Club Diver
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200020
+25:21  Kevin MacLeod – Ouroboros
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400007
+28:03  Kevin MacLeod – EDM Detection Mode
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500026
+34:09  Kevin MacLeod – Exit the Premises
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500029
+37:39  Kevin MacLeod – Trips It
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100498
+41:59  Kevin MacLeod – Furious Freak
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600021
+45:06  Kevin MacLeod – In a Heartbeat
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100197
+48:44  Kevin MacLeod – Harmful or Fatal
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100210
+54:15  Kevin MacLeod – Cognitive Dissonance
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100289
+59:03  Kevin MacLeod – Dance Monster
+       https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100272
+
+Krafttraining – Metal
+00:00  Alexander Nakarada – Apex
+       https://creatorchords.com/music/apex/
+05:17  Alexander Nakarada – Riffs
+       https://creatorchords.com/music/riffs/
+09:19  Alexander Nakarada – Metal
+       https://creatorchords.com/music/metal/
+12:32  Alexander Nakarada – Catalyst
+       https://creatorchords.com/music/catalyst/
+18:25  Alexander Nakarada – Battle Metal
+       https://creatorchords.com/music/battle-metal/
+23:31  Alexander Nakarada – Psychotic
+       https://creatorchords.com/music/psychotic/
+27:58  Alexander Nakarada – Torment
+       https://creatorchords.com/music/torment/
+32:06  Alexander Nakarada – Wrath
+       https://creatorchords.com/music/wrath/
+36:17  Alexander Nakarada – Stygian Rise
+       https://creatorchords.com/music/stygian-rise/
+40:32  Alexander Nakarada – Circuits
+       https://creatorchords.com/music/circuits/
+46:22  Alexander Nakarada – Berserker
+       https://creatorchords.com/music/berserker/
+52:29  Alexander Nakarada – Hall of the Metal King
+       https://creatorchords.com/music/hall-of-the-metal-king/
+56:34  Alexander Nakarada – Sovereign
+       https://creatorchords.com/music/sovereign/

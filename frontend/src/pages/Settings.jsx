@@ -6,6 +6,7 @@ import { api, avatarSrc, shrinkImage } from "../lib/api";
 import ExerciseIcon from "../components/ExerciseIcon";
 import IconPicker from "../components/IconPicker";
 import { InviteBox } from "../components/CrewRequests";
+import MusicButton from "../components/MusicPlayer";
 import InstallSheet from "../components/InstallSheet";
 import MyData from "../components/MyData";
 import PauseLossInfo from "../components/PauseLossInfo";
@@ -969,6 +970,8 @@ export default function Settings() {
             <Lightning size={26} weight="fill" className="text-[#CCFF00]" />
             <span className="font-anton text-2xl tracking-widest">TRACKER</span>
           </div>
+          <div className="flex items-center gap-1.5 md:gap-3">
+          <MusicButton />
           <button
             onClick={(e) => { try { e.currentTarget.blur(); } catch (_) { /* ignore */ } navigate("/dashboard"); }}
             data-testid="back-to-dashboard"
@@ -976,6 +979,7 @@ export default function Settings() {
           >
             <ArrowLeft size={16} /> {t("common.back")}
           </button>
+          </div>
         </div>
       </header>
 

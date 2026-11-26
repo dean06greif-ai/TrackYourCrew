@@ -4,7 +4,7 @@
 // - /assets/* (Dateinamen mit Hash, ändern sich nie): aus dem Speicher, sonst Netz
 // - übrige eigene Dateien (Icons, Coach-Aufnahmen …): aus dem Speicher, im Hintergrund auffrischen
 // - Server-Daten (api.trackyourcrew.de) fasst er nicht an; die speichert die App selbst (lib/offline.js)
-const CACHE = "tyc-app-v1";
+const CACHE = "tyc-app-v2";
 const SHELL = "/index.html";
 
 self.addEventListener("install", (event) => {
@@ -26,6 +26,8 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // Server-Daten und fremde Seiten: wie ohne Service Worker
+  // Musik (große Dateien, wird stückweise geladen) und Teil-Anfragen: nicht speichern, direkt ans Netz
+  if (url.pathname.startsWith("/music/") || req.headers.has("range")) return;
 
   if (req.mode === "navigate") {
     event.respondWith(
