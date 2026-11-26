@@ -523,7 +523,6 @@ const t = {
   "settings.language": "Sprache",
   "settings.languageSaved": "Sprache geändert",
   "settings.languageText": "Gilt sofort und auf all deinen Geräten.",
-  "settings.legendManual": "von dir gesetzt",
   "settings.legendMissed": "verfehlt",
   "settings.legendPaused": "pausiert",
   "settings.maxActivities": "Maximal {n} Aktivitäten gleichzeitig",

@@ -1776,7 +1776,6 @@ export default function Settings() {
             <span>{t("settings.currentWeek", { week: currentWeek })}</span>
             <span><Flame size={12} weight="fill" className="inline align-middle text-[#FF8800]" /> Boost</span>
             <span><span className="text-[#FF3B30]">✕</span> {t("settings.legendMissed")}</span>
-            <span><span className="text-[#CCFF00]">●</span> {t("settings.legendManual")}</span>
             <span>‖ {t("settings.legendPaused")}</span>
           </p>
 
@@ -1823,7 +1822,7 @@ export default function Settings() {
                         return (
                           <td key={ex.key} className={`py-2 px-1 md:px-4 ${missed ? "text-[#FF3B30]" : "text-white"}`} data-testid={`progression-cell-${week}-${ex.key}`}>
                             <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full">
-                              <span className="flex justify-end pr-1">{cell.manual && <span className="text-[#CCFF00] text-[10px]" title={t("settings.legendManual")}>●</span>}</span>
+                              <span className="flex justify-end pr-1" />
                               <span className={`tabular-nums leading-none ${missed ? "line-through decoration-2" : ""}`}>{isDistanceUnit(ex.unit) ? Number(fmtNum(cell.goal, ex.unit)).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : formatNumber(fmtNum(cell.goal, ex.unit), locale)}</span>
                               <div className="flex items-center gap-1 pl-1 min-w-0">
                                 {ex.unit && <span className={`text-[10px] md:text-xs leading-none ${missed ? "text-[#FF3B30]" : "text-ink-3"}`}>{ex.unit}</span>}
