@@ -5,7 +5,7 @@ mongomock ersetzt. Kein Netzwerk, keine echte Datenbank, keine Secrets nötig.
 
 WICHTIG: Der Mongo-Client wird ersetzt, BEVOR server.py importiert wird. Damit
 können die Tests die echte Datenbank nie anfassen, selbst wenn in backend/.env
-eine echte MONGO_URI steht.
+eine echte MONGO_URL steht.
 """
 import asyncio
 import os
@@ -20,7 +20,7 @@ collect_ignore = ["legacy_emergent"]
 # Feste Dummy-Werte. Bewusst hart gesetzt (kein setdefault), damit nichts aus
 # der Shell-Umgebung durchrutscht. load_dotenv überschreibt gesetzte Werte nicht.
 os.environ.update({
-    "MONGO_URI": "mongodb://offline-test.invalid:27017",
+    "MONGO_URL": "mongodb://offline-test.invalid:27017",
     "DB_NAME": "tracker_offline_test",
     "GOOGLE_CLIENT_ID": "offline-test-client-id",
     "GOOGLE_CLIENT_SECRET": "offline-test-client-secret",

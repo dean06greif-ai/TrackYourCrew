@@ -4,7 +4,7 @@ Start:  backend\\.venv\\Scripts\\python dev_server.py      (Port 5000)
 Login:  http://localhost:5000/api/dev/login?as=dean   (oder anton, mia, leo, neu)
 
 - Die echte MongoDB wird NIE angefasst: der Mongo-Client wird vor dem Import von
-  server.py durch mongomock ersetzt, die MONGO_URI ist ein Dummy.
+  server.py durch mongomock ersetzt, die MONGO_URL ist ein Dummy.
 - Beim Start werden Demo-Nutzer mit 9 Wochen Verlauf angelegt.
 - Alles ist nach einem Neustart wieder weg.
 - Zeitreise zum Testen von Wochenwechseln: /api/dev/shift?days=7
@@ -19,7 +19,7 @@ from pathlib import Path
 DEV_PORT = int(os.environ.get("DEV_PORT", "5000"))
 
 os.environ.update({
-    "MONGO_URI": "mongodb://dev-in-memory.invalid:27017",
+    "MONGO_URL": "mongodb://dev-in-memory.invalid:27017",
     "DB_NAME": "tracker_dev",
     "GOOGLE_CLIENT_ID": "dev-client-id",
     "GOOGLE_CLIENT_SECRET": "dev-client-secret",

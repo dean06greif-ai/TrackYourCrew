@@ -17,7 +17,7 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11    # getestet mit 3.11 und 3.15
-      - key: MONGO_URI
+      - key: MONGO_URL
         sync: false
       - key: DB_NAME
         sync: false

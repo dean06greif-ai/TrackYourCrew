@@ -9,7 +9,7 @@ Erledigtes abhaken und Datum dazuschreiben. "Geprüft" heißt: per Test oder Cod
   (Branch `main`, mehrere Commits) wurde `backend/.env` mit der MongoDB-Atlas-URI
   inklusive Passwort eingecheckt. Löschen der Datei entfernt sie nicht aus der Historie.
   Das Repo war am 2026-11-23 ohne Anmeldung lesbar.
-  Lösung: Passwort des Datenbank-Users in MongoDB Atlas ändern, `MONGO_URI` bei Render
+  Lösung: Passwort des Datenbank-Users in MongoDB Atlas ändern, `MONGO_URL` bei Render
   aktualisieren, altes Repo auf privat stellen oder löschen. Historie nicht ins neue Repo übernehmen.
 - [ ] **S1b – Google-Client-Secret und DB-Passwort wurden am 2026-11-23 im Chat geteilt.**
   Beim Erledigen von S1 auch ein neues Client-Secret in der Google Cloud Console erzeugen

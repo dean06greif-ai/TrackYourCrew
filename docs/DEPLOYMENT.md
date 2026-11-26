@@ -32,7 +32,7 @@ dazu, den Text in `frontend/src/pages/Legal.jsx` nachziehen.
 
 | Variable | Woher |
 |---|---|
-| `MONGO_URI` | MongoDB Atlas → *Connect* → Drivers. **Vorher Passwort erneuern (BACKLOG S1)!** |
+| `MONGO_URL` | MongoDB Atlas → *Connect* → Drivers. **Vorher Passwort erneuern (BACKLOG S1)!** |
 | `DB_NAME` | wie bisher (siehe deine `backend/.env`) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Cloud Console → APIs → Anmeldedaten. **Neues Secret erzeugen (S1b)!** |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | siehe Schritt 5 (optional, kann später) |

@@ -23,7 +23,15 @@ import i18n_messages
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-mongo_url = os.environ['MONGO_URI']
+def _mongo_url(env) -> str:
+    """MONGO_URL (Render); der alte Name MONGO_URI geht weiter (lokale .env)."""
+    url = (env.get("MONGO_URL") or env.get("MONGO_URI") or "").strip()
+    if not url:
+        raise KeyError("MONGO_URL fehlt (Umgebungsvariable)")
+    return url
+
+
+mongo_url = _mongo_url(os.environ)
 GOOGLE_CLIENT_ID = os.environ["GOOGLE_CLIENT_ID"]
 GOOGLE_CLIENT_SECRET = os.environ["GOOGLE_CLIENT_SECRET"]
 FRONTEND_URL = os.environ["FRONTEND_URL"].rstrip("/")
