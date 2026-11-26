@@ -634,11 +634,14 @@ export function startChallengeLoop() {
   src.start();
   return {
     setUrgent() { /* bleibt gleichmäßig */ },
-    stop() {
+    // weich ausblenden (~0,5 s), damit Annehmen/Ablehnen nahtlos daran anschließt
+    stop(fade = 0.16) {
       try {
-        out.gain.cancelScheduledValues(ctx.currentTime);
-        out.gain.setTargetAtTime(0, ctx.currentTime, 0.06);
-        window.setTimeout(() => { try { src.stop(); out.disconnect(); } catch { /* egal */ } }, 600);
+        const now = ctx.currentTime;
+        out.gain.cancelScheduledValues(now);
+        out.gain.setValueAtTime(out.gain.value, now);
+        out.gain.setTargetAtTime(0, now, fade);
+        window.setTimeout(() => { try { src.stop(); out.disconnect(); } catch { /* egal */ } }, fade * 6000 + 200);
       } catch { /* egal */ }
     },
   };
@@ -647,11 +650,13 @@ export function startChallengeLoop() {
 export function playChallengeAccept() {
   if (!sfxBuffers.accept) return synthChallengeAccept();
   if (!soundEffects.ensureRunning()) return;
-  playBuffer(soundEffects.audioContext, sfxBuffers.accept, soundEffects.audioContext.destination, soundEffects.audioContext.currentTime);
+  const ctx = soundEffects.audioContext;
+  playBuffer(ctx, sfxBuffers.accept, ctx.destination, ctx.currentTime + 0.06);
 }
 
 export function playChallengeDecline() {
   if (!sfxBuffers.decline) return synthChallengeDecline();
   if (!soundEffects.ensureRunning()) return;
-  playBuffer(soundEffects.audioContext, sfxBuffers.decline, soundEffects.audioContext.destination, soundEffects.audioContext.currentTime);
+  const ctx = soundEffects.audioContext;
+  playBuffer(ctx, sfxBuffers.decline, ctx.destination, ctx.currentTime + 0.06);
 }
