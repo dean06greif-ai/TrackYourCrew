@@ -51,7 +51,7 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
 - **Ränge F–S+** (`frontend/src/lib/ranks.js`, Tabelle `docs/RANG-TABELLE.md`): nur aus dem Serverwert `best_goals`
   (bester Wochenwert, gedeckelt aufs Wochenziel) -> auf allen Geräten gleich. Übungsart wird
   am Namen erkannt, Einheiten umgerechnet. Browser speichert nur "Rang-Up schon gezeigt".
-- **Workout-Modus (Intervall-Timer, 2026-11-26):** Knopf neben „Fortschritt eintragen“, `components/Workout.jsx` (Logik `lib/workout.js`):
+- **Workout-Modus (Intervall-Timer, 2026-11-26):** Symbol im Eintrage-Formular zwischen Zahnrad und Mikro, `components/Workout.jsx` (Logik `lib/workout.js`):
   Vorlagen/Arbeit/Pause/Runden, Wdh. je Runde per Tippen oder Sprache, Zeit-Übungen zählen die Arbeitszeit selbst, Ende -> `applyVoiceItems`.
   Live für die Crew: `PUT/DELETE /api/me/live` (nur im Speicher, `LIVE_TTL_S` 120 s, Lebenszeichen alle 45 s), Board-Feld `live`, WS `live_workout`.
 - **Workout-Musik (2026-11-26):** 3 Mixe in `frontend/public/music/` (CC BY 4.0, Credits-Datei daneben), Kapitel je Lied in

@@ -732,7 +732,6 @@ const t = {
   "wo.liveOff": "You log everything at the end.",
   "wo.liveOn": "Every round is saved right away.",
   "wo.liveSaved": "Already logged live ✓",
-  "wo.mobile": "Workout · Interval timer",
   "wo.noExercises": "Add an exercise in the settings first.",
   "wo.paused": "Paused",
   "wo.phase.countdown": "Get ready",

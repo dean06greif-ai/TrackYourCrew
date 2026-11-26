@@ -732,7 +732,6 @@ const t = {
   "wo.liveOff": "Lo registras todo al final.",
   "wo.liveOn": "Cada ronda se guarda al instante.",
   "wo.liveSaved": "Ya registrado en vivo ✓",
-  "wo.mobile": "Workout · Temporizador",
   "wo.noExercises": "Primero añade un ejercicio en los ajustes.",
   "wo.paused": "En pausa",
   "wo.phase.countdown": "Prepárate",

@@ -732,7 +732,6 @@ const t = {
   "wo.liveOff": "Du trägst am Ende alles auf einmal ein.",
   "wo.liveOn": "Jede Runde wird sofort gespeichert.",
   "wo.liveSaved": "Schon live eingetragen ✓",
-  "wo.mobile": "Workout · Intervall-Timer",
   "wo.noExercises": "Leg zuerst eine Übung in den Einstellungen an.",
   "wo.paused": "Pausiert",
   "wo.phase.countdown": "Gleich geht's los",

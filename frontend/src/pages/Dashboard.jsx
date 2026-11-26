@@ -1587,29 +1587,8 @@ export default function Dashboard() {
             >
               <Plus size={18} weight="bold" /> {t("log.open")}
             </button>
-            {/* Workout-Modus (Intervall-Timer) */}
-            <button
-              type="button"
-              onClick={() => { unlockAudio(); setWorkoutOpen(true); }}
-              title={t("wo.title")}
-              aria-label={t("wo.title")}
-              data-testid="open-workout"
-              className="hidden md:flex shrink-0 px-5 items-center justify-center gap-2 border border-[#CCFF00]/60 text-[#CCFF00] hover:bg-[#CCFF00]/10 transition-colors"
-            >
-              <Timer size={20} weight="bold" />
-              <span className="text-xs uppercase tracking-widest font-bold">{t("wo.title")}</span>
-            </button>
             <GlobalMicButton />
             </div>
-            {/* Handy: Workout als schlanke eigene Zeile (neben dem Knopf wäre es zu eng) */}
-            <button
-              type="button"
-              onClick={() => { unlockAudio(); setWorkoutOpen(true); }}
-              data-testid="open-workout-mobile"
-              className="md:hidden w-full flex items-center justify-center gap-2 border border-[#CCFF00]/40 text-[#CCFF00] py-2.5 text-[11px] uppercase tracking-[0.2em] font-bold active:bg-[#CCFF00]/10"
-            >
-              <Timer size={16} weight="bold" /> {t("wo.mobile")}
-            </button>
             {globalVoiceOn && (
               <p className="text-[11px] text-ink-3 leading-relaxed" data-testid="global-voice-status">
                 {voiceAsk ? <span className="text-[#CCFF00]">{voiceAsk}</span> : voiceHeard ? <span className="text-ink-2">„{voiceHeard.slice(0, 80)}“</span> : t("voice.globalHint")}
@@ -1651,6 +1630,17 @@ export default function Dashboard() {
                     className={`w-7 h-7 flex items-center justify-center transition-colors focus:outline-none ${showStepSettings ? "text-black bg-[#FFD700]" : "text-[#FFD700] [@media(hover:hover)]:hover:bg-[#FFD700]/15 active:bg-[#FFD700]/15"}`}
                   >
                     <Gear size={18} weight={showStepSettings ? "fill" : "bold"} />
+                  </button>
+                  {/* Workout-Modus (Intervall-Timer) */}
+                  <button
+                    type="button"
+                    onClick={(e) => { unlockAudio(); setWorkoutOpen(true); e.currentTarget.blur(); }}
+                    title={t("wo.title")}
+                    aria-label={t("wo.title")}
+                    data-testid="open-workout"
+                    className="w-7 h-7 flex items-center justify-center text-[#CCFF00] transition-colors focus:outline-none [@media(hover:hover)]:hover:bg-[#CCFF00]/15 active:bg-[#CCFF00]/15"
+                  >
+                    <Timer size={18} weight="bold" />
                   </button>
                   <VoiceLogButton active={voiceOpen} onClick={(e) => { setVoiceOpen((v) => !v); e.currentTarget.blur(); }} />
                 </div>

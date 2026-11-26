@@ -732,7 +732,6 @@ const t = {
   "wo.liveOff": "Tu enregistres tout à la fin.",
   "wo.liveOn": "Chaque tour est enregistré aussitôt.",
   "wo.liveSaved": "Déjà enregistré en direct ✓",
-  "wo.mobile": "Workout · Minuteur",
   "wo.noExercises": "Ajoute d'abord un exercice dans les réglages.",
   "wo.paused": "En pause",
   "wo.phase.countdown": "Prépare-toi",
