@@ -936,6 +936,9 @@ export default function Settings() {
   }, [originalExercises]);
 
   const tableExercises = exercises.filter((ex) => !isActivity(ex) && statusOf(state[ex.key]) !== "completed");
+  // Wochen-Progression: jede Spalte so breit wie ihr Name braucht (kein Abschneiden);
+  // reicht der Platz nicht (viele Übungen), scrollt die Tabelle seitlich (Dean 2026-11-26)
+  const colWidths = tableExercises.map((ex) => Math.max(60, Math.ceil(exerciseLabel(ex).length * 6.6 + 14)));
 
   const rows = useMemo(() => {
     if (!tableExercises.length) return [];
@@ -1814,12 +1817,17 @@ export default function Settings() {
             style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
             data-testid="progression-scroll"
           >
-            <table className="w-full table-fixed text-xs md:text-sm border-collapse" style={{ minWidth: `${44 + tableExercises.length * 58}px` }} data-testid="progression-table">
+            <table className="w-full table-fixed text-xs md:text-sm border-collapse" style={{ minWidth: `${44 + colWidths.reduce((a, b) => a + b, 0)}px` }} data-testid="progression-table">
+              {/* Spalte so breit wie ihr Name braucht; reicht der Platz nicht, scrollt die Tabelle seitlich */}
+              <colgroup>
+                <col style={{ width: 44 }} />
+                {colWidths.map((w, i) => <col key={tableExercises[i].key} style={{ width: w }} />)}
+              </colgroup>
               <thead className="sticky top-0 z-10 bg-[#121212]">
                 <tr className="text-[9px] md:text-[10px] uppercase tracking-normal md:tracking-widest text-ink-3 border-b border-[#1A1A1A]">
                   <th className="py-2 pr-1 md:pr-4 text-left w-12 md:w-16 bg-[#121212]">{t("common.week")}</th>
                   {tableExercises.map((ex) => (
-                    <th key={ex.key} className={`py-2 px-0.5 md:px-4 text-center bg-[#121212] truncate ${exerciseLabel(ex).length > 10 ? "text-[8px] md:text-[10px]" : ""}`} style={{ color: ex.color }}>{exerciseLabel(ex)}</th>
+                    <th key={ex.key} className="py-2 px-1 md:px-4 text-center bg-[#121212] whitespace-nowrap" style={{ color: ex.color }}>{exerciseLabel(ex)}</th>
                   ))}
                 </tr>
               </thead>
