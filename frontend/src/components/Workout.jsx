@@ -3,7 +3,7 @@
 // Wiederholungen je Runde per Tippen oder Sprache, Summe live -> am Ende „Eintragen“.
 // Während des Trainings sieht die Crew auf der Karte „LIVE · Runde 3/8 · 34“ (PUT /me/live).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { X, Play, Pause, Stop, Minus, Plus, Microphone, MicrophoneSlash, Check, Timer, PencilSimple, SpeakerHigh, SpeakerSlash, Lightning } from "@phosphor-icons/react";
+import { X, Play, Pause, Stop, Minus, Plus, Microphone, Check, Timer, PencilSimple, SpeakerHigh, SpeakerSlash, Gear } from "@phosphor-icons/react";
 import { api } from "../lib/api";
 import { useI18n } from "../i18n";
 import { speechLang, isTimeUnit, secondsToUnit, formatClock, matchVoiceCommand } from "../lib/stopwatch";
@@ -80,6 +80,19 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
   const setPrefs = (patch) => setPrefsState((p) => { const n = { ...p, ...patch }; writePrefs(n); return n; });
   const steps = DEFAULT_STEPS.map((d, i) => Number(prefs.steps?.[i]) > 0 ? Number(prefs.steps[i]) : d);
   const [editSteps, setEditSteps] = useState(false);
+  const [showSettings, setShowSettings] = useState(false); // Zahnrad: Live-Werte (wie im Eintrage-Formular)
+  // Vorlagen: eigene Liste (Standard-Vorlagen lassen sich auch löschen); null = noch nie geändert -> Standard
+  const presets = Array.isArray(prefs.presets) ? prefs.presets : PRESETS;
+  const [editPresets, setEditPresets] = useState(false);
+  const [presetName, setPresetName] = useState("");
+  const presetLabel = (p) => p.name || (PRESETS.some((d) => d.id === p.id) ? t(`wo.preset.${p.id}`) : `${p.work}/${p.rest}`);
+  const isCurrent = (p) => p.work === work && p.rest === rest && p.rounds === rounds;
+  const savePreset = () => {
+    const p = { id: `own_${Date.now().toString(36)}`, name: presetName.trim().slice(0, 24) || undefined, work, rest, rounds };
+    setPrefs({ presets: [...presets, p] });
+    setPresetName("");
+  };
+  const deletePreset = (id) => setPrefs({ presets: presets.filter((p) => p.id !== id) });
   const savedRef = useRef(0); // Live eintragen: schon gespeicherte Menge
   // Coach: Sprache + Stimme wie bei der Stoppuhr
   const cLangPref = readLS("tyc_sw_coach_lang");
@@ -320,11 +333,45 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
   return (
     <div className="fixed inset-0 z-[55] bg-[#0A0A0A] overflow-y-auto overscroll-contain" data-testid="workout">
       <div className="max-w-xl mx-auto px-4 pt-4 pb-10" style={{ paddingBottom: "calc(40px + env(safe-area-inset-bottom))" }}>
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 mb-4">
           <Timer size={22} weight="bold" className="text-[#CCFF00]" />
-          <p className="font-anton text-2xl tracking-tight flex-1">{t("wo.title")}</p>
+          <p className="font-anton text-2xl tracking-tight mr-1">{t("wo.title")}</p>
+          {/* Symbole wie im Eintrage-Formular */}
+          <button type="button" onClick={(e) => { setShowSettings((v) => !v); e.currentTarget.blur(); }} aria-pressed={showSettings} aria-label={t("common.settings")} title={t("common.settings")}
+            className={`w-7 h-7 flex items-center justify-center transition-colors focus:outline-none ${showSettings ? "text-black bg-[#FFD700]" : "text-[#FFD700] [@media(hover:hover)]:hover:bg-[#FFD700]/15 active:bg-[#FFD700]/15"}`} data-testid="wo-gear">
+            <Gear size={18} weight={showSettings ? "fill" : "bold"} />
+          </button>
+          <button type="button" onClick={(e) => { unlockAudio(); setPrefs({ coach: !prefs.coach }); e.currentTarget.blur(); }} aria-pressed={prefs.coach} aria-label={t("wo.coach")} title={t("wo.coach")}
+            className={`w-7 h-7 flex items-center justify-center transition-colors focus:outline-none ${prefs.coach ? "text-[#CCFF00]" : "text-ink-3"} [@media(hover:hover)]:hover:bg-[#CCFF00]/15 active:bg-[#CCFF00]/15`} data-testid="wo-coach">
+            {prefs.coach ? <SpeakerHigh size={18} weight="fill" /> : <SpeakerSlash size={18} weight="bold" />}
+          </button>
+          {micAllowed && (
+            <button type="button" onClick={(e) => { if (!mic && stage === "run") kickVoice(lang); setMic((m) => !m); e.currentTarget.blur(); }} aria-pressed={mic} aria-label={t("wo.voice")} title={t("wo.voice")}
+              className={`w-7 h-7 flex items-center justify-center transition-colors focus:outline-none ${mic ? "text-black bg-[#FF3B30]" : "text-[#CCFF00] [@media(hover:hover)]:hover:bg-[#CCFF00]/15 active:bg-[#CCFF00]/15"}`} data-testid="wo-mic">
+              <Microphone size={18} weight={mic ? "fill" : "bold"} className={mic && stage === "run" ? "animate-pulse" : ""} />
+            </button>
+          )}
+          <span className="flex-1" />
+          {prefs.live && (
+            <span className="relative flex w-2.5 h-2.5 mr-1" data-testid="wo-live-indicator" aria-hidden="true">
+              <span className="absolute inset-0 rounded-full bg-[#00FF66] opacity-60 animate-ping" />
+              <span className="relative inline-flex rounded-full w-2.5 h-2.5 bg-[#00FF66] shadow-[0_0_8px_rgba(0,255,102,0.6)]" />
+            </span>
+          )}
           <button type="button" onClick={() => (stage === "run" ? finish() : onClose?.())} className="w-10 h-10 border border-[#333] text-ink-2 hover:text-white flex items-center justify-center" aria-label={t("common.close")} data-testid="wo-close"><X size={18} weight="bold" /></button>
         </div>
+        {showSettings && (
+          <label className="flex items-center gap-3 cursor-pointer select-none w-fit mb-4" data-testid="wo-live-row">
+            <button type="button" role="switch" aria-checked={prefs.live} onClick={() => setPrefs({ live: !prefs.live })} data-testid="wo-live"
+              style={{ WebkitTapHighlightColor: "transparent" }}
+              className={`relative w-10 h-5 rounded-full transition-colors duration-200 focus:outline-none ${prefs.live ? "bg-[#CCFF00]" : "bg-[#2A2A2A] border border-[#333]"}`}>
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200 ${prefs.live ? "left-[22px] bg-black" : "left-0.5 bg-[#888]"}`} />
+            </button>
+            <span className="text-[10px] uppercase tracking-widest text-ink-2">
+              {t("log.live")} <span className={prefs.live ? "text-[#CCFF00]" : "text-ink-3"}>{prefs.live ? t("common.on") : t("common.off")}</span>
+            </span>
+          </label>
+        )}
 
         {stage === "setup" && (
           <div className="space-y-4">
@@ -342,19 +389,47 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-ink-3 mb-2">{t("wo.presets")}</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-[10px] uppercase tracking-widest text-ink-3">{t("wo.presets")}</p>
+                    <button type="button" onClick={() => setEditPresets((v) => !v)} aria-pressed={editPresets} aria-label={t("wo.editPresets")} title={t("wo.editPresets")}
+                      className={`w-6 h-6 flex items-center justify-center ${editPresets ? "text-black bg-[#FFD700]" : "text-[#FFD700]"}`} data-testid="wo-edit-presets">
+                      {editPresets ? <Check size={12} weight="bold" /> : <PencilSimple size={12} weight="bold" />}
+                    </button>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {PRESETS.map((p) => {
-                      const on = p.work === work && p.rest === rest && p.rounds === rounds;
-                      return (
-                        <button key={p.id} type="button" onClick={() => { setWork(p.work); setRest(p.rest); setRounds(p.rounds); }} data-testid={`wo-preset-${p.id}`}
-                          className={`text-left px-3 py-2 border ${on ? "border-[#CCFF00] bg-[#CCFF00]/10" : "border-[#222] bg-[#121212]"}`}>
-                          <p className="font-anton text-lg leading-tight">{t(`wo.preset.${p.id}`)}</p>
+                    {presets.map((p) => (
+                      <div key={p.id} className="relative">
+                        <button type="button" onClick={() => { setWork(p.work); setRest(p.rest); setRounds(p.rounds); }} data-testid={`wo-preset-${p.id}`}
+                          className={`w-full text-left px-3 py-2 border ${isCurrent(p) ? "border-[#CCFF00] bg-[#CCFF00]/10" : "border-[#222] bg-[#121212]"}`}>
+                          <p className="font-anton text-lg leading-tight truncate pr-5">{presetLabel(p)}</p>
                           <p className="text-[11px] text-ink-3">{p.work}s / {p.rest}s × {p.rounds}</p>
                         </button>
-                      );
-                    })}
+                        {editPresets && (
+                          <button type="button" onClick={() => deletePreset(p.id)} aria-label={t("common.remove")}
+                            className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center text-ink-3 hover:text-[#FF3B30]" data-testid={`wo-del-${p.id}`}>
+                            <X size={12} weight="bold" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
+                  {editPresets && (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex gap-2">
+                        <input value={presetName} onChange={(e) => setPresetName(e.target.value)} maxLength={24} placeholder={`${work}/${rest} × ${rounds}`}
+                          className="flex-1 min-w-0 bg-[#0A0A0A] border border-[#333] px-3 py-2 text-sm text-white placeholder:text-ink-3 outline-none focus:border-[#CCFF00]/60" data-testid="wo-preset-name" />
+                        <button type="button" onClick={savePreset} disabled={presets.some(isCurrent)}
+                          className="shrink-0 border border-[#CCFF00]/60 text-[#CCFF00] px-3 text-[11px] uppercase tracking-widest font-bold flex items-center gap-1.5 disabled:opacity-40" data-testid="wo-preset-save">
+                          <Plus size={12} weight="bold" /> {t("wo.savePreset")}
+                        </button>
+                      </div>
+                      {Array.isArray(prefs.presets) && (
+                        <button type="button" onClick={() => setPrefs({ presets: null })} className="text-[10px] uppercase tracking-widest text-ink-3 hover:text-white" data-testid="wo-preset-reset">
+                          {t("wo.resetPresets")}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <Stepper label={t("wo.work")} value={work} onChange={setWork} min={5} max={600} testid="wo-work" />
@@ -362,29 +437,6 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
                   <Stepper label={t("wo.rounds")} value={rounds} onChange={setRounds} min={1} max={50} step={1} suffix="×" testid="wo-rounds" />
                 </div>
                 <p className="text-xs text-ink-3">{t("wo.totalTime", { time: formatClock(totalSeconds(phases) - COUNTDOWN_S) })}</p>
-                <button type="button" onClick={() => { unlockAudio(); setPrefs({ coach: !prefs.coach }); }} aria-pressed={prefs.coach} data-testid="wo-coach"
-                  className={`w-full flex items-center gap-3 border p-3 text-left ${prefs.coach ? "border-[#CCFF00]/60 text-white" : "border-[#222] text-ink-2"}`}>
-                  {prefs.coach ? <SpeakerHigh size={18} weight="fill" className="text-[#CCFF00]" /> : <SpeakerSlash size={18} weight="bold" />}
-                  <span className="text-sm flex-1">{t("wo.coach")}</span>
-                  <span className="text-[10px] uppercase tracking-widest">{prefs.coach ? t("common.on") : t("common.off")}</span>
-                </button>
-                <button type="button" onClick={() => setPrefs({ live: !prefs.live })} aria-pressed={prefs.live} data-testid="wo-live"
-                  className={`w-full flex items-center gap-3 border p-3 text-left ${prefs.live ? "border-[#00FF66]/60 text-white" : "border-[#222] text-ink-2"}`}>
-                  <Lightning size={18} weight={prefs.live ? "fill" : "bold"} className={prefs.live ? "text-[#00FF66]" : ""} />
-                  <span className="flex-1 min-w-0">
-                    <span className="text-sm block">{t("wo.live")}</span>
-                    <span className="text-[11px] text-ink-3 block">{prefs.live ? t("wo.liveOn") : t("wo.liveOff")}</span>
-                  </span>
-                  <span className="text-[10px] uppercase tracking-widest">{prefs.live ? t("common.on") : t("common.off")}</span>
-                </button>
-                {micAllowed && (
-                  <button type="button" onClick={() => setMic((m) => !m)} aria-pressed={mic} data-testid="wo-mic"
-                    className={`w-full flex items-center gap-3 border p-3 text-left ${mic ? "border-[#FF3B30] text-white" : "border-[#222] text-ink-2"}`}>
-                    {mic ? <Microphone size={18} weight="fill" className="text-[#FF3B30]" /> : <MicrophoneSlash size={18} weight="bold" />}
-                    <span className="text-sm flex-1">{t("wo.voice")}</span>
-                    <span className="text-[10px] uppercase tracking-widest">{mic ? t("common.on") : t("common.off")}</span>
-                  </button>
-                )}
                 <button type="button" onClick={start} disabled={!ex} data-testid="wo-start"
                   className="w-full bg-[#CCFF00] text-black font-bold uppercase tracking-[0.2em] py-4 flex items-center justify-center gap-2 glow-lime disabled:opacity-50">
                   <Play size={18} weight="fill" /> {t("wo.start")}
@@ -447,11 +499,6 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
               <button type="button" onClick={() => pauseToggle()} className="flex-1 border border-[#333] text-white uppercase tracking-widest text-sm py-4 flex items-center justify-center gap-2" data-testid="wo-pause">
                 {pausedAt ? <><Play size={18} weight="fill" /> {t("sw.resume")}</> : <><Pause size={18} weight="fill" /> {t("sw.pause")}</>}
               </button>
-              {micAllowed && (
-                <button type="button" onClick={() => { if (!mic) kickVoice(lang); setMic((m) => !m); }} aria-pressed={mic} className={`w-14 border flex items-center justify-center ${mic ? "border-[#FF3B30] text-[#FF3B30]" : "border-[#333] text-ink-2"}`} aria-label={t("wo.voice")} data-testid="wo-mic-run">
-                  {mic ? <Microphone size={18} weight="fill" className="animate-pulse" /> : <MicrophoneSlash size={18} weight="bold" />}
-                </button>
-              )}
               <button type="button" onClick={finish} className="flex-1 border border-[#FF3B30]/50 text-[#FF3B30] uppercase tracking-widest text-sm py-4 flex items-center justify-center gap-2" data-testid="wo-finish">
                 <Stop size={18} weight="fill" /> {t("wo.finish")}
               </button>

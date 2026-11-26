@@ -4,11 +4,12 @@ import { wordsToDigits } from "./voiceLog";
 export const COUNTDOWN_S = 3;
 
 // Vorlagen: Arbeit / Pause in Sekunden, Runden
+// Reihenfolge (Dean 2026-11-26): oben HIIT | EMOM, unten Ausdauer | Tabata
 export const PRESETS = [
-  { id: "tabata", work: 20, rest: 10, rounds: 8 },
   { id: "hiit", work: 40, rest: 20, rounds: 8 },
-  { id: "long", work: 45, rest: 15, rounds: 10 },
   { id: "emom", work: 60, rest: 0, rounds: 10 },
+  { id: "long", work: 45, rest: 15, rounds: 10 },
+  { id: "tabata", work: 20, rest: 10, rounds: 8 },
 ];
 
 export const clampInt = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
