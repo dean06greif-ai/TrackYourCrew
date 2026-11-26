@@ -1075,15 +1075,13 @@ export default function Settings() {
 
             <button
               onClick={saveProfile}
-              disabled={savingProfile || !profileDirty}
+              disabled={savingProfile}
               data-testid="save-profile-button"
               data-dirty={profileDirty ? "1" : "0"}
-              className={`w-full md:w-auto justify-center font-bold uppercase tracking-widest py-3 px-6 flex items-center gap-2 transition-all ${profileDirty
-                ? "bg-[#CCFF00] hover:bg-[#D4FF33] text-black hover:-translate-y-0.5 glow-lime disabled:opacity-60"
-                : "bg-transparent border border-[#2A2A2A] text-ink-3 cursor-default"}`}
+              className="w-full md:w-auto justify-center bg-[#CCFF00] hover:bg-[#D4FF33] text-black font-bold uppercase tracking-widest py-3 px-6 flex items-center gap-2 transition-all hover:-translate-y-0.5 glow-lime disabled:opacity-60"
             >
-              {profileDirty ? <FloppyDisk size={16} weight="bold" /> : <Check size={16} weight="bold" />}
-              {savingProfile ? t("common.saving") : profileDirty ? t("settings.saveProfile") : t("common.saved")}
+              <FloppyDisk size={16} weight="bold" />
+              {savingProfile ? t("common.saving") : t("settings.saveProfile")}
             </button>
 
             {/* Weitere Einstellungen: eingeklappt, damit die Seite ruhig bleibt (Dean, 2026-11-24) */}

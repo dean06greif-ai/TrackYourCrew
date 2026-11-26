@@ -83,7 +83,7 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
   „Fortschritt eintragen“ (`components/GlobalVoice.jsx`, 10 s Stille = aus) schaltet Formular- (30 s) und Stoppuhr-Mikro (60 s) mit;
   „starte die Stoppuhr (für X)“ -> Ereignis `tyc:sw`, sonst Rückfrage „Für welche Übung?“. „fertig“ trägt direkt ein,
   Einstellung „Erst bestätigen“ (localStorage `tyc_voice_confirm`) zeigt vorher die Prüfen-Ansicht.
-- **Speichern:** Profil (Name/Bild) per Knopf, der nur bei Änderung leuchtet; Schalter speichern sofort; Übungen per Leiste unten (Dean 2026-11-26: so lassen).
+- **Speichern:** Profil (Name/Bild) per Knopf „Profil speichern“ (immer neongelb, wie früher – Dean 2026-11-26); Schalter speichern sofort; Übungen per Leiste unten (Dean 2026-11-26: so lassen).
 - **Sprachcoach (Stoppuhr):** Ansagen mit fester ID in `lib/coachClips.js`; KI-Stimmen als Pakete `<stimme>-<stil>`
   in `public/coach/<paket>/<lang>/` + `packs.json` (erzeugt mit `node tools/gen-coach-voice.mjs`, Deans 10 Stimmen, Standard `de,en`; `ash-beast` voreingestellt;
   harte Ansagen `coach.hard.*` in `<lang>-hart` bei Stilen hart/beast, Schalter „Hart“; Coach-Sprache wählbar, Standard App-Sprache;

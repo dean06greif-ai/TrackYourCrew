@@ -32,6 +32,25 @@ describe("Zahlwörter", () => {
   });
 });
 
+describe("Zahlen und Einheiten (alle 4 Sprachen)", () => {
+  const E = [
+    { key: "lauf", name: "Lauf", unit: "km" }, { key: "push", name: "Liegestütze", unit: "" },
+    { key: "plank", name: "Plank", unit: "s" }, { key: "rad", name: "Radfahren", unit: "min" },
+  ];
+  test.each([
+    ["eine Minute dreißig Plank", "plank", 90], ["2 Minuten und 15 Sekunden Plank", "plank", 135], ["Plank 1:30", "plank", 90],
+    ["1 hour 20 minutes cycling", "rad", 80], ["half an hour cycling", "rad", 30], ["media hora en bici", "rad", 30], ["une demi-heure de vélo", "rad", 30],
+    ["einhundertzwanzig Liegestütze", "push", 120], ["one hundred and twenty push-ups", "push", 120], ["twenty-five push-ups", "push", 25],
+    ["doscientas flexiones", "push", 200], ["veintiún flexiones", "push", 21],
+    ["deux cents pompes", "push", 200], ["quatre vingt dix pompes", "push", 90], ["soixante et onze pompes", "push", 71], ["dix sept pompes", "push", 17],
+    ["ein halber Kilometer gelaufen", "lauf", 0.5], ["half a kilometer run", "lauf", 0.5], ["un demi kilomètre couru", "lauf", 0.5],
+    ["5km gelaufen", "lauf", 5], ["ran a 5k", "lauf", 5], ["5 km und 300 Meter gelaufen", "lauf", 5.3], ["cinco punto dos kilómetros", "lauf", 5.2],
+    ["tausend Meter gelaufen", "lauf", 1], ["Plank 45s", "plank", 45], ["Plank 30 Sek.", "plank", 30], ["a minute plank", "plank", 60],
+  ])("%s", (text, key, amount) => {
+    expect(parseVoiceLog(text, E, 3).items[0]).toMatchObject({ key, amount });
+  });
+});
+
 describe("alle 4 Sprachen, egal welche App-Sprache", () => {
   const E = [...EX, { key: "gym", name: "Gym", unit: "×", type: "activity" }];
   test.each([
