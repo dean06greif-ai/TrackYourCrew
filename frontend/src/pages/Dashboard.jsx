@@ -28,7 +28,7 @@ import { tourEvent, tourNeed, TOUR_EVENT } from "../lib/tour";
 import InstallSheet from "../components/InstallSheet";
 import { countVisit, currentPlatform, markLogged, readInstallState, shouldAutoShow, snoozedState, writeInstallState } from "../lib/install";
 import { amountParts } from "../lib/amount";
-import { VoiceLogButton, VoiceLogPanel } from "../components/VoiceLog";
+import { VoiceLogButton, VoiceLogPanel, VoiceSaved } from "../components/VoiceLog";
 import { GlobalMicButton, useGlobalVoiceRouter } from "../components/GlobalVoice";
 import LegalLinks from "../components/LegalLinks";
 import { useVoiceConfirm, setGlobalVoice } from "../lib/voiceHub";
@@ -295,6 +295,7 @@ export default function Dashboard() {
   const [voiceAsk, setVoiceAsk] = useState("");
   const voiceConfirmOn = useVoiceConfirm();
   const voiceSaveRef = useRef(false);
+  const voiceSummaryRef = useRef(null); // was per Sprache eingetragen wurde -> Rückmeldung im Speichern-Toast
   const scheduleLiveSave = useCallback(() => {
     if (!liveSaveEnabled) return;
     if (liveSaveTimerRef.current) clearTimeout(liveSaveTimerRef.current);
@@ -1093,7 +1094,14 @@ export default function Dashboard() {
         setSavedLogForm(sums);
       }
       if (!silent) {
-        toast.success(t("log.saved"), { duration: 2500 });
+        const vRows = voiceSummaryRef.current;
+        voiceSummaryRef.current = null;
+        if (vRows?.length) {
+          toast.success(t("log.saved"), {
+            duration: 6000,
+            description: <VoiceSaved rows={vRows} exercises={me?.exercises || []} todayIdx={getTodayIdx()} dayNames={weekdayNames(locale, "long")} t={t} locale={locale} />,
+          });
+        } else toast.success(t("log.saved"), { duration: 2500 });
         closeStepSettings();
         setLogging(false);
       }
@@ -1140,14 +1148,20 @@ export default function Dashboard() {
     // Wochensumme kommt aus dem Formular (enthält auch alte Einträge ohne Mo–So-Aufteilung).
     // Gesamt-Modus: Speichern verteilt den Rest (Summe − Tage) wie gewohnt auf heute.
     const actKeys = new Set((me?.exercises || []).filter(isActivity).map((e) => e.key));
+    const rows = [];
     for (const it of items) {
       if (actKeys.has(it.key)) {
+        rows.push({ key: it.key, day: it.day, kind: Number(newDays?.[it.day]?.[it.key]) > 0 ? "doneSame" : "done", amount: 1 });
         // Aktivität: der Tag gilt als erledigt (nie mehr als 1 pro Tag)
         newDays[it.day] = { ...(newDays[it.day] || {}), [it.key]: 1 };
         newForm[it.key] = doneDays(newDays, it.key).length;
         continue;
       }
       const formTotal = Number(newForm[it.key]) || 0;
+      const curDay = Number(newDays?.[it.day]?.[it.key]) || 0;
+      if (it.mode === "set") rows.push({ key: it.key, day: it.day, kind: round2(formTotal) === round2(it.amount) ? "same" : "set", amount: it.amount, from: formTotal });
+      else if (it.mode === "day") rows.push({ key: it.key, day: it.day, kind: round2(curDay) === round2(it.amount) ? "same" : "day", amount: it.amount, from: curDay });
+      else rows.push({ key: it.key, day: it.day, kind: "add", amount: it.amount });
       if (it.mode === "set") {
         if (logMode === "days") {
           const delta = it.amount - sumOf(it.key);
@@ -1169,6 +1183,7 @@ export default function Dashboard() {
     setLogDays(newDays);
     setLogForm(newForm);
     setVoiceOpen(false);
+    voiceSummaryRef.current = rows;
     voiceSaveRef.current = true;
     tourEvent("voice-logged");
   };

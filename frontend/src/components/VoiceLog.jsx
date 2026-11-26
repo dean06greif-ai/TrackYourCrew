@@ -12,6 +12,7 @@ import { useMicEnabled } from "../lib/mic";
 import { useVoiceChannel, useSilenceTimeout, cleanSpeech, mentionsStopwatch } from "../lib/voiceHub";
 import { exerciseLabel } from "../lib/exercises";
 import { formatAmount } from "../lib/amount";
+import ExerciseIcon from "./ExerciseIcon";
 
 const SpeechRec = typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 const SILENCE_MS = 2500;
@@ -152,5 +153,31 @@ export function VoiceLogPanel({ exercises, todayIdx, dayNames, onApply, onClose,
         </div>
       )}
     </div>
+  );
+}
+
+// Rückmeldung nach dem Speichern per Sprache (Dean 2026-11-26): unter „Fortschritt gespeichert“ steht je
+// Eintrag, was passiert ist – auch wenn sich nichts geändert hat („heute schon 10 drin“).
+// rows: [{key, day, kind: add|day|set|same|done|doneSame, amount, from}]
+export function VoiceSaved({ rows, exercises, todayIdx, dayNames, t, locale }) {
+  const byKey = Object.fromEntries(exercises.map((e) => [e.key, e]));
+  const dayLabel = (d) => (d === todayIdx ? t("voice.fbToday") : d === todayIdx - 1 ? t("voice.fbYesterday") : dayNames[d]);
+  return (
+    <ul className="mt-1 space-y-1" data-testid="voice-saved">
+      {rows.map((r, i) => {
+        const ex = byKey[r.key];
+        if (!ex) return null;
+        const name = exerciseLabel(ex);
+        const v = formatAmount(r.amount, ex.unit, locale);
+        const vars = { day: dayLabel(r.day), name, v, from: formatAmount(r.from || 0, ex.unit, locale) };
+        const same = r.kind === "same" || r.kind === "doneSame";
+        return (
+          <li key={i} className={`flex items-center gap-1.5 text-xs ${same ? "opacity-60" : ""}`} data-testid={`voice-saved-${r.kind}`}>
+            <span style={{ color: ex.color || "#CCFF00" }} className="shrink-0 flex"><ExerciseIcon icon={ex.icon} size={14} /></span>
+            <span>{t(`voice.fb.${r.kind}`, vars)}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

@@ -10,7 +10,7 @@
 //  - Tag: heute (Standard), gestern, vorgestern, Wochentag (nur bis heute)
 //  - „insgesamt / in total / en total / au total“ = Wochensumme setzen statt dazuzählen
 // Ende-Wörter („das war's“, „fertig“, „that's it“ …) beenden die Aufnahme.
-import { detectExerciseKind, normalizeName } from "./exercises";
+import { detectExerciseKind, normalizeName, exerciseLabel } from "./exercises";
 import { parseUnit } from "./ranks";
 
 const strip = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss");
@@ -165,7 +165,50 @@ function findExercise(segment, toks, exercises) {
     const byKind = exercises.filter((e) => detectExerciseKind(e.name) === kind);
     if (byKind.length >= 1) return byKind.find((e) => !e.variant) || byKind[0];
   }
-  return null;
+  // 3) unscharf: klingt fast wie eine der EIGENEN Übungen („Liege Stützen“, „Klim Züge“)
+  return fuzzyExercise(toks, exercises);
+}
+
+// ── Unscharfe Zuordnung (Dean 2026-11-26) ───────────────────────────────
+// Nur gegen die aktuellen Übungen des Nutzers, nie gegen eine allgemeine Liste. Verglichen werden
+// 1–3 aufeinanderfolgende Wörter (zusammengezogen) mit Name/Anzeigename per Editierabstand.
+function lev(a, b) {
+  if (a === b) return 0;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+const NOT_NAME = /^(\d+(\.\d+)?|heute|gestern|vorgestern|today|yesterday|hoy|ayer|noch|insgesamt|gemacht|habe|hab|ich|bin|war|did|done|have|i|hice|he|fait|j'?ai|und|and|mal|times|veces|fois)$/;
+export function fuzzyScore(spoken, name) {
+  const a = normalizeName(spoken);
+  const b = normalizeName(name);
+  if (a.length < 3 || b.length < 4) return 0;
+  return 1 - lev(a, b) / Math.max(a.length, b.length);
+}
+function fuzzyExercise(toks, exercises) {
+  const words = toks.filter((t) => t && !NOT_NAME.test(t) && !spokenUnit(t));
+  const windows = [];
+  for (let i = 0; i < words.length; i++) {
+    for (let n = 1; n <= 3 && i + n <= words.length; n++) windows.push(words.slice(i, i + n).join(""));
+  }
+  if (!windows.length) return null;
+  const scored = exercises.map((e) => {
+    const names = [e.name, exerciseLabel(e)].filter(Boolean);
+    let best = 0;
+    for (const w of windows) for (const nm of names) best = Math.max(best, fuzzyScore(w, nm));
+    return { e, best };
+  }).sort((x, y) => y.best - x.best);
+  const top = scored[0];
+  if (!top || top.best < 0.7) return null;
+  // eindeutig: die zweitbeste Übung muss klar schlechter passen
+  if (scored[1] && top.best - scored[1].best < 0.1) return null;
+  return top.e;
 }
 
 // Für das Dashboard-Mikro: welche der Übungen wird im Satz genannt? (oder null)

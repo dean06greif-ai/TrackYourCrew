@@ -32,6 +32,30 @@ describe("Zahlwörter", () => {
   });
 });
 
+describe("unscharfe Zuordnung (nur eigene Übungen)", () => {
+  const MINE = [
+    { key: "kb", name: "Kniebeugen", unit: "" },
+    { key: "bur", name: "Burpees", unit: "" },
+    { key: "pull", name: "Klimmzüge", unit: "" },
+  ];
+  test("verhörte Namen werden der eigenen Übung zugeordnet", () => {
+    expect(p("heute 20 Knie Beuge gemacht", MINE).items[0]).toMatchObject({ key: "kb", amount: 20 });
+    expect(p("15 Bör Pies", MINE).items[0]).toMatchObject({ key: "bur", amount: 15 });
+    expect(p("8 Klim Züge", MINE).items[0]).toMatchObject({ key: "pull", amount: 8 });
+    expect(p("12 Kniebeuge", MINE).items[0]).toMatchObject({ key: "kb" });
+  });
+  test("nur gegen die aktuellen Übungen: Fremdes bleibt unbekannt", () => {
+    const r = p("20 Sit-ups", MINE);
+    expect(r.items).toEqual([]);
+    expect(r.unknown.length).toBe(1);
+  });
+  test("Ähnlichkeit", async () => {
+    const { fuzzyScore } = await import("./voiceLog");
+    expect(fuzzyScore("liegestutzen", "Liegestütze")).toBeGreaterThan(0.85);
+    expect(fuzzyScore("gemacht", "Plank")).toBeLessThan(0.5);
+  });
+});
+
 describe("Tagesstand oder dazu (genau sein)", () => {
   test("mit Tagesangabe = Stand des Tages", () => {
     expect(p("ich habe heute 10 Liegestütze gemacht").items[0]).toMatchObject({ key: "push", amount: 10, mode: "day", day: 3 });
