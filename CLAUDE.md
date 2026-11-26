@@ -186,8 +186,8 @@ Umgebungsvariablen: siehe `backend/.env.example` und `frontend/.env.example`.
   Danach (nicht jetzt): Deploy/Git-Umzug, Promo (UMSETZUNGSPLAN 6.4–6.6), App-Release (6.7).
   Übersetzungen: neue Schlüssel in alle 4 Dateien `frontend/src/i18n/*.js`, Prüfung `python tools/check-i18n.py`
   (läuft auch in `tools/check.sh frontend`).
-- Noch nichts nach GitHub hochgeladen. Nächste Schritte laut `docs/BACKLOG.md`:
-  1. Git-Umzug nach TrackYourCrew (Abschnitt "Git-Umzug", wartet auf Freigabe des Nutzers)
+- Git-Umzug erledigt (2026-11-26, siehe Abschnitt Git). Nächste Schritte laut `docs/BACKLOG.md`:
+  1. ~~Git-Umzug~~ ✅
   2. Sicherheit S1/S1b (DB-Passwort + Google-Secret erneuern)
   3. Deployment komplett auf Render (D1-D3)
 
@@ -203,8 +203,10 @@ Umgebungsvariablen: siehe `backend/.env.example` und `frontend/.env.example`.
 - In `App.js` steht die Warnung, keine Backend-URL fest einzutragen: nur `REACT_APP_BACKEND_URL`.
 
 ## Git
-Zielrepo: https://github.com/dean06greif-ai/TrackYourCrew (ein Repo für beides).
-Der lokale Ordner enthält historisch drei verschachtelte Repos (Wurzel -> `Tracker`,
-`backend/` -> `TrackerAPP`, `frontend/` -> `Frontend`). Zustand und Umzug: siehe
-`docs/BACKLOG.md`, Abschnitt "Git-Umzug".
+Repo: https://github.com/dean06greif-ai/TrackYourCrew (öffentlich, ein Repo für Backend + Frontend, Zweig `main`).
+Seit 2026-11-26 (Git-Umzug) gibt es nur noch das Wurzel-Repo, ohne alte Historie. Alte Repos (`Tracker`,
+`TrackerAPP`, `Frontend`) liegen lokal als Bundles + `.git`-Ordner in `_archiv/git-alt/`, die alte Wurzel-Historie
+zusätzlich im lokalen Zweig `alt-main` (nie pushen: TrackerAPP-Historie enthält das alte DB-Passwort).
+Render ist noch NICHT mit dem Repo verbunden; sobald doch, löst jeder Push auf `main` ein Live-Deployment aus.
+Öffentlich -> vor jedem Commit an Secrets denken (`.env*` sind ignoriert).
 Commit-Nachrichten: kurz, deutsch, was und warum (nicht "hjklö").

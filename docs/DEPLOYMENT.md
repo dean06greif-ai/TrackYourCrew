@@ -11,7 +11,7 @@ Reihenfolge: 0 → 6. Schritte mit 🔑 brauchen deine Zugangsdaten, die mache i
 ---
 
 ## 0. Voraussetzung: Code auf GitHub
-Der Git-Umzug nach `TrackYourCrew` (BACKLOG, Abschnitt "Git-Umzug") muss erledigt sein.
+✅ Erledigt (2026-11-26): Code liegt in `dean06greif-ai/TrackYourCrew`, Zweig `main`.
 Render baut immer aus GitHub. **Jeder Push auf `main` löst danach ein Live-Deployment aus.**
 
 ## 0b. 🔑 Impressum + Datenschutz ausfüllen (Pflicht, 2 Minuten)

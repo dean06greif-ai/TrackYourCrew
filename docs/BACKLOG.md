@@ -125,21 +125,11 @@ Erledigtes abhaken und Datum dazuschreiben. "Geprüft" heißt: per Test oder Cod
 - [ ] **D2 – Eines der zwei Render-Backends stilllegen** (`trackerapp-fr8f` vs. `tracker-07uz`).
 - [ ] **D3 – Netlify abschalten**, sobald D1 läuft.
 
-## Git-Umzug nach TrackYourCrew (wartet auf Freigabe)
-
-Ist-Zustand lokal: drei verschachtelte Repos mit je eigenen, nicht eingecheckten Änderungen.
-| Ordner | Remote | Hinweis |
-|---|---|---|
-| Wurzel | `Tracker` | führt `backend` als Verweis, `frontend` doppelt |
-| `backend/` | `TrackerAPP` | Historie enthält das DB-Passwort (S1) und den 32-MB-Installer |
-| `frontend/` | `Frontend` | – |
-
-Vorschlag:
-1. Die drei alten `.git`-Ordner nach `_archiv/git-alt/` verschieben (nichts löschen).
-2. Im Wurzelordner ein neues Repo mit sauberer erster Version anlegen, Remote = TrackYourCrew.
-3. Vercel (Root Directory `frontend`) und Render (Root Directory `backend`) auf das neue
-   Repo umstellen. Bis dahin deployen sie weiter aus den alten Repos.
-4. Alte Repos archivieren bzw. auf privat stellen.
+## Git-Umzug nach TrackYourCrew ✅ (2026-11-26)
+Erledigt: ein Repo `TrackYourCrew` (öffentlich), erste Version ohne alte Historie. Alte `.git`-Ordner + Bundles in
+`_archiv/git-alt/` (Wurzel-`.git` war gesperrt -> alte Wurzel-Historie als lokaler Zweig `alt-main`).
+Offen: Render auf das neue Repo umstellen (DEPLOYMENT Schritt 1), danach alte Repos `Tracker`, `TrackerAPP`,
+`Frontend` auf GitHub archivieren bzw. auf privat stellen (TrackerAPP enthält das alte DB-Passwort -> S1).
 
 ## Erledigt
 
