@@ -1,4 +1,4 @@
-import { parseVoiceLog, wordsToDigits, isDone } from "./voiceLog";
+import { parseVoiceLog, wordsToDigits, isDone, spokenDigits } from "./voiceLog";
 
 const EX = [
   { key: "lauf", name: "Lauf", unit: "km" },
@@ -206,4 +206,30 @@ describe("keine / löschen (Dean 2026-11-27)", () => {
     expect(r.refused).toBe("week");
     expect(r.items).toEqual([]);
   });
+});
+
+describe("Übung schlägt Aktivität mit ähnlicher Art (Dean 2026-11-27)", () => {
+  const EXA = [
+    { key: "pull", name: "Klimmzüge", unit: "" },
+    { key: "act", name: "Pull", unit: "×", type: "activity" },
+  ];
+  test("„habe heute 10 Klimmzüge gemacht“ -> Klimmzüge, nicht Aktivität Pull", () => {
+    const r = parseVoiceLog("habe heute 10 Klimmzüge gemacht", EXA, 2);
+    expect(r.items).toEqual([{ key: "pull", amount: 10, day: 2, mode: "day" }]);
+  });
+  test("„heute war ich bei Pull“ -> Aktivität (Name genau genannt)", () => {
+    const r = parseVoiceLog("heute war ich bei Pull", EXA, 2);
+    expect(r.items).toEqual([{ key: "act", amount: 1, day: 2, mode: "add" }]);
+  });
+});
+
+describe("Anzeige mit Ziffern (Dean 2026-11-27)", () => {
+  test.each([
+    ["Ich habe zehn Liegestütze gemacht", "Ich habe 10 Liegestütze gemacht"],
+    ["heute fünfundzwanzig Klimmzüge", "heute 25 Klimmzüge"],
+    ["I did twenty five push-ups", "I did 25 push-ups"],
+    ["treinta y cinco flexiones", "35 flexiones"],
+    ["eine Runde Laufen", "eine Runde Laufen"],
+    ["Lauf zehn Kilometer.", "Lauf 10 Kilometer."],
+  ])("%s", (a, b) => expect(spokenDigits(a)).toBe(b));
 });

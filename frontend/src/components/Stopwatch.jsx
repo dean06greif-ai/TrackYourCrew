@@ -10,6 +10,7 @@ import {
 import { clipId, cueText } from "../lib/coachClips";
 import { getAudioCtx, unlockAudio, loadPackIndex, loadCoachClips, playCoachClip, stopCoachClips } from "../lib/coachAudio";
 import { track } from "../lib/usage";
+import { spokenDigits } from "../lib/voiceLog";
 
 // Stoppuhr für Zeit-Übungen (Plan 13f) im Eintrag-Formular.
 // - Start mit 3-2-1-Countdown (Piepton, mit Coach auch gesprochen), dann zählt die Zeit.
@@ -540,7 +541,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
       {micOn && (
         <p className="text-[10px] text-ink-3 mt-1.5 leading-relaxed" data-testid={`${id}-stopwatch-voicehint`}>
           {review != null ? t("sw.voiceHintReview") : paused != null ? t("sw.voiceHintPaused") : start || count ? t("sw.voiceHintRunning") : t("sw.voiceHintIdle")}
-          {heard && <span className="text-ink-2"> · {t("sw.heard", { text: heard.trim().slice(0, 40) })}</span>}
+          {heard && <span className="text-ink-2"> · {t("sw.heard", { text: spokenDigits(heard.trim()).slice(0, 40) })}</span>}
         </p>
       )}
       {micError && <p className="text-[10px] text-[#FF3B30] mt-1.5" data-testid={`${id}-stopwatch-micerror`}>{t(`sw.err.${["insecure", "not-allowed", "not-allowed-retry", "service-not-allowed", "audio-capture", "network", "language-not-supported"].includes(micError) ? micError : "generic"}`)}</p>}

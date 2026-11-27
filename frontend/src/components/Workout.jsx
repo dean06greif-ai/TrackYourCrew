@@ -19,6 +19,7 @@ import { claimMediaSession, restoreMediaSession, pause as pauseMusic, play as pl
 import { PRESETS, buildPhases, phaseAt, parseRepsSpeech, clampInt, sum, totalSeconds, COUNTDOWN_S } from "../lib/workout";
 import ExerciseIcon from "./ExerciseIcon";
 import { track } from "../lib/usage";
+import { spokenDigits } from "../lib/voiceLog";
 
 const KEY = "tyc_workout";
 const PREFS_KEY = "tyc_workout_prefs"; // { coach: bool, live: bool, steps: [n,n,n] }
@@ -656,7 +657,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
                   </button>
                 </div>
               )}
-              {mic && <p className="text-[11px] text-ink-3 text-center mt-3" data-testid="wo-heard">{heard ? `„${heard.slice(0, 60)}“` : t("wo.voiceHint")}</p>}
+              {mic && <p className="text-[11px] text-ink-3 text-center mt-3" data-testid="wo-heard">{heard ? `„${spokenDigits(heard).slice(0, 60)}“` : t("wo.voiceHint")}</p>}
               <div className="flex flex-wrap gap-1.5 mt-4" data-testid="wo-rounds-list">
                 {Array.from({ length: rounds }, (_, i) => (
                   <span key={i} className={`text-[11px] px-2 py-1 border tabular-nums ${i + 1 === curRound ? "border-[#CCFF00] text-white" : i + 1 < curRound ? "border-[#333] text-ink-2" : "border-[#1A1A1A] text-ink-3"}`}>

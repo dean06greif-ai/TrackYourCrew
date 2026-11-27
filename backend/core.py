@@ -203,6 +203,8 @@ def _rename_defaults(exercises: list, lang: str) -> None:
         return
     for ex in exercises:
         key = ex.get("key")
+        if ex.get("name_custom"):
+            continue  # selbst benannt (auch wenn es zufällig ein Standardname einer anderen Sprache ist)
         if key in target and any(ex.get("name") == n[key] for n in i18n_messages.DEFAULT_NAMES.values()):
             ex["name"] = target[key]
 

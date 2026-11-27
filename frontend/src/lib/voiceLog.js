@@ -153,6 +153,36 @@ export function wordsToDigits(text) {
   return combineAmounts(s).trim();
 }
 
+// Anzeige „Gehört: …“ mit Ziffern statt Zahlwörtern (Dean 2026-11-27): nur Zahlwörter ersetzen,
+// der Rest bleibt wie gesprochen (Groß-/Kleinschreibung, Satzzeichen). Ein einzelnes „ein/eine/a/un“
+// bleibt ein Wort (Artikel).
+const ARTICLE = /^(ein|eine|einen|einem|einer|a|an|one|un|una|uno|une)$/;
+const JOIN = /^(y|and|und|et)$/;
+export function spokenDigits(text) {
+  const parts = String(text || "").split(/(\s+)/);
+  const clean = (w) => strip(w).replace(/[.,!?;:„“"()]/g, "");
+  const isNum = (w) => !!clean(w) && wordValue(clean(w)) != null;
+  const out = [];
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    if (!p || /^\s+$/.test(p) || !isNum(p)) { out.push(p); continue; }
+    const run = [p];
+    let j = i + 1;
+    while (j + 1 < parts.length) {
+      const nx = parts[j + 1];
+      if (isNum(nx) || (JOIN.test(clean(nx)) && j + 3 < parts.length && isNum(parts[j + 3]))) { run.push(nx); j += 2; } else break;
+    }
+    if (run.length === 1 && ARTICLE.test(clean(p))) { out.push(p); continue; }
+    const conv = wordsToDigits(run.join(" "));
+    if (/^\d/.test(conv)) {
+      const tail = (run[run.length - 1].match(/[.,!?;:]+$/) || [""])[0];
+      out.push(conv + tail);
+      i = j - 1;
+    } else out.push(p);
+  }
+  return out.join("");
+}
+
 // ── Einheiten im gesprochenen Text ───────────────────────────────────────
 const SPOKEN_UNITS = [
   { re: /^(km|kilometer|kilometern|kilometers|kilometres|kilometros|kilometre|kilometro|kms|k)$/, kind: "distance", toBase: 1 },
@@ -215,6 +245,13 @@ const ALL = /\b(alles|alle|all|everything|todo|todos|tout|tous)\b/;
 
 const ADD = /\b(noch|nochmal|weitere|weiteren|zusatzlich|dazu|extra|mehr|another|more|additional|plus|otra|otras|otro|otros|mas|encore|de plus|supplementaires?)\b/;
 const TOTAL = /\b(insgesamt|gesamt|in total|total|en total|au total|in summe)\b/;
+
+// Wurde die Übung mit ihrem eigenen Namen genannt (stärker als nur die Art, z. B. „Klimmzüge“ ↔ Aktivität „Pull“)?
+function namedIn(segment, ex) {
+  const ns = normalizeName(segment);
+  const n = normalizeName(ex?.name);
+  return !!ex && n.length >= 3 && ns.includes(n);
+}
 
 // Eine Übung des Nutzers zu einer Art/einem Namen finden
 function findExercise(segment, toks, exercises) {
@@ -314,8 +351,14 @@ export function parseVoiceLog(text, exercises, today = 0) {
   for (const seg of segments) {
     const toks = seg.split(/\s+/);
     const numIdx = toks.findIndex((t) => /^\d+(\.\d+)?$/.test(t));
-    // Aktivität (z. B. „heute war ich im Gym“): keine Zahl nötig, der Tag gilt als erledigt
-    const actEx = findExercise(seg, toks, exercises.filter((e) => e.type === "activity"));
+    // Aktivität (z. B. „heute war ich im Gym“): keine Zahl nötig, der Tag gilt als erledigt.
+    // Passt auch eine Übung: die mit ihrem Namen genannte gewinnt, sonst mit Zahl die Übung
+    // (Dean 2026-11-27: „10 Klimmzüge“ ging an die Aktivität „Pull“, weil beides Art „Klimmzug“ ist)
+    let actEx = findExercise(seg, toks, exercises.filter((e) => e.type === "activity"));
+    if (actEx && !namedIn(seg, actEx)) {
+      const exHit = findExercise(seg, toks, exercises.filter((e) => e.type !== "activity"));
+      if (exHit && (numIdx >= 0 || namedIn(seg, exHit))) actEx = null;
+    }
     if (actEx) {
       const day = dayOf(toks, today) ?? globalDay ?? today;
       if (!items.some((it) => it.key === actEx.key && it.day === day)) items.push({ key: actEx.key, amount: 1, day, mode: "add" });

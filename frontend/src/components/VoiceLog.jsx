@@ -14,6 +14,7 @@ import { useVoiceChannel, useSilenceTimeout, cleanSpeech, mentionsStopwatch, kic
 import { exerciseLabel } from "../lib/exercises";
 import { formatAmount } from "../lib/amount";
 import ExerciseIcon from "./ExerciseIcon";
+import { spokenDigits } from "../lib/voiceLog";
 
 const SpeechRec = typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 const SILENCE_MS = 2500;
@@ -128,13 +129,13 @@ export function VoiceLogPanel({ exercises, todayIdx, dayNames, onApply, onClose,
             <button type="button" onClick={() => finish()} className="text-[10px] uppercase tracking-widest text-[#CCFF00] hover:text-white" data-testid="voice-stop">{t("voice.stop")}</button>
             <button type="button" onClick={onClose} className="p-1 text-ink-3 hover:text-white" aria-label={t("common.cancel")} data-testid="voice-cancel"><X size={14} weight="bold" /></button>
           </div>
-          <p className="text-xs text-ink-3 leading-relaxed">{heard ? <span className="text-ink-2">„{heard}“</span> : t("voice.example")}</p>
+          <p className="text-xs text-ink-3 leading-relaxed">{heard ? <span className="text-ink-2">„{spokenDigits(heard)}“</span> : t("voice.example")}</p>
           {items.length > 0 && <div className="flex flex-wrap gap-1.5">{items.map((it, i) => chip(it, i, false))}</div>}
         </>
       )}
       {phase === "review" && (
         <>
-          {heard && <p className="text-xs text-ink-3 leading-relaxed">„{heard}“</p>}
+          {heard && <p className="text-xs text-ink-3 leading-relaxed">„{spokenDigits(heard)}“</p>}
           {items.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">{items.map((it, i) => chip(it, i, true))}</div>
           ) : (

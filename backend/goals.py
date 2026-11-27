@@ -500,6 +500,9 @@ def _merge_exercises(g: dict, incoming: list, cur_week: int) -> list:
         merged = dict(old)
         for field in ("name", "unit", "icon"):
             merged[field] = ex.get(field, old.get(field))
+        # Selbst umbenannt -> Name bleibt bei jedem Sprachwechsel so (Dean 2026-11-27, _rename_defaults)
+        if (merged.get("name") or "").strip() != (old.get("name") or "").strip():
+            merged["name_custom"] = True
         merged["type"] = old.get("type", "exercise")
         # Die Variante einer bestehenden Übung ändert sich nur über /upgrade
         # (alte Übung wird abgeschlossen, die Variante startet neu).

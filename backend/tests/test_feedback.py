@@ -71,3 +71,16 @@ def test_new_google_user_gets_language_and_localized_defaults(db):
     goals = run(db.user_goals.find_one({"user_id": uid}))
     assert user["language"] == "es"
     assert [e["name"] for e in goals["exercises"]] == ["Correr", "Flexiones", "Dominadas"]
+
+
+def test_selbst_benannt_bleibt_auch_als_standardname_anderer_sprache(auth):
+    """Dean 2026-11-27: wer „Push-ups“ (englischer Standardname) selbst einträgt, behält ihn beim Sprachwechsel."""
+    g = auth.get("/api/goals/me").json()
+    body = {"exercises": [{k: e[k] for k in ("key", "name", "unit", "icon", "base_value", "progression_pct")}
+                          for e in g["exercises"]]}
+    body["exercises"][1]["name"] = "Push-ups"
+    auth.put("/api/goals/me", json=body)
+    auth.put("/api/me/language", json={"language": "de"})
+    names = [e["name"] for e in auth.get("/api/goals/me").json()["exercises"]]
+    assert names[1] == "Push-ups"
+    assert names[0] == "Lauf"  # unverändert -> wird weiter übersetzt

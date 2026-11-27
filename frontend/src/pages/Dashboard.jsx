@@ -42,6 +42,7 @@ import { ActivityLogRow, ActivityDayButton } from "../components/ActivityLog";
 import { isActivity, doneDays } from "../lib/activities";
 import { AutoFitNumberInput, NumInput } from "../components/NumInput";
 import { track } from "../lib/usage";
+import { spokenDigits } from "../lib/voiceLog";
 
 // Globaler Toast-Tweak: Container click-through machen, damit Buttons hinter Nachrichten
 // trotzdem klickbar sind. Zusätzlich werden Toasts nach unten verschoben, damit sie nicht
@@ -1610,7 +1611,7 @@ export default function Dashboard() {
             </div>
             {globalVoiceOn && (
               <p className="text-[11px] text-ink-3 leading-relaxed" data-testid="global-voice-status">
-                {voiceAsk ? <span className="text-[#CCFF00]">{voiceAsk}</span> : voiceHeard ? <span className="text-ink-2">„{voiceHeard.slice(0, 80)}“</span> : t("voice.globalHint")}
+                {voiceAsk ? <span className="text-[#CCFF00]">{voiceAsk}</span> : voiceHeard ? <span className="text-ink-2">„{spokenDigits(voiceHeard).slice(0, 80)}“</span> : t("voice.globalHint")}
               </p>
             )}
             {/* Smarter Ziel-Vorschlag (Plan 12f) */}

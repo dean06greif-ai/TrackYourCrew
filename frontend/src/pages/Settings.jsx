@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lightbulb, FloppyDisk, ArrowCounterClockwise, Lightning, Plus, Trash, X, Camera, User, Flame, Copy, Check, PencilSimple, DotsSixVertical, DotsThreeVertical, Pause, Play, FlagCheckered, CaretDown } from "@phosphor-icons/react";
+import { ArrowLeft, Lightbulb, FloppyDisk, ArrowCounterClockwise, Lightning, Plus, Trash, X, Camera, User, Flame, Copy, Check, PencilSimple, DotsSixVertical, DotsThreeVertical, Pause, Play, FlagCheckered, CaretDown, ChatCircleText } from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import { api, avatarSrc, shrinkImage } from "../lib/api";
 import ExerciseIcon from "../components/ExerciseIcon";
 import IconPicker from "../components/IconPicker";
 import { InviteBox } from "../components/CrewRequests";
+import FeedbackDialog from "../components/FeedbackDialog";
 import InstallSheet from "../components/InstallSheet";
 import MyData from "../components/MyData";
 import PauseLossInfo from "../components/PauseLossInfo";
@@ -81,6 +82,7 @@ export default function Settings() {
   // Übungen / Aktivitäten (Dean 2026-11-26): zwei Abschnitte in einer Liste
   const [section, setSection] = useState("exercise");
   const [ideasOpen, setIdeasOpen] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const sectionPicked = useRef(false);
   const [profileName, setProfileName] = useState("");
   const [profilePic, setProfilePic] = useState("");
@@ -1952,8 +1954,20 @@ export default function Settings() {
         </div>
         )}
 
-        {/* Neustart (Feedback gibt es unten auf dem Dashboard, Dean 2026-11-26) */}
+        {/* Feedback und Neustart nebeneinander (am Handy untereinander) – Feedback wieder da (Dean 2026-11-27) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch" data-testid="bottom-cards">
+        <div className="border border-[#CCFF00]/30 bg-[#121212] p-5 flex flex-col items-start" data-testid="feedback-row">
+          <p className="font-anton text-lg tracking-tight mb-1">{t("settings.feedbackTitle")}</p>
+          <p className="text-xs text-ink-2 mb-4 leading-relaxed">{t("settings.feedbackText")}</p>
+          <button
+            onClick={() => setShowFeedback(true)}
+            data-testid="open-feedback"
+            className="mt-auto border border-[#CCFF00]/50 text-[#CCFF00] hover:bg-[#CCFF00] hover:text-black py-2.5 px-5 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
+          >
+            <ChatCircleText size={14} weight="fill" /> {t("settings.feedbackButton")}
+          </button>
+        </div>
+
         <div className="border border-[#2A1414] bg-[#0E0A0A] p-5 flex flex-col items-start">
           <p className="font-anton text-lg tracking-tight mb-1">{t("settings.restartTitle")}</p>
           <p className="text-xs text-ink-2 mb-4 leading-relaxed">
@@ -1968,6 +1982,7 @@ export default function Settings() {
           </button>
         </div>
         </div>
+        <FeedbackDialog open={showFeedback} onClose={() => setShowFeedback(false)} />
       </section>
 
       {showResetConfirm && (

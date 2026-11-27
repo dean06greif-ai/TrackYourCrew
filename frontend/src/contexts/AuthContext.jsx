@@ -170,7 +170,7 @@ export function AuthProvider({ children }) {
   const [precheck, setPrecheck] = useState(true);
 
   const pushLine = (text) => {
-    setStatusLines((prev) => [...prev, { t: timeStamp(), text }]);
+    setStatusLines((prev) => (prev.length && prev[prev.length - 1].text === text ? prev : [...prev, { t: timeStamp(), text }]));
   };
 
   const checkAuth = useCallback(async () => {
@@ -223,17 +223,17 @@ export function AuthProvider({ children }) {
       // -------- Backend schläft -> Wake-Screen zuerst --------
       setWakeFailed(false);
       setStatusLines([]);
-      pushLine("INITIATING HANDSHAKE");
+      pushLine("handshake");
       setWaking(true);
       setPrecheck(false); // ab jetzt darf der Wake-Screen sichtbar werden
 
       const drama = [
-        "WAKING SERVER FROM IDLE",
-        "ALLOCATING COMPUTE RESOURCES",
-        "WARMING DATABASE CONNECTION",
-        "CALIBRATING WEEKLY PROGRESSION",
-        "CHECKING CREW STATUS",
-        "STEADY HANDS. ALMOST THERE",
+        "idle",
+        "alloc",
+        "db",
+        "progression",
+        "crew",
+        "almost",
       ];
       let i = 0;
       const dramaInterval = setInterval(() => {
@@ -256,13 +256,13 @@ export function AuthProvider({ children }) {
         return;
       }
       if (!ok) {
-        pushLine("CONNECTION TIMED OUT");
+        pushLine("timeout");
         setWakeFailed(true);
         setLoading(false);
         return;
       }
 
-      pushLine("BACKEND ONLINE");
+      pushLine("online");
       setProgress(100);
       // Kurz wirken lassen, dann auf AUTHENTICATING (children) übergeben.
       await new Promise((r) => setTimeout(r, 500));
@@ -363,17 +363,14 @@ export function AuthProvider({ children }) {
             <span className="font-anton text-2xl tracking-widest">
               TRACKER
             </span>
-            <span className="text-[10px] tracking-[0.3em] uppercase text-ink-3 ml-auto">
-              / BOOT SEQUENCE
-            </span>
           </div>
 
           {/* Headline */}
           <p className="text-xs tracking-[0.3em] uppercase text-[#CCFF00] mb-3">
-            {wakeFailed ? "/ CONNECTION FAILED" : "/ WAKING BACKEND"}
+            / {wakeFailed ? t("wake.kickerFailed") : t("wake.kicker")}
           </p>
           <h1 className="font-anton text-4xl md:text-5xl leading-none tracking-tight mb-3">
-            {wakeFailed ? "SERVER UNREACHABLE." : "STEADY HANDS."}
+            {wakeFailed ? t("wake.titleFailed") : t("wake.title")}
           </h1>
           <p className="text-ink-2 text-sm leading-relaxed mb-6 md:mb-10 max-w-lg">
             {wakeFailed
@@ -388,10 +385,9 @@ export function AuthProvider({ children }) {
             data-testid="wake-log"
           >
             {statusLines.map((l, i) => (
-              <div key={i} className="text-ink-2">
-                <span className="text-ink-3">{l.t}</span>{" "}
-                <span className="text-white">{l.text}</span>
-                <span className="text-ink-3"> ...</span>
+              <div key={i} className="text-ink-2 flex gap-2">
+                <span className="text-ink-3 shrink-0">{l.t}</span>
+                <span className="min-w-0"><span className="text-white">{t(`wake.l.${l.text}`)}</span><span className="text-ink-3">{" ..."}</span></span>
               </div>
             ))}
             {!wakeFailed && (
@@ -405,7 +401,7 @@ export function AuthProvider({ children }) {
           {!wakeFailed && (
             <div className="mb-6 md:mb-8" data-testid="wake-progress">
               <div className="flex items-center justify-between text-[10px] font-mono tracking-[0.25em] uppercase text-ink-3 mb-2">
-                <span>{progress >= 100 ? "BACKEND ONLINE" : "BOOTING"}</span>
+                <span>{progress >= 100 ? t("wake.l.online") : t("wake.booting")}</span>
                 <span
                   className="text-[#CCFF00] tabular-nums"
                   data-testid="wake-progress-percent"
@@ -457,7 +453,7 @@ export function AuthProvider({ children }) {
           </div>
 
           <p className="text-[10px] tracking-[0.25em] uppercase text-ink-3 mt-6 md:mt-10">
-            FREE TIER COLD START · NORMALERWEISE 20-60 SEKUNDEN
+            {t("wake.footer")}
           </p>
         </div>
 
