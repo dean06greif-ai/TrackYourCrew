@@ -1,5 +1,5 @@
 """Wochenende nach Ortszeit (Dean 2026-11-27): die Woche endet Sonntag 24:00 dort, wo der Nutzer ist."""
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 import goals
 
