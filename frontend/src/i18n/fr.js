@@ -730,6 +730,7 @@ const t = {
   "wo.finish": "Terminer",
   "wo.left": "encore {time}",
   "wo.liveSaved": "Déjà enregistré en direct ✓",
+  "wo.lockscreen": "Écran verrouillé",
   "wo.noExercises": "Ajoute d'abord un exercice dans les réglages.",
   "wo.paused": "En pause",
   "wo.phase.countdown": "Prépare-toi",

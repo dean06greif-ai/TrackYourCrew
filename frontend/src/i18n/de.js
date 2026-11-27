@@ -730,6 +730,7 @@ const t = {
   "wo.finish": "Beenden",
   "wo.left": "noch {time}",
   "wo.liveSaved": "Schon live eingetragen ✓",
+  "wo.lockscreen": "Sperrbildschirm",
   "wo.noExercises": "Leg zuerst eine Übung in den Einstellungen an.",
   "wo.paused": "Pausiert",
   "wo.phase.countdown": "Gleich geht's los",

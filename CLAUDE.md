@@ -53,6 +53,8 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
   am Namen erkannt, Einheiten umgerechnet. Browser speichert nur "Rang-Up schon gezeigt".
 - **Workout-Modus (Intervall-Timer, 2026-11-26):** Symbol im Eintrage-Formular zwischen Zahnrad und Mikro, `components/Workout.jsx` (Logik `lib/workout.js`):
   Vorlagen/Arbeit/Pause/Runden, Wdh. je Runde per Tippen oder Sprache, Zeit-Übungen zählen die Arbeitszeit selbst, Ende -> `applyVoiceItems`.
+  Sperrbildschirm/Benachrichtigung (iOS + Android, Media Session): Runde/Phase/Balken, Play/Pause, Vor = nächste Phase, Zurück = Phase neu;
+  ohne eigene Musik hält `public/sounds/silence.mp3` die Anzeige wach (Schalter „Sperrbildschirm“ im Zahnrad, `claim/restoreMediaSession` in musicPlayer).
   Live für die Crew: `PUT/DELETE /api/me/live` (nur im Speicher, `LIVE_TTL_S` 120 s, Lebenszeichen alle 45 s), Board-Feld `live`, WS `live_workout`.
 - **Workout-Musik (2026-11-26):** 3 Mixe in `frontend/public/music/` (CC BY 4.0, Credits-Datei daneben), Kapitel je Lied in
   `playlists.json` (aus den Kapitelmarken + Credits erzeugt). Player `lib/musicPlayer.js` (ein `<audio>` für die ganze App,
@@ -147,6 +149,7 @@ weil Frontend und Backend auf verschiedenen Domains laufen und Cross-Site-Cookie
 oft blockiert werden.
 
 Ziel-Deployment: `render.yaml` + `docs/DEPLOYMENT.md` (Website trackyourcrew.de, Backend api.trackyourcrew.de).
+Google/Teilen: Titel, Beschreibung, JSON-LD, OG-Tags in `frontend/index.html`, `public/robots.txt` + `sitemap.xml`.
 Impressum/Datenschutz: `/impressum`, `/datenschutz` (`pages/Legal.jsx`, vor dem Login-Gate, Text nur Deutsch),
 Betreiberdaten in `frontend/src/lib/legal.js` (Platzhalter bis Dean sie einträgt). Neuer Drittdienst -> Datenschutztext nachziehen.
 Schriften lokal über `@fontsource` (kein Google Fonts, DSGVO).

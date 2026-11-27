@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /join/
+Disallow: /api/
+
+Sitemap: https://trackyourcrew.de/sitemap.xml

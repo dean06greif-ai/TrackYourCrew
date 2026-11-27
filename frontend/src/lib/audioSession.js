@@ -15,7 +15,7 @@ export function duckOthers() {
   window.clearTimeout(releaseTimer);
   signal(true);
   // Läuft unsere eigene Musik, nicht zusätzlich die Audio-Sitzung umstellen (würde sie unterbrechen)
-  if (!supported() || window.__tycMusicPlaying) return;
+  if (!supported() || window.__tycMusicPlaying || window.__tycLockAudio) return;
   try { if (navigator.audioSession.type !== "transient") navigator.audioSession.type = "transient"; } catch { /* egal */ }
 }
 

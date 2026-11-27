@@ -730,6 +730,7 @@ const t = {
   "wo.finish": "Finish",
   "wo.left": "{time} left",
   "wo.liveSaved": "Already logged live ✓",
+  "wo.lockscreen": "Lock screen",
   "wo.noExercises": "Add an exercise in the settings first.",
   "wo.paused": "Paused",
   "wo.phase.countdown": "Get ready",

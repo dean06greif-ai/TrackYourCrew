@@ -1,7 +1,7 @@
 {
   "name": "TrackYourCrew",
   "short_name": "TrackYourCrew",
-  "description": "Weekly goals, progression and streaks with your crew.",
+  "description": "Fitness-Tracker mit Freunden: Wochenziele, Streaks, Ränge und Live-Board für deine Crew.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0A0A",

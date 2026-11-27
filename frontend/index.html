@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0A0A0A" />
-        <meta name="description" content="TrackYourCrew – weekly goals, progression and streaks with your crew." />
+        <meta name="description" content="Kostenloser Fitness-Tracker für dich und deine Freunde: Wochenziele, die mitwachsen, Streaks, Ränge und Live-Board für deine Crew. Liegestütze, Laufen, Klimmzüge, Gym – auch per Sprache eintragen." />
         <!-- ICO nur als Rückfall (32x32); Browser mit SVG-Unterstützung nehmen das scharfe SVG -->
         <!-- Nur das SVG verlinken: Chrome/Edge/Firefox nehmen es und zeichnen es bei jeder
              Bildschirm-Skalierung scharf (mit verlinkter ICO nahm Chrome die 32-px-Version und
@@ -17,18 +17,59 @@
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
         <meta name="apple-mobile-web-app-title" content="TrackYourCrew" />
-        <title>TrackYourCrew</title>
+        <title>TrackYourCrew – Fitness-Tracker mit Freunden | Wochenziele, Streaks & Ränge</title>
+        <link rel="canonical" href="https://trackyourcrew.de/" />
+        <script>
+            // Kanonische Adresse je Seite (/impressum soll nicht als Startseite gelten)
+            (function () { try { var l = document.querySelector('link[rel="canonical"]'); if (l && location.pathname !== "/") l.href = "https://trackyourcrew.de" + location.pathname; } catch (e) {} })();
+        </script>
+        <!-- Für Google: Name der Website + App-Beschreibung (strukturierte Daten) -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://trackyourcrew.de/#website",
+              "name": "TrackYourCrew",
+              "alternateName": ["Track Your Crew", "TYC"],
+              "url": "https://trackyourcrew.de/",
+              "inLanguage": ["de", "en", "es", "fr"]
+            },
+            {
+              "@type": "WebApplication",
+              "name": "TrackYourCrew",
+              "url": "https://trackyourcrew.de/",
+              "image": "https://trackyourcrew.de/og-image.jpg",
+              "description": "Fitness-Tracker für dich und deine Freunde: Wochenziele, die jede Woche ein Stück steigen, Streaks, Ränge von F bis S+, Live-Board, Herausforderungen und Intervall-Timer.",
+              "applicationCategory": "HealthApplication",
+              "operatingSystem": "Web, iOS, Android",
+              "browserRequirements": "Requires JavaScript",
+              "inLanguage": ["de", "en", "es", "fr"],
+              "isAccessibleForFree": true,
+              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+              "featureList": ["Wochenziele mit Progression", "Streaks und Ränge", "Crew-Board live", "Herausforderungen", "Eintragen per Sprache", "Intervall-Timer mit Sprachcoach", "Offline nutzbar"]
+            }
+          ]
+        }
+        </script>
         <!-- Vorschau beim Teilen (WhatsApp, Telegram, iMessage …). Bild-URL muss absolut sein:
              zeigt auf die Ziel-Domain (render.yaml). -->
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="TrackYourCrew" />
-        <meta property="og:title" content="TrackYourCrew – train with your crew" />
-        <meta property="og:description" content="A little more every week. Your crew sees live who delivers. Streaks, ranks, duels – join in with one tap." />
+        <meta property="og:url" content="https://trackyourcrew.de/" />
+        <meta property="og:locale" content="de_DE" />
+        <meta property="og:locale:alternate" content="en_US" />
+        <meta property="og:title" content="TrackYourCrew – trainier mit deiner Crew" />
+        <meta property="og:description" content="Jede Woche ein bisschen mehr. Deine Crew sieht live, wer liefert. Streaks, Ränge, Duelle – kostenlos, mit einem Tipp dabei." />
+        <meta property="og:image:alt" content="TrackYourCrew – Fitness-Tracker mit Freunden" />
         <meta property="og:image" content="https://trackyourcrew.de/og-image.jpg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="https://trackyourcrew.de/og-image.jpg" />
+        <meta name="twitter:title" content="TrackYourCrew – trainier mit deiner Crew" />
+        <meta name="twitter:description" content="Wochenziele, Streaks, Ränge und Live-Board für dich und deine Freunde. Kostenlos." />
         <script>
             // Sprache so früh wie möglich setzen (gespeicherte Wahl, sonst Browser-Sprache),
             // damit schon die erste Anzeige in der richtigen Sprache ist.
@@ -46,7 +87,7 @@
         </script>
     </head>
     <body>
-        <noscript>Please enable JavaScript to use TrackYourCrew.</noscript>
+        <noscript><h1>TrackYourCrew – Fitness-Tracker mit Freunden</h1><p>Wochenziele, die mitwachsen, Streaks, Ränge und ein Live-Board für deine Crew. Bitte JavaScript aktivieren.</p></noscript>
         <div id="root"></div>
         <script type="module" src="/src/index.jsx"></script>
     </body>

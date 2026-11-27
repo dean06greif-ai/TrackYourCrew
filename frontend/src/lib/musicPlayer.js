@@ -34,8 +34,34 @@ function applyVolume() {
   if (audio) audio.volume = Math.max(0, Math.min(1, state.volume * (state.ducked ? DUCK : 1)));
 }
 
-function updateMediaSession() {
+// Workout-Modus übernimmt den Sperrbildschirm (Runde/Phase statt Liedtitel); danach wieder Musik
+let claimed = false;
+export function claimMediaSession() { claimed = true; }
+export function restoreMediaSession() {
+  claimed = false;
   if (!("mediaSession" in navigator)) return;
+  try {
+    if (!audio) {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = "none";
+      for (const k of ["play", "pause", "previoustrack", "nexttrack"]) navigator.mediaSession.setActionHandler(k, null);
+    }
+    navigator.mediaSession.setPositionState?.();
+  } catch { /* egal */ }
+  if (audio) { registerHandlers(); updateMediaSession(); }
+}
+function registerHandlers() {
+  if (!("mediaSession" in navigator)) return;
+  try {
+    navigator.mediaSession.setActionHandler("play", () => play());
+    navigator.mediaSession.setActionHandler("pause", () => pause());
+    navigator.mediaSession.setActionHandler("previoustrack", () => prev());
+    navigator.mediaSession.setActionHandler("nexttrack", () => next());
+  } catch { /* egal */ }
+}
+
+function updateMediaSession() {
+  if (!("mediaSession" in navigator) || claimed) return;
   const pl = playlist(state.plId);
   const { track } = trackAt(pl, state.time);
   if (!track) return;
@@ -67,14 +93,7 @@ function ensureAudio() {
     selectPlaylist(data.playlists[(i + 1) % data.playlists.length].id, true, 0);
   });
   window.addEventListener("tyc:duck", (e) => { set({ ducked: !!e.detail }); applyVolume(); });
-  if ("mediaSession" in navigator) {
-    try {
-      navigator.mediaSession.setActionHandler("play", () => play());
-      navigator.mediaSession.setActionHandler("pause", () => pause());
-      navigator.mediaSession.setActionHandler("previoustrack", () => prev());
-      navigator.mediaSession.setActionHandler("nexttrack", () => next());
-    } catch { /* egal */ }
-  }
+  if (!claimed) registerHandlers();
   return audio;
 }
 

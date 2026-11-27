@@ -15,13 +15,14 @@ import { getAudioCtx, unlockAudio, loadPackIndex, loadCoachClips, playCoachClip 
 import { clipId, cueText } from "../lib/coachClips";
 import { translate, LANGUAGES } from "../i18n";
 import { duckDuring } from "../lib/audioSession";
+import { claimMediaSession, restoreMediaSession, pause as pauseMusic, play as playMusic } from "../lib/musicPlayer";
 import { PRESETS, buildPhases, phaseAt, parseRepsSpeech, clampInt, sum, totalSeconds, COUNTDOWN_S } from "../lib/workout";
 import ExerciseIcon from "./ExerciseIcon";
 
 const KEY = "tyc_workout";
 const PREFS_KEY = "tyc_workout_prefs"; // { coach: bool, live: bool, steps: [n,n,n] }
 const DEFAULT_STEPS = [5, 10, 15];
-const readPrefs = () => { try { return { coach: true, live: false, steps: [], ...JSON.parse(window.localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { coach: true, live: false, steps: [] }; } };
+const readPrefs = () => { try { return { coach: true, live: false, lock: true, steps: [], ...JSON.parse(window.localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { coach: true, live: false, lock: true, steps: [] }; } };
 const writePrefs = (v) => { try { window.localStorage.setItem(PREFS_KEY, JSON.stringify(v)); } catch { /* egal */ } };
 // Coach-Stimme wie bei der Stoppuhr (gleiche Auswahl): KI-Aufnahme, sonst Gerätestimme
 const readLS = (k) => { try { return window.localStorage.getItem(k) || ""; } catch { return ""; } };
@@ -242,6 +243,83 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curRound, stage]);
 
+  // Sperrbildschirm / Benachrichtigung (iPhone + Android, Media Session): Runde, Phase, Balken der Phase,
+  // Play/Pause = Training pausieren, Vor = nächste Phase, Zurück = Phase neu. Ohne laufende Musik hält eine
+  // unhörbare Tonspur die Anzeige wach (Betriebssysteme zeigen sie nur bei laufendem Ton). Schalter im Zahnrad.
+  const silentRef = useRef(null);
+  const musicByUs = useRef(false);
+  const ctl = useRef({});
+  const jumpTo = (sec) => {
+    const tNow = Date.now();
+    const ref = pausedRef.current || tNow;
+    setStartAt(ref - sec * 1000);
+    setNow(tNow);
+    lastAnnounce.current = "";
+  };
+  ctl.current = {
+    pause: () => {
+      pauseToggle(true);
+      silentRef.current?.pause();
+      if (window.__tycMusicPlaying) { musicByUs.current = true; pauseMusic(); }
+    },
+    play: () => {
+      pauseToggle(false);
+      silentRef.current?.play().catch(() => {});
+      if (musicByUs.current) { musicByUs.current = false; playMusic(); }
+    },
+    next: () => {
+      const end = phases.slice(0, pos.index + 1).reduce((a, p) => a + p.dur, 0);
+      if (pos.index >= phases.length - 1) finish(); else jumpTo(end);
+    },
+    prev: () => {
+      const startOf = phases.slice(0, pos.index).reduce((a, p) => a + p.dur, 0);
+      const into = pos.phase.dur - pos.left;
+      jumpTo(into > 2 || pos.index === 0 ? startOf : startOf - phases[pos.index - 1].dur);
+    },
+  };
+  const startLockAudio = () => {
+    if (!prefs.lock || window.__tycMusicPlaying || silentRef.current) return;
+    const a = new Audio("/sounds/silence.mp3");
+    a.loop = true;
+    a.setAttribute("playsinline", "");
+    silentRef.current = a;
+    window.__tycLockAudio = true;
+    a.play().catch(() => {});
+  };
+  const stopLockAudio = () => {
+    window.__tycLockAudio = false;
+    if (silentRef.current) { silentRef.current.pause(); silentRef.current.src = ""; silentRef.current = null; }
+  };
+  const lockOn = stage === "run" && prefs.lock && "mediaSession" in navigator;
+  useEffect(() => {
+    if (!lockOn) return undefined;
+    const ms = navigator.mediaSession;
+    claimMediaSession();
+    const h = { play: () => ctl.current.play(), pause: () => ctl.current.pause(), nexttrack: () => ctl.current.next(), previoustrack: () => ctl.current.prev() };
+    for (const [k, fn] of Object.entries(h)) { try { ms.setActionHandler(k, fn); } catch { /* egal */ } }
+    try { ms.setActionHandler("seekto", null); } catch { /* egal */ }
+    return () => { stopLockAudio(); restoreMediaSession(); };
+  }, [lockOn]);
+  useEffect(() => () => { stopLockAudio(); }, []);
+  // Anzeige: bei Phase, Runde, Pause, Menge neu (der Balken läuft vom System aus weiter)
+  const phaseTitle = pausedAt ? t("wo.paused") : t(`wo.phase.${pos.phase.type}`);
+  useEffect(() => {
+    if (!lockOn || !ex) return;
+    const ms = navigator.mediaSession;
+    try {
+      ms.metadata = new window.MediaMetadata({
+        title: `${phaseTitle} · ${t("wo.round", { n: curRound, of: rounds })}`,
+        artist: `${exerciseLabel(ex)} · ${formatAmount(total, ex.unit, locale)}`,
+        album: "TrackYourCrew Workout",
+        artwork: [{ src: "/icon-512.png", sizes: "512x512", type: "image/png" }],
+      });
+      ms.playbackState = pausedAt ? "paused" : "playing";
+      const dur = pos.phase.dur;
+      ms.setPositionState?.({ duration: dur, position: Math.max(0, Math.min(dur, dur - pos.left)), playbackRate: 1 });
+    } catch { /* egal */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockOn, ex, pos.index, curRound, rounds, pausedAt, total, phaseTitle, locale]);
+
   // Live-Status an die Crew (gebündelt), am Ende entfernen
   const liveTimer = useRef(0);
   useEffect(() => {
@@ -294,6 +372,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     setNow(s);
     setPausedAt(0);
     setStage("run");
+    startLockAudio(); // im Tipp starten (Browser-Regel)
     if (mic) kickVoice(lang);
   };
   const pausedRef = useRef(0);
@@ -361,7 +440,8 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
           <button type="button" onClick={() => (stage === "run" ? finish() : onClose?.())} className="w-10 h-10 border border-[#333] text-ink-2 hover:text-white flex items-center justify-center" aria-label={t("common.close")} data-testid="wo-close"><X size={18} weight="bold" /></button>
         </div>
         {showSettings && (
-          <label className="flex items-center gap-3 cursor-pointer select-none w-fit mb-4" data-testid="wo-live-row">
+          <div className="flex flex-wrap gap-x-6 gap-y-3 mb-4">
+          <label className="flex items-center gap-3 cursor-pointer select-none w-fit" data-testid="wo-live-row">
             <button type="button" role="switch" aria-checked={prefs.live} onClick={() => setPrefs({ live: !prefs.live })} data-testid="wo-live"
               style={{ WebkitTapHighlightColor: "transparent" }}
               className={`relative w-10 h-5 rounded-full transition-colors duration-200 focus:outline-none ${prefs.live ? "bg-[#CCFF00]" : "bg-[#2A2A2A] border border-[#333]"}`}>
@@ -371,6 +451,17 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
               {t("log.live")} <span className={prefs.live ? "text-[#CCFF00]" : "text-ink-3"}>{prefs.live ? t("common.on") : t("common.off")}</span>
             </span>
           </label>
+          <label className="flex items-center gap-3 cursor-pointer select-none w-fit" data-testid="wo-lock-row">
+            <button type="button" role="switch" aria-checked={prefs.lock} onClick={() => setPrefs({ lock: !prefs.lock })} data-testid="wo-lock"
+              style={{ WebkitTapHighlightColor: "transparent" }}
+              className={`relative w-10 h-5 rounded-full transition-colors duration-200 focus:outline-none ${prefs.lock ? "bg-[#CCFF00]" : "bg-[#2A2A2A] border border-[#333]"}`}>
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200 ${prefs.lock ? "left-[22px] bg-black" : "left-0.5 bg-[#888]"}`} />
+            </button>
+            <span className="text-[10px] uppercase tracking-widest text-ink-2">
+              {t("wo.lockscreen")} <span className={prefs.lock ? "text-[#CCFF00]" : "text-ink-3"}>{prefs.lock ? t("common.on") : t("common.off")}</span>
+            </span>
+          </label>
+          </div>
         )}
 
         {stage === "setup" && (
