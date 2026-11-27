@@ -14,7 +14,7 @@ import { useVoiceChannel, cleanSpeech, kickVoice } from "../lib/voiceHub";
 import { getAudioCtx, unlockAudio, loadPackIndex, loadCoachClips, playCoachClip } from "../lib/coachAudio";
 import { clipId, cueText } from "../lib/coachClips";
 import { translate, LANGUAGES } from "../i18n";
-import { duckDuring } from "../lib/audioSession";
+import { speak, PACK_KEY, CLANG_KEY } from "./Stopwatch";
 import { claimMediaSession, restoreMediaSession, pause as pauseMusic, play as playMusic } from "../lib/musicPlayer";
 import { PRESETS, buildPhases, phaseAt, parseRepsSpeech, clampInt, sum, totalSeconds, COUNTDOWN_S } from "../lib/workout";
 import ExerciseIcon from "./ExerciseIcon";
@@ -26,6 +26,7 @@ const readPrefs = () => { try { return { coach: true, live: false, lock: true, s
 const writePrefs = (v) => { try { window.localStorage.setItem(PREFS_KEY, JSON.stringify(v)); } catch { /* egal */ } };
 // Coach-Stimme wie bei der Stoppuhr (gleiche Auswahl): KI-Aufnahme, sonst Gerätestimme
 const readLS = (k) => { try { return window.localStorage.getItem(k) || ""; } catch { return ""; } };
+const writeLS = (k, v) => { try { window.localStorage.setItem(k, v); } catch { /* egal */ } };
 const readLast = () => { try { return JSON.parse(window.localStorage.getItem(KEY) || "{}") || {}; } catch { return {}; } };
 const writeLast = (v) => { try { window.localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* egal */ } };
 
@@ -46,19 +47,6 @@ function beep(freq, dur = 0.15, vol = 0.25) {
   } catch { /* egal */ }
 }
 
-function say(text, lang) {
-  try {
-    if (!("speechSynthesis" in window) || !text) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = speechLang(lang);
-    u.rate = 1.1;
-    duckDuring(u); // iPhone: eigene Musik leiser statt gestoppt
-    window.speechSynthesis.speak(u);
-  } catch { /* egal */ }
-}
-
-const speechLangOf = (l) => l;
 
 function Stepper({ label, value, onChange, min, max, step = 5, suffix = "s", testid }) {
   // Handy: Zahl oben, − und + darunter (nebeneinander wäre bei 3 Stellen zu eng); ab sm alles in einer Zeile
@@ -95,29 +83,52 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
   };
   const deletePreset = (id) => setPrefs({ presets: presets.filter((p) => p.id !== id) });
   const savedRef = useRef(0); // Live eintragen: schon gespeicherte Menge
-  // Coach: Sprache + Stimme wie bei der Stoppuhr
-  const cLangPref = readLS("tyc_sw_coach_lang");
+  // Coach: Stimme + Sprache wie bei der Stoppuhr (gleiche Einstellung, hier und dort wählbar).
+  // KI-Stimme spricht alles (auch Runden/Pausen), Gerätestimme nur, wenn es keine Aufnahme gibt.
+  const [cLangPref, setCLangPref] = useState(() => readLS(CLANG_KEY));
   const cLang = LANGUAGES.some((l) => l.code === cLangPref) ? cLangPref : lang;
   const ct = useCallback((key, vars) => translate(cLang, key, vars), [cLang]);
-  const coachPack = useRef("");
+  const [voiceChoice, setVoiceChoice] = useState(() => readLS(PACK_KEY));
+  const [packIndex, setPackIndex] = useState([]);
   useEffect(() => {
-    if (!open) return;
-    const choice = readLS("tyc_sw_coach_voice");
-    if (choice === "device") { coachPack.current = ""; return; }
-    loadPackIndex().then((list) => {
-      const mine = list.filter((p) => (p.langs || []).includes(cLang));
-      const id = choice.startsWith("pack:") ? choice.slice(5) : "";
-      const pk = mine.find((p) => p.id === id) || mine[0];
-      coachPack.current = pk?.id || "";
-      if (pk) loadCoachClips(pk.id, cLang);
-    });
-  }, [open, cLang]);
-  const cue = (c) => {
-    if (!prefs.coach) return;
+    if (!open) return undefined;
+    let alive = true;
+    setVoiceChoice(readLS(PACK_KEY));
+    setCLangPref(readLS(CLANG_KEY));
+    loadPackIndex().then((l) => { if (alive) setPackIndex(l); });
+    return () => { alive = false; };
+  }, [open]);
+  const packList = packIndex.filter((p) => (p.langs || []).includes(cLang));
+  const chosenPack = voiceChoice.startsWith("pack:") ? voiceChoice.slice(5) : "";
+  const activePack = voiceChoice === "device" ? "" : (packList.find((p) => p.id === chosenPack) || packList[0])?.id || "";
+  const coachPack = useRef("");
+  coachPack.current = activePack;
+  useEffect(() => { if (open && activePack) loadCoachClips(activePack, cLang); }, [open, activePack, cLang]);
+  const cue = (c, force = false) => {
+    if (!prefs.coach && !force) return;
     if (coachPack.current && playCoachClip(coachPack.current, cLang, clipId(c), true)) return;
-    say(cueText(c, ct, false), speechLangOf(cLang));
+    speak(cueText(c, ct, false), speechLang(cLang), true);
   };
-  const sayCoach = (text) => { if (prefs.coach) say(text, speechLangOf(cLang)); };
+  const hello = (pack, l) => {
+    const c = { type: "on" };
+    if (pack) loadCoachClips(pack, l).then(() => { if (!playCoachClip(pack, l, clipId(c), true)) speak(cueText(c, (k, v) => translate(l, k, v)), speechLang(l), true); });
+    else window.setTimeout(() => speak(cueText(c, (k, v) => translate(l, k, v)), speechLang(l), true), 30);
+  };
+  const pickVoice = (val) => {
+    unlockAudio();
+    setVoiceChoice(val);
+    writeLS(PACK_KEY, val);
+    hello(val.startsWith("pack:") ? val.slice(5) : "", cLang);
+  };
+  const pickLang = (code) => {
+    unlockAudio();
+    const v = code === lang ? "" : code;
+    setCLangPref(v);
+    writeLS(CLANG_KEY, v);
+    const pk = packIndex.filter((p) => (p.langs || []).includes(code));
+    const p = voiceChoice === "device" ? "" : (pk.find((x) => x.id === chosenPack) || pk[0])?.id || "";
+    hello(p, code);
+  };
   const micAllowed = useMicEnabled();
   const list = useMemo(() => exercises.filter((e) => e.type !== "activity" && !e.paused), [exercises]);
   const last = useMemo(() => (open ? readLast() : {}), [open]);
@@ -185,7 +196,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
       if (lastAnnounce.current !== "done") {
         lastAnnounce.current = "done";
         beep(990, 0.4);
-        sayCoach(ct("wo.say.done"));
+        cue({ type: "woDone" });
         setStage("summary");
       }
       return;
@@ -196,16 +207,17 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     const fresh = !lastAnnounce.current.startsWith(`${pos.index}:`);
     lastAnnounce.current = k;
     if (fresh) {
-      if (pos.phase.type === "countdown") {
-        sayCoach(ct("wo.say.round", { n: 1, of: rounds }));
-      } else if (pos.phase.type === "work") {
+      if (pos.phase.type === "work") {
         beep(1200, 0.25);
-        cue({ type: "go" });
+        // Ohne Pause (z. B. EMOM) sagt der Coach die Runde direkt an, sonst kam sie schon in der Pause
+        const r = pos.phase.round;
+        if (r === 1 || rest > 0) cue({ type: "go" });
+        else cue(r === rounds ? { type: "woLast" } : { type: "woRound", n: r });
         if (timeEx) setReps((r) => { const n = [...r]; n[pos.phase.round - 1] = n[pos.phase.round - 1] ?? 0; return n; });
       } else if (pos.phase.type === "rest") {
         beep(500, 0.3);
         const nextRound = pos.phase.round + 1;
-        sayCoach(nextRound === rounds ? ct("wo.say.restLast") : ct("wo.say.restNext", { n: nextRound, of: rounds }));
+        cue(nextRound === rounds ? { type: "woRestLast" } : { type: "woNext", n: nextRound });
       }
     }
     // 3-2-1: im Countdown und am Ende jeder Phase (Coach zählt mit, dazu Piep)
@@ -223,7 +235,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     }
     // cue/sayCoach/ct ändern sich je Render; doppelte Ansagen verhindert lastAnnounce
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pos.index, pos.left, pos.done, pos.phase, stage, pausedAt, rounds, lang, t, timeEx, ex]);
+  }, [pos.index, pos.left, pos.done, pos.phase, stage, pausedAt, rounds, rest, lang, t, timeEx, ex]);
 
   // Option „Live eintragen“: bei jedem Rundenwechsel (und am Ende) das Neue sofort speichern
   const flushLive = useCallback(() => {
@@ -461,6 +473,20 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
               {t("wo.lockscreen")} <span className={prefs.lock ? "text-[#CCFF00]" : "text-ink-3"}>{prefs.lock ? t("common.on") : t("common.off")}</span>
             </span>
           </label>
+          {/* Coach-Stimme + Sprache (gleiche Einstellung wie in der Stoppuhr) */}
+          <div className="flex items-center gap-1.5 w-full" data-testid="wo-voice-row">
+            <SpeakerHigh size={14} weight="fill" className="text-[#CCFF00] shrink-0" aria-hidden="true" />
+            <select value={activePack ? `pack:${activePack}` : "device"} onChange={(e) => pickVoice(e.target.value)}
+              aria-label={t("wo.coachVoice")} title={t("wo.coachVoice")}
+              className="flex-1 min-w-0 max-w-[14rem] h-7 bg-[#0A0A0A] border border-[#333] text-[11px] text-ink-2 px-1.5" data-testid="wo-voice">
+              {packList.map((p) => <option key={p.id} value={`pack:${p.id}`}>{p.label}</option>)}
+              <option value="device">{t("sw.deviceVoice")}</option>
+            </select>
+            <select value={cLang} onChange={(e) => pickLang(e.target.value)} aria-label={t("sw.coachLang")} title={t("sw.coachLang")}
+              className="h-7 bg-[#0A0A0A] border border-[#333] text-[11px] text-ink-2 px-1.5 uppercase" data-testid="wo-coachlang">
+              {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.code.toUpperCase()}</option>)}
+            </select>
+          </div>
           </div>
         )}
 

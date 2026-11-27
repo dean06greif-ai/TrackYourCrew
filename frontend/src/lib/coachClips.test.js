@@ -43,7 +43,7 @@ describe("harte Ansagen", () => {
     for (const [code, d] of Object.entries(dicts)) {
       const tt = (key, params = {}) => String(d[key] ?? key).replace(/\{(\w+)\}/g, (_, x) => params[x] ?? "");
       const hard = coachClips(tt, true);
-      const normal = coachClips(tt, false);
+      const normal = coachClips(tt, false).filter((c) => !/^w/.test(c.id)); // Workout-Ansagen gibt es nur normal
       hard.forEach((c, i) => {
         expect(c.text.startsWith("coach.")).toBe(false);
         expect(c.text).not.toMatch(/\{\w+\}/);
@@ -52,5 +52,19 @@ describe("harte Ansagen", () => {
       expect(hard.map((c) => c.id)).toEqual(normal.map((c) => c.id));
       expect(code).toBeTruthy();
     }
+  });
+});
+
+describe("Workout-Ansagen", () => {
+  test("Runden, Pausen, Ende als Aufnahme – in allen Sprachen ohne Platzhalter, IDs eindeutig", () => {
+    for (const d of [de, en, es, fr]) {
+      const tt = (key, params = {}) => String(d[key] ?? key).replace(/\{(\w+)\}/g, (_, x) => params[x] ?? "");
+      const all = coachClips(tt, false);
+      const wo = all.filter((c) => /^w/.test(c.id));
+      expect(wo.map((c) => c.id)).toEqual(expect.arrayContaining(["wr2", "wr30", "wn2", "wn30", "wlast", "wrestlast", "wdone"]));
+      wo.forEach((c) => { expect(c.text.startsWith("wo.")).toBe(false); expect(c.text).not.toMatch(/\{\w+\}/); });
+      expect(new Set(all.map((c) => c.id)).size).toBe(all.length);
+    }
+    expect(clipId({ type: "woNext", n: 4 })).toBe("wn4");
   });
 });

@@ -86,9 +86,9 @@ function beep(freq, dur = 0.18) {
 // sofort – Online-Stimmen („Google …“, „… Online“) brauchen vor jedem Satz eine Netzwerk-Runde und
 // kamen deshalb verzögert. Reihenfolge: selbst gewählte Stimme > Gerätestimme mit Männernamen >
 // sonstige Gerätestimme > Rest. Die Wahl merkt sich der Browser.
-const VOICE_KEY = "tyc_sw_voice";
-const PACK_KEY = "tyc_sw_coach_voice"; // "pack:<id>" (KI-Stimme) oder "device" (Gerätestimme)
-const CLANG_KEY = "tyc_sw_coach_lang"; // Sprache des Coachs; leer = App-Sprache
+export const VOICE_KEY = "tyc_sw_voice";
+export const PACK_KEY = "tyc_sw_coach_voice"; // "pack:<id>" (KI-Stimme) oder "device" (Gerätestimme)
+export const CLANG_KEY = "tyc_sw_coach_lang"; // Sprache des Coachs; leer = App-Sprache
 const HARD_KEY = "tyc_sw_coach_hard"; // "1" = harte Ansagen
 const MALE = /\b(stefan|conrad|killian|hans|markus|daniel|thomas|david|guy|christopher|eric|mark|james|george|jorge|pablo|alvaro|henri|paul|claude|thierry|male|mann|männlich)\b/i;
 
@@ -98,7 +98,7 @@ export function coachVoices(langTag) {
   return (window.speechSynthesis.getVoices() || []).filter((v) => (v.lang || "").toLowerCase().startsWith(base));
 }
 
-function pickVoice(langTag) {
+export function pickVoice(langTag) {
   const voices = coachVoices(langTag);
   if (!voices.length) return null;
   let saved = "";
@@ -111,7 +111,7 @@ function pickVoice(langTag) {
 }
 
 // interrupt: laufende/wartende Ansagen abbrechen (sonst stauen sie sich und kommen zu spät)
-function speak(text, langTag, interrupt = false) {
+export function speak(text, langTag, interrupt = false) {
   if (!canSpeak || !text) return;
   try {
     if (interrupt) window.speechSynthesis.cancel();

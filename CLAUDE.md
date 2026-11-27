@@ -52,6 +52,7 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
   (bester Wochenwert, gedeckelt aufs Wochenziel) -> auf allen Geräten gleich. Übungsart wird
   am Namen erkannt, Einheiten umgerechnet. Browser speichert nur "Rang-Up schon gezeigt".
 - **Workout-Modus (Intervall-Timer, 2026-11-26):** Symbol im Eintrage-Formular zwischen Zahnrad und Mikro, `components/Workout.jsx` (Logik `lib/workout.js`):
+  Coach-Stimme + Sprache im Zahnrad (gleiche Einstellung wie Stoppuhr), Runden-/Pausen-Ansagen als Aufnahmen `wr*`/`wn*`/`wlast`/`wrestlast`/`wdone` (bis Runde 30).
   Vorlagen/Arbeit/Pause/Runden, Wdh. je Runde per Tippen oder Sprache, Zeit-Übungen zählen die Arbeitszeit selbst, Ende -> `applyVoiceItems`.
   Sperrbildschirm/Benachrichtigung (iOS + Android, Media Session): Runde/Phase/Balken, Play/Pause, Vor = nächste Phase, Zurück = Phase neu;
   ohne eigene Musik hält `public/sounds/silence.mp3` die Anzeige wach (Schalter „Sperrbildschirm“ im Zahnrad, `claim/restoreMediaSession` in musicPlayer).
