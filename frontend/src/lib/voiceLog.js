@@ -247,10 +247,19 @@ const ADD = /\b(noch|nochmal|weitere|weiteren|zusatzlich|dazu|extra|mehr|another
 const TOTAL = /\b(insgesamt|gesamt|in total|total|en total|au total|in summe)\b/;
 
 // Wurde die Übung mit ihrem eigenen Namen genannt (stärker als nur die Art, z. B. „Klimmzüge“ ↔ Aktivität „Pull“)?
+// Nur ganze Wörter zählen (1–3 aufeinanderfolgende): „gelaufen“ nennt nicht die Aktivität „Laufen“.
 function namedIn(segment, ex) {
-  const ns = normalizeName(segment);
   const n = normalizeName(ex?.name);
-  return !!ex && n.length >= 3 && ns.includes(n);
+  if (!ex || n.length < 3) return false;
+  const words = String(segment || "").split(/\s+/).map((w) => normalizeName(w)).filter(Boolean);
+  for (let i = 0; i < words.length; i++) {
+    let joined = "";
+    for (let k = i; k < Math.min(words.length, i + 3); k++) {
+      joined += words[k];
+      if (joined === n) return true;
+    }
+  }
+  return false;
 }
 
 // Eine Übung des Nutzers zu einer Art/einem Namen finden
@@ -355,9 +364,14 @@ export function parseVoiceLog(text, exercises, today = 0) {
     // Passt auch eine Übung: die mit ihrem Namen genannte gewinnt, sonst mit Zahl die Übung
     // (Dean 2026-11-27: „10 Klimmzüge“ ging an die Aktivität „Pull“, weil beides Art „Klimmzug“ ist)
     let actEx = findExercise(seg, toks, exercises.filter((e) => e.type === "activity"));
-    if (actEx && !namedIn(seg, actEx)) {
+    if (actEx) {
       const exHit = findExercise(seg, toks, exercises.filter((e) => e.type !== "activity"));
-      if (exHit && (numIdx >= 0 || namedIn(seg, exHit))) actEx = null;
+      if (exHit) {
+        // Zahl + passende Einheit (z. B. „5 km“ zur Übung in km) -> immer die Übung
+        const su0 = numIdx >= 0 ? (spokenUnit(toks[numIdx + 1] || "") || toks.map(spokenUnit).find(Boolean)) : null;
+        const unitFits = su0 && (parseUnit(exHit.unit) || {}).kind === su0.kind;
+        if (unitFits || namedIn(seg, exHit) || (numIdx >= 0 && !namedIn(seg, actEx))) actEx = null;
+      }
     }
     if (actEx) {
       const day = dayOf(toks, today) ?? globalDay ?? today;

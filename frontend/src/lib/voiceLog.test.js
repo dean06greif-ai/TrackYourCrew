@@ -233,3 +233,20 @@ describe("Anzeige mit Ziffern (Dean 2026-11-27)", () => {
     ["Lauf zehn Kilometer.", "Lauf 10 Kilometer."],
   ])("%s", (a, b) => expect(spokenDigits(a)).toBe(b));
 });
+
+describe("Übung schlägt gleichartige Aktivität – alle üblichen Paare (Dean 2026-11-27)", () => {
+  test.each([
+    ["Liegestütze", "Push", "heute 20 Liegestütze gemacht", "heute war ich bei Push"],
+    ["Push-ups", "Push day", "today I did 20 push-ups", "today I went to push day"],
+    ["Klimmzüge", "Pull", "habe heute 10 Klimmzüge gemacht", "heute war ich bei Pull"],
+    ["Lauf", "Laufen", "heute 5 km gelaufen", "heute war ich laufen"],
+    ["Kniebeugen", "Leg Day", "heute 30 Kniebeugen", "heute war Leg Day"],
+  ])("%s ↔ Aktivität %s", (exName, actName, exSay, actSay) => {
+    const list = [
+      { key: "ex", name: exName, unit: exName === "Lauf" ? "km" : "" },
+      { key: "act", name: actName, unit: "×", type: "activity" },
+    ];
+    expect(parseVoiceLog(exSay, list, 2).items.map((i) => i.key)).toEqual(["ex"]);
+    expect(parseVoiceLog(actSay, list, 2).items.map((i) => i.key)).toEqual(["act"]);
+  });
+});
