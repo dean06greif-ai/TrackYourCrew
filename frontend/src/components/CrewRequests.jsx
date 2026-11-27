@@ -85,9 +85,9 @@ export function InviteBox({ handle, compact = false, tour = false, embedded = fa
         <LinkSimple size={16} weight="bold" className="text-[#CCFF00] shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] uppercase tracking-[0.3em] text-ink-3">{t("crew.invite")}</p>
-          {/* Einstellungen: voller Link, darf umbrechen (Dean 2026-11-26) */}
-          <code ref={linkRef} className="block break-words select-all text-xs text-ink-2 font-mono mt-0.5 leading-5" title={url} data-testid="invite-link">
-            {url.split("/").map((part, i, arr) => (
+          {/* Einstellungen: ganzer Link (ohne „https://“, kopiert wird der volle), am Handy etwas kleiner -> eine Zeile (Dean 2026-11-27) */}
+          <code ref={linkRef} className="block break-words select-all text-[11px] sm:text-xs tracking-tight sm:tracking-normal text-ink-2 font-mono mt-0.5 leading-5" title={url} data-testid="invite-link">
+            {url.replace(/^https?:\/\//, "").split("/").map((part, i, arr) => (
               <span key={i}>{part}{i < arr.length - 1 && <>/<wbr /></>}</span>
             ))}
           </code>
@@ -96,10 +96,13 @@ export function InviteBox({ handle, compact = false, tour = false, embedded = fa
           type="button"
           onClick={onShare}
           data-testid="invite-share"
-          className="shrink-0 h-9 border border-[#333] text-ink-2 hover:border-[#CCFF00] hover:text-[#CCFF00] uppercase tracking-widest text-[10px] font-bold px-3 flex items-center gap-2 transition-colors"
+          aria-label={t("crew.share")}
+          title={t("crew.share")}
+          className="shrink-0 h-9 min-w-9 border border-[#333] text-ink-2 hover:border-[#CCFF00] hover:text-[#CCFF00] uppercase tracking-widest text-[10px] font-bold px-2.5 sm:px-3 flex items-center justify-center gap-2 transition-colors"
         >
           {shareIcon}
-          {t("crew.share")}
+          {/* Handy: nur Symbol, damit der Link in eine Zeile passt */}
+          <span className="hidden sm:inline">{t("crew.share")}</span>
         </button>
       </div>
     );
