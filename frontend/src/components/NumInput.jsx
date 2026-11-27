@@ -150,7 +150,7 @@ export function NumInput({ label, value, onChange, step, testid, color, icon, go
  *   sichtbar bleibt. Bei kürzeren Werten kehrt sie automatisch zur Basisgröße
  *   zurück. Reagiert auch auf Viewport-Resize.
  */
-export function AutoFitNumberInput({ value, onChange, step, placeholder, className, baseFontStyle }) {
+export function AutoFitNumberInput({ value, onChange, step, placeholder, className, baseFontStyle, disabled = false, ariaLabel }) {
   const inputRef = useRef(null);
   const measureRef = useRef(null);
   const [adjustedSize, setAdjustedSize] = useState(null);
@@ -254,6 +254,8 @@ export function AutoFitNumberInput({ value, onChange, step, placeholder, classNa
         onChange={onChange}
         style={mergedStyle}
         className={className}
+        disabled={disabled}
+        aria-label={ariaLabel}
       />
       <span
         ref={measureRef}

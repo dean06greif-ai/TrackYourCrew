@@ -1787,7 +1787,7 @@ export default function Dashboard() {
                           <span className="hidden md:inline">{t("common.exercise")}</span>
                         </th>
                         {dayShort.map((d, i) => (
-                          <th key={i} className="px-0.5 md:px-2 text-center" data-testid={`day-header-${i}`}>{d}</th>
+                          <th key={i} className={`px-0.5 md:px-2 text-center ${i === getTodayIdx() ? "text-[#CCFF00]" : i > getTodayIdx() ? "opacity-50" : ""}`} data-testid={`day-header-${i}`}>{d}</th>
                         ))}
                         <th className="pl-1 md:px-2 text-right">Σ</th>
                       </tr>
@@ -1810,7 +1810,7 @@ export default function Dashboard() {
                               <div className="flex items-center gap-1 md:gap-2" style={{ color: ex.color }}>
                                 <ExerciseIcon icon={ex.icon} size={14} className="shrink-0" />
                                 <span className="hidden md:inline text-[11px] uppercase tracking-wider leading-tight whitespace-nowrap">
-                                  {exerciseLabel(ex)}{ex.unit ? ` (${ex.unit})` : ""}
+                                  {exerciseLabel(ex)}{ex.unit && !isActivity(ex) ? ` (${ex.unit})` : ""}
                                 </span>
                               </div>
                             </td>
@@ -1828,10 +1828,12 @@ export default function Dashboard() {
                                   <AutoFitNumberInput
                                     step={ex.unit === "km" ? 0.1 : 1}
                                     value={displayValue}
-                                    placeholder="0"
+                                    placeholder={di > getTodayIdx() ? "" : "0"}
                                     onChange={(e) => setDayValue(di, ex.key, e.target.value)}
+                                    disabled={di > getTodayIdx()}
+                                    ariaLabel={`${exerciseLabel(ex)} ${dayShort[di]}`}
                                     baseFontStyle={{ fontSize: 'clamp(12px, 3vw, 19px)' }}
-                                    className="w-full bg-[#0A0A0A] border border-[#222] focus:border-[#CCFF00] outline-none text-center text-white py-1.5 px-0.5 font-anton placeholder:text-ink-3"
+                                    className={`w-full bg-[#0A0A0A] border outline-none text-center text-white py-1.5 px-0.5 font-anton placeholder:text-ink-3 disabled:opacity-40 disabled:border-[#1A1A1A] ${di === getTodayIdx() ? "border-[#333] focus:border-[#CCFF00]" : "border-[#222] focus:border-[#CCFF00]"}`}
                                   />
                                 </td>
                               );
@@ -1839,7 +1841,7 @@ export default function Dashboard() {
                             <td className="pl-1 md:px-2 text-right font-anton align-middle" style={{ color: ex.color }} data-testid={`sum-${ex.key}`}>
                               <div className="flex flex-col leading-tight items-end">
                                 <span className="text-[15px] md:text-[17px]">{isActivity(ex) ? doneDays(logDays, ex.key).length : formattedSum}</span>
-                                <span className="text-[10px] md:text-[11px] text-ink-3 whitespace-nowrap">/ {formattedGoal}{ex.unit && !isActivity(ex) ? ` ${ex.unit}` : isActivity(ex) ? "×" : ""}</span>
+                                <span className="text-[10px] md:text-[11px] text-ink-3 whitespace-nowrap">/ {formattedGoal}{ex.unit && !isActivity(ex) ? ` ${ex.unit}` : isActivity(ex) ? <span className="font-sans font-bold ml-px">×</span> : ""}</span>
                               </div>
                             </td>
                           </tr>

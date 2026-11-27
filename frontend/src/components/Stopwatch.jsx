@@ -541,7 +541,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
           {heard && <span className="text-ink-2"> · {t("sw.heard", { text: heard.trim().slice(0, 40) })}</span>}
         </p>
       )}
-      {micError && <p className="text-[10px] text-[#FF3B30] mt-1.5" data-testid={`${id}-stopwatch-micerror`}>{t(`sw.err.${["insecure", "not-allowed", "service-not-allowed", "audio-capture", "network", "language-not-supported"].includes(micError) ? micError : "generic"}`)}</p>}
+      {micError && <p className="text-[10px] text-[#FF3B30] mt-1.5" data-testid={`${id}-stopwatch-micerror`}>{t(`sw.err.${["insecure", "not-allowed", "not-allowed-retry", "service-not-allowed", "audio-capture", "network", "language-not-supported"].includes(micError) ? micError : "generic"}`)}</p>}
       {coach && !start && !count && review == null && (
         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
           {target > 0 && <p className="text-[10px] text-ink-3">{t("sw.coachTarget", { v: formatClock(target) })}</p>}

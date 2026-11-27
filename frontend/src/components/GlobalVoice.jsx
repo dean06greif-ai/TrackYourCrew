@@ -140,7 +140,7 @@ export function useGlobalVoiceRouter({ exercises, todayIdx, formOpen, panelOpen,
     off();
     // Fehler verständlich melden (z. B. Vivaldi/Brave ohne Spracherkennung, Mikro nicht erlaubt)
     if (code !== "stopped") {
-      const known = ["insecure", "not-allowed", "service-not-allowed", "audio-capture", "network", "language-not-supported"];
+      const known = ["insecure", "not-allowed", "not-allowed-retry", "service-not-allowed", "audio-capture", "network", "language-not-supported"];
       toast.error(t(`sw.err.${known.includes(code) ? code : "generic"}`), { id: "voice-error", duration: 6000 });
     }
   });

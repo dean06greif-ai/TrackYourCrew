@@ -56,6 +56,15 @@ const SAFARI_QUIET_MS = 1200;
 const emit = (fn) => subs.forEach((s) => { try { fn(s); } catch { /* ein Abnehmer darf die anderen nicht stören */ } });
 const fail = (code) => {
   stopRec();
+  // Mikro-Frage gerade abgelehnt/weggeklickt: der Browser fragt beim nächsten Tippen meist nochmal
+  // -> „nochmal tippen“ statt gleich aufs Schloss-Symbol zu verweisen (Dean 2026-11-27).
+  // Nur wenn die Freigabe dauerhaft gesperrt ist („denied“), bleibt der Schloss-Hinweis.
+  if (code === "not-allowed" && navigator.permissions?.query) {
+    navigator.permissions.query({ name: "microphone" })
+      .then((p) => emit((s) => s.onError?.(p.state === "denied" ? "not-allowed" : "not-allowed-retry")))
+      .catch(() => emit((s) => s.onError?.(code)));
+    return;
+  }
   emit((s) => s.onError?.(code));
 };
 
