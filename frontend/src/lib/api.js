@@ -71,6 +71,8 @@ api.interceptors.request.use((config) => {
   if (t) config.headers.Authorization = `Bearer ${t}`;
   // Server-Meldungen in der gewählten Sprache
   config.headers["Accept-Language"] = getLang();
+  // Zeitzone des Geräts: der Server rechnet „heute“ und das Wochenende (So 24:00) in Ortszeit
+  try { config.headers["X-Timezone"] = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch { /* egal */ }
   return config;
 });
 

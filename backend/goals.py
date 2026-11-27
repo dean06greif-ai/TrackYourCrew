@@ -7,23 +7,29 @@ from pydantic import BaseModel, field_validator
 from typing import Optional
 import uuid
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 from core import BASE_INCREASE, BOOST_INCREASE, BoostRequest, FUTURE_WEEKS, GoalsUpdate, User, _normalize_exercise_colors, _notify, api_router, db, default_exercises, get_current_user
 
 # -------------------- Goals --------------------
-def _calc_week_number(start_date: datetime) -> int:
+def _tz(name: Optional[str]):
+    """Zeitzone des Nutzers (IANA-Name vom Gerät), sonst UTC."""
+    if not name:
+        return timezone.utc
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return timezone.utc
+
+
+def _calc_week_number(start_date: datetime, tz: Optional[str] = None) -> int:
+    """Programmwoche (Montag–Sonntag). „Heute“ zählt in der Ortszeit des Nutzers (Dean 2026-11-27):
+    die Woche endet Sonntag 24:00 dort, wo er ist. Der Start-Montag bleibt wie gespeichert (UTC),
+    damit sich bei Bestandsnutzern keine Wochennummern verschieben."""
     if start_date.tzinfo is None:
         start_date = start_date.replace(tzinfo=timezone.utc)
-    now = datetime.now(timezone.utc)
-    
     start_monday = (start_date - timedelta(days=start_date.weekday())).date()
-    current_weekday = now.weekday()
-    
-    # Sonntag (6) gehört noch zur aktuellen Woche!
-    if current_weekday == 6:
-        today_monday = (now - timedelta(days=6)).date()
-    else:
-        today_monday = (now - timedelta(days=current_weekday)).date()
-    
+    today = datetime.now(_tz(tz)).date()
+    today_monday = today - timedelta(days=today.weekday())
     return max(1, (today_monday - start_monday).days // 7 + 1)
 
 def _round_goal(value: float, unit: str) -> float:
@@ -69,13 +75,13 @@ async def _load_goals(user_id: str) -> dict:
         # (Abzug nach 4 Wochen, Einfrieren auch nach der 1. Woche) erst ab jetzt.
         sd = g.get("start_date")
         sd = datetime.fromisoformat(sd) if isinstance(sd, str) else (sd or now)
-        g["rules_from_week"] = _calc_week_number(sd)
+        g["rules_from_week"] = _calc_week_number(sd, g.get("tz"))
         await db.user_goals.update_one({"user_id": user_id}, {"$set": {"rules_from_week": g["rules_from_week"]}})
     if "pause_loss_from_week" not in g:
         # Formverlust nach Pausen (2026-11-25) zählt bei Bestandsnutzern erst ab jetzt – nichts rückwirkend.
         sd = g.get("start_date")
         sd = datetime.fromisoformat(sd) if isinstance(sd, str) else (sd or now)
-        g["pause_loss_from_week"] = _calc_week_number(sd)
+        g["pause_loss_from_week"] = _calc_week_number(sd, g.get("tz"))
         await db.user_goals.update_one({"user_id": user_id}, {"$set": {"pause_loss_from_week": g["pause_loss_from_week"]}})
     _normalize_exercise_colors(g.get("exercises", []))
     _ensure_progression_pct(g.get("exercises", []))
@@ -401,7 +407,7 @@ async def get_my_goals(user: User = Depends(get_current_user)):
     sd = g["start_date"]
     if isinstance(sd, str):
         sd = datetime.fromisoformat(sd)
-    cur_week = _calc_week_number(sd)
+    cur_week = _calc_week_number(sd, g.get("tz"))
     state = await _compute_user_state(user.user_id, g, cur_week)
     g["current_week"] = cur_week
     g["state"] = state
@@ -415,7 +421,7 @@ def _current_week_of(g: dict) -> int:
     sd = g["start_date"]
     if isinstance(sd, str):
         sd = datetime.fromisoformat(sd)
-    return _calc_week_number(sd)
+    return _calc_week_number(sd, g.get("tz"))
 
 
 def _new_exercise_key(used: set) -> str:
@@ -671,7 +677,7 @@ async def boost_exercise(payload: BoostRequest, user: User = Depends(get_current
     sd = g["start_date"]
     if isinstance(sd, str):
         sd = datetime.fromisoformat(sd)
-    cur_week = _calc_week_number(sd)
+    cur_week = _calc_week_number(sd, g.get("tz"))
     existing_keys = {e["key"] for e in g["exercises"]}
     if payload.exercise_key not in existing_keys:
         raise HTTPException(status_code=400, detail="Unknown exercise")
@@ -726,7 +732,7 @@ async def cancel_boost(user: User = Depends(get_current_user)):
     sd = g["start_date"]
     if isinstance(sd, str):
         sd = datetime.fromisoformat(sd)
-    cur_week = _calc_week_number(sd)
+    cur_week = _calc_week_number(sd, g.get("tz"))
     existing_keys = {e["key"] for e in g["exercises"]}
     boosts = g.get("boosts", [])
     # Nur Boosts beachten, deren Uebung noch existiert. Verwaiste Eintraege

@@ -7,7 +7,7 @@ from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime, timezone
 from core import ProgressUpdate, User, _notify, _picture_ref, api_router, db, get_current_user, manager
-from goals import _calc_week_number, _compute_user_state, _current_week_of, _exercise_status, _get_pct_for_week, _load_goals, _progress_by_week, _round_goal, _starts_on
+from goals import _calc_week_number, _tz, _compute_user_state, _current_week_of, _exercise_status, _get_pct_for_week, _load_goals, _progress_by_week, _round_goal, _starts_on
 from social import _get_friend_ids_ordered
 
 # -------------------- Progress --------------------
@@ -24,7 +24,7 @@ async def my_progress(week: Optional[int] = None, user: User = Depends(get_curre
     sd = g["start_date"]
     if isinstance(sd, str):
         sd = datetime.fromisoformat(sd)
-    target_week = week if week else _calc_week_number(sd)
+    target_week = week if week else _calc_week_number(sd, g.get("tz"))
     entry = await db.progress_entries.find_one(
         {"user_id": user.user_id, "week_number": target_week},
         {"_id": 0},
@@ -219,7 +219,7 @@ async def _board_entry(u: dict, viewer_id: str, week: Optional[int] = None) -> d
     sd = g["start_date"]
     if isinstance(sd, str):
         sd = datetime.fromisoformat(sd)
-    cur_week = week if week else _calc_week_number(sd)
+    cur_week = week if week else _calc_week_number(sd, g.get("tz"))
     # Einträge nur einmal pro Nutzer laden (Plan 9 / BACKLOG P2) und dreifach nutzen:
     # Wochenwerte, aktuelle Woche, All-Time-Summen.
     all_entries = await db.progress_entries.find({"user_id": u["user_id"]}, {"_id": 0}).to_list(1000)
@@ -602,8 +602,8 @@ async def insights_me(user: User = Depends(get_current_user)):
             sd = datetime.now(timezone.utc)
     if not isinstance(sd, datetime):
         sd = datetime.now(timezone.utc)
-    current_week_num = _calc_week_number(sd)
-    current_dow = datetime.now(timezone.utc).weekday()  # 0=Mo..6=So
+    current_week_num = _calc_week_number(sd, g.get("tz"))
+    current_dow = datetime.now(_tz(g.get("tz"))).weekday()  # 0=Mo..6=So (Ortszeit)
 
     by_weekday = {k: [0.0] * 7 for k in ex_keys}
     weeks_active = {k: [0] * 7 for k in ex_keys}

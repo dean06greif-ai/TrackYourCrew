@@ -295,6 +295,15 @@ async def _notify(user_id: str, message: dict):
 
 
 # -------------------- Auth helpers --------------------
+def _valid_tz(name: str) -> bool:
+    try:
+        from zoneinfo import ZoneInfo
+        ZoneInfo(name)
+        return True
+    except Exception:
+        return False
+
+
 async def get_current_user(request: Request) -> User:
     token = request.cookies.get("session_token")
     if not token:
@@ -321,6 +330,12 @@ async def get_current_user(request: Request) -> User:
         raise HTTPException(status_code=401, detail="User not found")
     if isinstance(user_doc.get("created_at"), str):
         user_doc["created_at"] = datetime.fromisoformat(user_doc["created_at"])
+    # Zeitzone des Geräts (Header X-Timezone) merken: Wochenende = Sonntag 24:00 Ortszeit (Dean 2026-11-27)
+    tzname = (request.headers.get("x-timezone") or "").strip()[:64]
+    if tzname and tzname != user_doc.get("tz") and _valid_tz(tzname):
+        await db.users.update_one({"user_id": user_doc["user_id"]}, {"$set": {"tz": tzname}})
+        await db.user_goals.update_one({"user_id": user_doc["user_id"]}, {"$set": {"tz": tzname}})
+        user_doc["tz"] = tzname
     if not user_doc.get("handle"):
         h = await _generate_unique_handle()
         await db.users.update_one({"user_id": user_doc["user_id"]}, {"$set": {"handle": h}})
