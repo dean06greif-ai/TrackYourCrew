@@ -531,10 +531,12 @@ export default function UserCard({ entry, isMe, flash, canBoost, onBoost, onCanc
               </div>
               {/* Workout-Modus läuft gerade: live für die Crew */}
               {entry.live && (
-                <div className="flex items-center gap-1.5 px-2 py-1 border border-[#FF3B30]/70 text-[#FF3B30] bg-[#FF3B30]/[0.08] min-w-0" data-testid={`live-${entry.user_id}`}>
-                  <span className="relative flex w-2 h-2 shrink-0"><span className="absolute inset-0 rounded-full bg-[#FF3B30] animate-ping opacity-70" /><span className="relative w-2 h-2 rounded-full bg-[#FF3B30]" /></span>
+                <div className="flex flex-col justify-center px-2 py-1 border border-[#00FF66]/50 text-[#00FF66] bg-[#00FF66]/[0.06] min-w-0 leading-tight" data-testid={`live-${entry.user_id}`}>
                   <span className="text-[10px] uppercase tracking-widest truncate">
-                    Live · {t("wo.round", { n: entry.live.round, of: entry.live.rounds })} · <span className="font-anton text-sm tracking-normal">{formatAmount(entry.live.reps, entry.live.unit, locale)}</span> {entry.live.exercise_name}
+                    {t("wo.title")} · {t("wo.round", { n: entry.live.round, of: entry.live.rounds })}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest truncate text-white/80">
+                    <span className="font-anton text-sm tracking-normal text-[#00FF66]">{formatAmount(entry.live.reps, entry.live.unit, locale)}</span> {entry.live.exercise_name}
                   </span>
                 </div>
               )}

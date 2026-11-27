@@ -57,7 +57,8 @@ export function useMilestones({ board, user, lang }) {
     if (!board?.users || !seen) return;
     const now = Date.now();
     const add = [];
-    for (const u of board.users) {
+    // Nur eigene Meilensteine als Toast (Dean 2026-11-27: die der anderen nicht sehen)
+    for (const u of board.users.filter((x) => x.user_id === me)) {
       for (const m of u.milestones || []) {
         if (m.silent || seen.has(`${u.user_id}|${m.id}`)) continue;
         if (!m.at || now - new Date(m.at).getTime() > FRESH_MS) continue;

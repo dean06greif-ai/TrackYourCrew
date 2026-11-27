@@ -27,6 +27,7 @@ const t = {
   "card.noEntries": "nothing logged yet",
   "card.paceLast": "{n} more today to finish the week",
   "card.paceToday": "{n} more today and you're on track",
+  "card.rankTab": "RANK",
   "card.starts": "Starts",
   "card.week": "Week",
   "card.weekDone": "WEEK DONE!",

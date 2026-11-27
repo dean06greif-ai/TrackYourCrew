@@ -51,12 +51,14 @@ export default function Insights({ open, onClose, meId }) {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex justify-end"
+          // iPhone: beim Ein-/Ausblenden der Adressleiste blitzte unten das Dashboard durch ->
+          // Überlagerung auf die große Viewport-Höhe (lvh), Panel füllt sie ganz (Dean 2026-11-27)
+          className="fixed top-0 left-0 right-0 z-50 flex justify-end h-screen [height:100lvh]"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={onClose}
           data-testid="insights-overlay"
         >
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="absolute inset-0 -bottom-24 bg-black/70 backdrop-blur-sm" />
           <motion.aside
             className="relative w-full sm:max-w-lg h-full bg-[#0A0A0A] border-l border-[#222] flex flex-col"
             initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
@@ -74,7 +76,7 @@ export default function Insights({ open, onClose, meId }) {
               </button>
             </header>
 
-            <div className="flex-1 overflow-y-auto scrollbar-dark p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto overscroll-contain scrollbar-dark p-6 space-y-6" style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom) + 100lvh - 100dvh)" }}>
               {!data ? (
                 <p className="text-ink-3 text-sm uppercase tracking-widest">{t("common.loading")}</p>
               ) : data.weeks_tracked === 0 && !data.exercises.some((e) => (e.history || []).length) ? (

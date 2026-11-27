@@ -27,6 +27,7 @@ const t = {
   "card.noEntries": "rien de saisi pour l'instant",
   "card.paceLast": "Encore {n} aujourd'hui pour boucler la semaine",
   "card.paceToday": "Encore {n} aujourd'hui et tu es dans le rythme",
+  "card.rankTab": "RANG",
   "card.starts": "Début",
   "card.week": "Semaine",
   "card.weekDone": "SEMAINE RÉUSSIE !",

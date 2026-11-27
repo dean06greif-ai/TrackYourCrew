@@ -345,11 +345,8 @@ export function CardBack({ exercises, values, weekNumber, userId, bestGoals = {}
       <div className="flex items-center justify-center gap-2" data-testid="card-back-radar-tabs">
         {[
           { key: "week", label: t("card.weekTab") },
-          { key: "rank", label: "RANK" },
+          { key: "rank", label: t("card.rankTab") },
           ...(archived.length ? [{ key: "archive", label: t("card.archiveTab") }] : []),
-          ...((entry?.milestones?.length || distanceKm(entry) > 0)
-            ? [{ key: "milestones", label: <Flag size={12} weight="bold" className="block" />, aria: t("card.milestonesTab") }]
-            : []),
         ].map((tab) => {
           const active = radarMode === tab.key;
           return (
@@ -381,8 +378,6 @@ export function CardBack({ exercises, values, weekNumber, userId, bestGoals = {}
 
       {radarMode === "archive" ? (
         <ArchiveList archived={archived} allTime={allTime} />
-      ) : radarMode === "milestones" ? (
-        <MilestoneList entry={entry} isMe={isMe} />
       ) : (
       <div className="relative flex-1 flex items-center justify-center min-h-0">
         <RadarChart
