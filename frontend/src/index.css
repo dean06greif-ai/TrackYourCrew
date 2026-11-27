@@ -114,6 +114,7 @@ body {
         linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
     background-size: 48px 48px;
+    background-position: center top; /* links und rechts gleich (Dean 2026-11-27) */
 }
 
 /* Scrollbereiche in Karten: Spur unsichtbar (Kartenhintergrund), Griff schmal und dunkel */

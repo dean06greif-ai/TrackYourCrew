@@ -121,10 +121,11 @@ export function useGlobalVoiceRouter({ exercises, todayIdx, formOpen, panelOpen,
     const flush = () => {
       const res = parseVoiceLog(v.buf, props.current.exercises || [], props.current.todayIdx);
       v.buf = "";
+      if (res.refused === "week") toast.error(t("voice.weekRefused"), { id: "voice-refused", duration: 4000 });
       if (res.items.length) props.current.onItems?.(res.items);
     };
     if (r.done) flush();
-    else if (r.items.length) v.silence = window.setTimeout(flush, SILENCE_MS);
+    else if (r.items.length || r.refused) v.silence = window.setTimeout(flush, SILENCE_MS);
   };
 
   useVoiceChannel(on, lang, (texts, isFinal) => {

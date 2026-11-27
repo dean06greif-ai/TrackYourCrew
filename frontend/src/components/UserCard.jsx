@@ -558,6 +558,7 @@ export default function UserCard({ entry, isMe, flash, canBoost, onBoost, onCanc
               ))}
               {activities.length > 0 && (
                 <div className={`${exercises.length ? "space-y-3 pt-4 border-t border-[#1A1A1A]" : "space-y-6"}`} data-testid={`activities-${entry.user_id}`}>
+                  {exercises.length > 0 && <p className="text-[9px] uppercase tracking-[0.3em] text-ink-3 -mb-1">{t("settings.tabActivities")}</p>}
                   {activities.map((a) => <ActivityRow key={a.key} activity={a} value={values?.[a.key]} large={exercises.length === 0} />)}
                 </div>
               )}

@@ -206,6 +206,13 @@ function dayOf(toks, today) {
   return null;
 }
 
+// „keine Liegestütze“ / „no push-ups“ = 0 (Dean 2026-11-27)
+const NONE = /\b(no|none|zero|keine|keinen|kein|null|ningun|ninguna|ningunos|ningunas|cero|aucun|aucune|pas de|pas d'|zero)\b/;
+// „lösch alles von heute“ (nur ein Tag; die ganze Woche per Sprache nicht – Dean 2026-11-27)
+const DELETE = /\b(delete|clear|remove|reset|erase|losch|losche|loschen|geloscht|entfern|entferne|entfernen|zurucksetzen|setz \w+ zuruck|borra|borrar|elimina|eliminar|supprime|supprimer|efface|effacer)\b/;
+const WEEK = /\b(woche|week|semana|semaine)\b/;
+const ALL = /\b(alles|alle|all|everything|todo|todos|tout|tous)\b/;
+
 const ADD = /\b(noch|nochmal|weitere|weiteren|zusatzlich|dazu|extra|mehr|another|more|additional|plus|otra|otras|otro|otros|mas|encore|de plus|supplementaires?)\b/;
 const TOTAL = /\b(insgesamt|gesamt|in total|total|en total|au total|in summe)\b/;
 
@@ -286,9 +293,18 @@ export function findSpokenExercise(text, exercises) {
  */
 export function parseVoiceLog(text, exercises, today = 0) {
   const done = isDone(text);
-  const clean = wordsToDigits(stripDone(text));
-  const globalToks = clean.split(/\s+/);
+  const clean0 = wordsToDigits(stripDone(text));
+  const globalToks = clean0.split(/\s+/);
   const globalDay = dayOf(globalToks, today);
+  // Löschen: Tag (Standard heute) auf 0 – für eine genannte Übung oder alle; ganze Woche wird abgelehnt
+  if (DELETE.test(clean0)) {
+    if (WEEK.test(clean0) && globalDay == null) return { items: [], unknown: [], done, refused: "week" };
+    const day = globalDay ?? today;
+    const named = ALL.test(clean0) ? null : findExercise(clean0, globalToks, exercises);
+    const list = named ? [named] : exercises;
+    return { items: list.map((e) => ({ key: e.key, amount: 0, day, mode: "day", clear: true })), unknown: [], done, clear: true };
+  }
+  const clean = clean0;
   const segments = clean
     .split(/\s*(?:,|;|\bund\b|\band\b|\bdann\b|\bthen\b|\by\b|\bet\b|\bplus\b|\bausserdem\b)\s*/)
     .map((x) => x.trim())
@@ -305,8 +321,10 @@ export function parseVoiceLog(text, exercises, today = 0) {
       if (!items.some((it) => it.key === actEx.key && it.day === day)) items.push({ key: actEx.key, amount: 1, day, mode: "add" });
       continue;
     }
-    if (numIdx < 0) continue;
-    let amount = Number(toks[numIdx]);
+    // „keine Liegestütze“ ohne Zahl im Satzteil = 0
+    const none = numIdx < 0 && NONE.test(seg);
+    if (numIdx < 0 && !none) continue;
+    let amount = none ? 0 : Number(toks[numIdx]);
     // Einheit direkt hinter der Zahl (oder irgendwo im Satzteil)
     const su = spokenUnit(toks[numIdx + 1] || "") || toks.map(spokenUnit).find(Boolean) || null;
     let ex = findExercise(seg, toks, exercises.filter((e) => e.type !== "activity"));
@@ -320,9 +338,15 @@ export function parseVoiceLog(text, exercises, today = 0) {
     if (su && eu.kind === su.kind && eu.toBase) amount = (amount * su.toBase) / eu.toBase;
     const isKm = eu.kind === "distance";
     amount = isKm ? Math.round(amount * 100) / 100 : Math.round(amount * 10) / 10;
-    if (!(amount > 0)) continue;
+    if (!(amount >= 0)) continue;
     const segDay = dayOf(toks, today) ?? globalDay;
     const day = segDay ?? today;
+    // „keine Liegestütze (heute)“ = Tagesstand 0
+    if (amount === 0) {
+      const prev0 = items.find((it) => it.key === ex.key && it.day === day);
+      if (!prev0) items.push({ key: ex.key, amount: 0, day, mode: "day" });
+      continue;
+    }
     // „insgesamt 120“ = Wochensumme; „heute/gestern … 10 gemacht“ = Stand dieses Tages (Dean 2026-11-26:
     // genau sein, nicht addieren); „noch/weitere 10“ oder ohne Tagesangabe = dazuzählen
     const mode = TOTAL.test(seg) ? "set" : segDay != null && !ADD.test(seg) ? "day" : "add";

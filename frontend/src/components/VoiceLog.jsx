@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Microphone, X, Check } from "@phosphor-icons/react";
 import { useI18n } from "../i18n";
+import { toast } from "sonner";
 import { parseVoiceLog, isDone } from "../lib/voiceLog";
 import { matchVoiceCommand } from "../lib/stopwatch";
 import { useMicEnabled } from "../lib/mic";
@@ -65,9 +66,11 @@ export function VoiceLogPanel({ exercises, todayIdx, dayNames, onApply, onClose,
     const r = evalRef.current(text ?? finalRef.current);
     setItems(r.items);
     setUnknown(r.unknown);
-    if (autoApply && r.items.length) { applyRef.current(r.items); return; }
+    if (r.refused === "week") toast.error(t("voice.weekRefused"), { id: "voice-refused", duration: 4000 });
+    // Löschen nie direkt, immer erst prüfen
+    if (autoApply && r.items.length && !r.clear) { applyRef.current(r.items); return; }
     setPhase("review");
-  }, [autoApply]);
+  }, [autoApply, t]);
   useEffect(() => () => window.clearTimeout(silenceRef.current), []);
 
   const listening = phase === "listening" && !!SpeechRec;
@@ -87,7 +90,7 @@ export function VoiceLogPanel({ exercises, todayIdx, dayNames, onApply, onClose,
     if (r.done) { finish(all); return; }
     // Stille abwarten: nur wenn schon etwas Brauchbares erkannt wurde
     window.clearTimeout(silenceRef.current);
-    if (r.items.length) silenceRef.current = window.setTimeout(() => finish(all), SILENCE_MS);
+    if (r.items.length || r.refused) silenceRef.current = window.setTimeout(() => finish(all), SILENCE_MS);
   }, (code) => {
     // Safari beendet manchmal still: dann einfach auswerten, was schon gehört wurde
     if (code === "stopped") { finish(); return; }

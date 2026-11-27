@@ -1269,9 +1269,10 @@ export default function Dashboard() {
     const rows = [];
     for (const it of items) {
       if (actKeys.has(it.key)) {
-        rows.push({ key: it.key, day: it.day, kind: Number(newDays?.[it.day]?.[it.key]) > 0 ? "doneSame" : "done", amount: 1 });
+        const v = it.amount === 0 ? 0 : 1; // „lösch heute“ / „heute nicht im Gym“ = Haken weg
+        rows.push({ key: it.key, day: it.day, kind: v === 0 ? "day" : Number(newDays?.[it.day]?.[it.key]) > 0 ? "doneSame" : "done", amount: v, from: Number(newDays?.[it.day]?.[it.key]) || 0 });
         // Aktivität: der Tag gilt als erledigt (nie mehr als 1 pro Tag)
-        newDays[it.day] = { ...(newDays[it.day] || {}), [it.key]: 1 };
+        newDays[it.day] = { ...(newDays[it.day] || {}), [it.key]: v };
         newForm[it.key] = doneDays(newDays, it.key).length;
         continue;
       }
@@ -1313,7 +1314,8 @@ export default function Dashboard() {
     panelOpen: logging && voiceOpen,
     openForm: () => { setLogMode("total"); setLogging(true); },
     onItems: (items) => {
-      if (voiceConfirmOn) { setVoiceInitial(items); setLogging(true); setVoiceOpen(true); }
+      // Löschen geht immer erst über die Prüfen-Ansicht
+      if (voiceConfirmOn || items.some((it) => it.clear)) { setVoiceInitial(items); setLogging(true); setVoiceOpen(true); }
       else applyVoiceItems(items);
     },
     onHeard: setVoiceHeard,
@@ -1501,11 +1503,8 @@ export default function Dashboard() {
             <h1 className="font-anton text-5xl md:text-6xl leading-none tracking-tight mb-3">
               {t("hero.week")} <span className="text-[#CCFF00] text-glow-lime">{String(me?.week_number || 1).padStart(2, "0")}</span> · <span className="whitespace-nowrap">{t("hero.getToWork")}</span>
             </h1>
-            <p className="text-ink-2 max-w-xl leading-relaxed text-pretty">
-              {t("hero.text")}
-              {!hideBoostButtons && ` ${t("hero.boostText")}`}
-            </p>
-            <p className="mt-3 text-[10px] uppercase tracking-[0.25em] text-ink-3" data-testid="days-left">
+            {/* Erklärtext entfernt (Dean 2026-11-27) */}
+            <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-ink-3" data-testid="days-left">
               {daysLeftLabel}
             </p>
             {hasBoostedThisWeek && (
@@ -1517,12 +1516,12 @@ export default function Dashboard() {
           {/* Mobile: grid-cols-3 -> erste 3 in voller Größe in Reihe 1, weitere wrappen darunter.
               PC (md+): flex-row, alle Ziele in einer einzigen Reihe rechts neben dem Text. */}
           {/* Im Urlaub/krank: keine Wochenziele (gibt es diese Woche nicht) */}
-          {!me?.all_paused && (
-          <div
-            className="grid grid-cols-3 gap-3 md:flex md:flex-row md:flex-nowrap md:gap-3 md:shrink-0"
-            data-testid="hero-goals-strip"
-          >
-            {me?.exercises.map((ex) => (
+          {!me?.all_paused && (() => {
+            // Übungen und Aktivitäten: sind beide da, dezent getrennt mit kleiner Überschrift (Dean 2026-11-27)
+            const exs = (me?.exercises || []).filter((e) => !isActivity(e));
+            const acts = (me?.exercises || []).filter(isActivity);
+            const both = exs.length > 0 && acts.length > 0;
+            const tileOf = (ex) => (
               <div
                 key={ex.key}
                 className="border border-[#222] bg-[#121212] p-3 md:p-4 relative min-w-0 md:min-w-[120px] md:max-w-[190px] flex flex-col justify-between"
@@ -1540,9 +1539,20 @@ export default function Dashboard() {
                   <Flame size={14} weight="fill" className="absolute top-1 right-0.5 md:top-1.5 md:right-1.5 text-[#FF8800]" />
                 )}
               </div>
-            ))}
-          </div>
-          )}
+            );
+            const group = (list, label, tid) => (
+              <div className="min-w-0 md:shrink-0" data-testid={tid}>
+                {both && <p className="text-[9px] uppercase tracking-[0.3em] text-ink-3 mb-1.5">{label}</p>}
+                <div className="grid grid-cols-3 gap-3 md:flex md:flex-row md:flex-nowrap md:gap-3">{list.map(tileOf)}</div>
+              </div>
+            );
+            return (
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-6 md:shrink-0" data-testid="hero-goals-strip">
+                {exs.length > 0 && group(exs, t("settings.tabExercises"), "hero-goals-exercises")}
+                {acts.length > 0 && group(acts, t("settings.tabActivities"), "hero-goals-activities")}
+              </div>
+            );
+          })()}
         </div>
       </section>
 

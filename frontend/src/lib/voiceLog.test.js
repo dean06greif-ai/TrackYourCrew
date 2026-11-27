@@ -181,3 +181,29 @@ describe("Aktivitäten", () => {
     expect(parseVoiceLog("2 Stunden Gym", WITH_ACT, 3).items).toEqual([{ key: "gym", amount: 1, day: 3, mode: "add" }]);
   });
 });
+
+describe("keine / löschen (Dean 2026-11-27)", () => {
+  test("„Today I have done no push-ups“ = heute 0", () => {
+    const r = parseVoiceLog("Today I have done no push-ups", EX_EN, 3);
+    expect(r.items).toEqual([expect.objectContaining({ amount: 0, day: 3, mode: "day" })]);
+  });
+  test("„heute keine Liegestütze“ = heute 0, Zahl im Satz hat Vorrang", () => {
+    expect(parseVoiceLog("heute keine Liegestütze", EX, 2).items[0]).toMatchObject({ amount: 0, day: 2, mode: "day" });
+    expect(parseVoiceLog("no, 20 Liegestütze", EX, 2).items[0].amount).toBe(20);
+  });
+  test("„Delete all my progress today“ = alle Übungen heute 0 (mit clear)", () => {
+    const r = parseVoiceLog("Delete all my progress today", EX_EN, 4);
+    expect(r.clear).toBe(true);
+    expect(r.items.length).toBe(EX_EN.length);
+    r.items.forEach((it) => expect(it).toMatchObject({ amount: 0, day: 4, mode: "day", clear: true }));
+  });
+  test("„lösch meine Liegestütze von heute“ = nur diese Übung", () => {
+    const r = parseVoiceLog("lösch meine Liegestütze von heute", EX, 1);
+    expect(r.items.length).toBe(1);
+  });
+  test("ganze Woche löschen wird abgelehnt", () => {
+    const r = parseVoiceLog("Delete all my progress for this week", EX_EN, 4);
+    expect(r.refused).toBe("week");
+    expect(r.items).toEqual([]);
+  });
+});

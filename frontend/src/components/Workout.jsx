@@ -11,7 +11,7 @@ import { exerciseLabel } from "../lib/exercises";
 import { formatAmount } from "../lib/amount";
 import { useMicEnabled } from "../lib/mic";
 import { useVoiceChannel, cleanSpeech, kickVoice } from "../lib/voiceHub";
-import { getAudioCtx, unlockAudio, loadPackIndex, loadCoachClips, playCoachClip } from "../lib/coachAudio";
+import { getAudioCtx, unlockAudio, unlockBackgroundAudio, loadPackIndex, loadCoachClips, playCoachClip } from "../lib/coachAudio";
 import { clipId, cueText } from "../lib/coachClips";
 import { translate, LANGUAGES } from "../i18n";
 import { speak, PACK_KEY, CLANG_KEY, COACH_SYNC, announceCoachSetting } from "./Stopwatch";
@@ -29,6 +29,26 @@ const readLS = (k) => { try { return window.localStorage.getItem(k) || ""; } cat
 const writeLS = (k, v) => { try { window.localStorage.setItem(k, v); } catch { /* egal */ } };
 const readLast = () => { try { return JSON.parse(window.localStorage.getItem(KEY) || "{}") || {}; } catch { return {}; } };
 const writeLast = (v) => { try { window.localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* egal */ } };
+
+// Stille als WAV (8 kHz, 8 Bit) in Phasenlänge, je Länge einmal erzeugt (max. 10 Min., danach Schleife)
+const silenceCache = new Map();
+function silenceUrl(sec) {
+  const d = Math.max(1, Math.min(600, Math.round(sec)));
+  if (silenceCache.has(d)) return silenceCache.get(d);
+  const rate = 8000;
+  const n = rate * d;
+  const buf = new ArrayBuffer(44 + n);
+  const v = new DataView(buf);
+  const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  str(0, "RIFF"); v.setUint32(4, 36 + n, true); str(8, "WAVE"); str(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  str(36, "data"); v.setUint32(40, n, true);
+  new Uint8Array(buf, 44).fill(128);
+  const url = URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+  silenceCache.set(d, url);
+  return url;
+}
 
 function beep(freq, dur = 0.15, vol = 0.25) {
   try {
@@ -274,6 +294,11 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     setStartAt(ref - sec * 1000);
     setNow(tNow);
     lastAnnounce.current = "";
+    const a = silentRef.current;
+    if (a) {
+      const q = phaseAt(phases, sec);
+      try { a.src = silenceUrl(q.phase.dur); a.currentTime = Math.max(0, q.phase.dur - q.left); if (!pausedRef.current) a.play().catch(() => {}); } catch { /* egal */ }
+    }
   };
   ctl.current = {
     pause: () => {
@@ -298,7 +323,8 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
   };
   const startLockAudio = () => {
     if (!prefs.lock || window.__tycMusicPlaying || silentRef.current) return;
-    const a = new Audio("/sounds/silence.mp3");
+    // Stille so lang wie die Phase: der Sperrbildschirm zeigt Zeit/Balken des Tons -> stimmt dann mit der Phase
+    const a = new Audio(silenceUrl(phases[0].dur));
     a.loop = true;
     a.setAttribute("playsinline", "");
     silentRef.current = a;
@@ -320,6 +346,24 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     return () => { stopLockAudio(); restoreMediaSession(); };
   }, [lockOn]);
   useEffect(() => () => { stopLockAudio(); }, []);
+  // Pause (auch über den Knopf im Fenster): stille Tonspur mit anhalten, damit die Zeit stehen bleibt
+  useEffect(() => {
+    const a = silentRef.current;
+    if (!a || stage !== "run") return;
+    if (pausedAt) a.pause();
+    else a.play().catch(() => {});
+  }, [pausedAt, stage]);
+  // Phasenwechsel: stille Tonspur auf die neue Phasenlänge, an die richtige Stelle
+  useEffect(() => {
+    const a = silentRef.current;
+    if (!a || stage !== "run") return;
+    try {
+      a.src = silenceUrl(pos.phase.dur);
+      a.currentTime = Math.max(0, Math.min(pos.phase.dur - 0.05, pos.phase.dur - pos.left));
+      if (!pausedRef.current) a.play().catch(() => {});
+    } catch { /* egal */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pos.index, stage]);
   // Anzeige: bei Phase, Runde, Pause, Menge neu (der Balken läuft vom System aus weiter)
   const phaseTitle = pausedAt ? t("wo.paused") : t(`wo.phase.${pos.phase.type}`);
   useEffect(() => {
@@ -392,6 +436,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     setPausedAt(0);
     setStage("run");
     startLockAudio(); // im Tipp starten (Browser-Regel)
+    unlockBackgroundAudio(); // Coach auch bei gesperrtem Bildschirm
     if (mic) kickVoice(lang);
   };
   const pausedRef = useRef(0);

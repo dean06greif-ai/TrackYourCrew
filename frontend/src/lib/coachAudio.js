@@ -87,7 +87,7 @@ export function loadCoachClips(packId, lang) {
           const res = await fetch(`${base()}/${packId}/${lang}/${info.file}`);
           if (!res.ok) return;
           const clip = trimInfo(await decode(c, await res.arrayBuffer()));
-          if (clip) pack.buffers.set(id, clip);
+          if (clip) pack.buffers.set(id, { ...clip, url: `${base()}/${packId}/${lang}/${info.file}` });
         } catch { /* einzelne Datei fehlt: dafür Gerätestimme */ }
       }));
       return pack.buffers.size > 0;
@@ -102,11 +102,41 @@ export function hasCoachClips(packId, lang) {
   return (packs[`${packId}/${lang}`]?.buffers.size || 0) > 0;
 }
 
+// Sperrbildschirm / Hintergrund (Dean 2026-11-27): iPhone hält Web Audio dann an, ein <audio>-Element
+// läuft aber weiter, solange die Seite Ton abspielt (Workout: stille Tonspur). Das Element muss einmal
+// in einem Tipp „entsperrt“ werden (unlockBackgroundAudio), danach darf es auch im Hintergrund starten.
+let bgEl = null;
+let bgStop = 0;
+export function unlockBackgroundAudio() {
+  if (typeof Audio === "undefined") return;
+  if (!bgEl) { bgEl = new Audio(); bgEl.preload = "auto"; bgEl.setAttribute("playsinline", ""); }
+  try {
+    bgEl.src = "/sounds/silence.mp3";
+    bgEl.play().then(() => bgEl.pause()).catch(() => {});
+  } catch { /* egal */ }
+}
+function playInBackground(clip) {
+  if (!bgEl || !clip.url) return false;
+  try {
+    window.clearTimeout(bgStop);
+    bgEl.src = clip.url;
+    bgEl.currentTime = clip.offset;
+    duckOthers();
+    bgEl.play().catch(() => {});
+    bgStop = window.setTimeout(() => { try { bgEl.pause(); } catch { /* egal */ } releaseOthers(); }, (clip.dur + 0.1) * 1000);
+    return true;
+  } catch {
+    return false;
+  }
+}
+const inBackground = (c) => (typeof document !== "undefined" && document.hidden) || (c && c.state !== "running" && c.state !== "suspended");
+
 // interrupt: laufende Ansage abbrechen; sonst hinten anstellen (nichts überlagert sich)
 export function playCoachClip(packId, lang, id, interrupt = false) {
   const clip = packs[`${packId}/${lang}`]?.buffers.get(id);
   const c = ctx;
   if (!clip || !c) return false;
+  if (bgEl && inBackground(c)) return playInBackground(clip);
   try {
     if (c.state === "suspended") c.resume().catch(() => {});
     const now = c.currentTime;
