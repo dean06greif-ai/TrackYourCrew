@@ -43,22 +43,6 @@ const PullupSvg = ({ size = 24 }) => (
   </Stroke>
 );
 
-const DipSvg = ({ size = 24 }) => (
-  <Stroke size={size}>
-    {/* Head */}
-    <circle cx="16" cy="5" r="2.5" />
-    {/* Forward-leaning body: neck -> hips at bar */}
-    <polyline points="15,7.5 13,12 10,18" />
-    {/* Both arms bent BEHIND body - elbow points back-up-right (behind the lean) */}
-    <polyline points="14,10 21,14 14,18" />
-    <polyline points="13,11 20,15 13,18" />
-    {/* Horizontal bar at hip level */}
-    <line x1="3" y1="18" x2="23" y2="18" />
-    {/* Legs hanging below bar, bent at knee */}
-    <polyline points="10,18 13,24 10,29" />
-  </Stroke>
-);
-
 const SquatSvg = ({ size = 24 }) => (
   <Stroke size={size}>
     {/* Head (side view, facing right) */}
@@ -130,18 +114,6 @@ const SitupSvg = ({ size = 24 }) => (
 );
 
 
-// Burpee: der Strecksprung am Ende, Arme hoch, Füße in der Luft.
-const BurpeeSvg = ({ size = 24 }) => (
-  <Stroke size={size}>
-    <circle cx="16" cy="9" r="2.2" />
-    <line x1="16" y1="11.2" x2="16" y2="20" />
-    <polyline points="11,3.5 16,13 21,3.5" />
-    <line x1="16" y1="20" x2="14" y2="26" />
-    <line x1="16" y1="20" x2="18" y2="26" />
-    <line x1="5" y1="29.5" x2="27" y2="29.5" strokeDasharray="2,2" />
-  </Stroke>
-);
-
 const JumpSvg = ({ size = 24 }) => (
   <Stroke size={size}>
     {/* Head */}
@@ -173,46 +145,6 @@ const BoxSvg = ({ size = 24 }) => (
   <BoxingGlove size={size} weight="bold" />
 );
 
-const JumpRopeSvg = ({ size = 24 }) => (
-  <Stroke size={size}>
-    {/* Volles Springseil - großer Bogen oben über dem Kopf */}
-    <path d="M 6 16 Q 16 2 26 16" />
-    {/* Springseil - unterer Bogen unter den Füßen (geschlossener Loop) */}
-    <path d="M 6 16 Q 16 30 26 16" strokeDasharray="2,2" />
-    {/* Griffe links und rechts (kleine Punkte) */}
-    <circle cx="6" cy="16" r="1.2" fill="currentColor" />
-    <circle cx="26" cy="16" r="1.2" fill="currentColor" />
-    {/* Kopf */}
-    <circle cx="16" cy="8" r="2" />
-    {/* Körper */}
-    <line x1="16" y1="10" x2="16" y2="19" />
-    {/* Arme zu den Griffen */}
-    <line x1="16" y1="13" x2="6" y2="16" />
-    <line x1="16" y1="13" x2="26" y2="16" />
-    {/* Beine - leicht angezogen (Sprungposition) */}
-    <line x1="16" y1="19" x2="13" y2="24" />
-    <line x1="16" y1="19" x2="19" y2="24" />
-  </Stroke>
-);
-const WallSitSvg = ({ size = 24 }) => (
-  <Stroke size={size}>
-    {/* Wand links — vertikale Linie */}
-    <line x1="4" y1="3" x2="4" y2="29" />
-    {/* Head — Rücken gegen Wand */}
-    <circle cx="7" cy="7" r="2" />
-    {/* Rücken gegen die Wand (vertikal nach unten) */}
-    <line x1="7" y1="9" x2="7" y2="18" />
-    {/* Oberschenkel — kürzer, horizontal nach rechts (90°) */}
-    <line x1="7" y1="18" x2="16" y2="18" />
-    {/* Unterschenkel — vertikal nach unten (90°) */}
-    <line x1="16" y1="18" x2="16" y2="26" />
-    {/* Arm liegt entspannt auf Oberschenkel */}
-    <line x1="9" y1="16" x2="14" y2="17" />
-    {/* Fuß */}
-    <line x1="16" y1="26" x2="20" y2="26" />
-  </Stroke>
-);
-
 const PlankSvg = ({ size = 24 }) => (
   <Stroke size={size}>
     {/* Head links */}
@@ -230,24 +162,6 @@ const PlankSvg = ({ size = 24 }) => (
   </Stroke>
 );
 
-const HollowHoldSvg = ({ size = 24 }) => (
-  <Stroke size={size}>
-    {/* Head - leicht angehoben */}
-    <circle cx="8" cy="16" r="1.8" />
-    {/* Arme gestreckt nach oben/hinter Kopf */}
-    <line x1="8" y1="16" x2="4" y2="12" />
-    {/* Oberkörper/Rumpf leicht angehoben, Hintern am Boden */}
-    <path d="M 10 16 Q 16 20 22 18" />
-    {/* Hintern am Boden (Punkt) */}
-    <circle cx="16" cy="20" r="0.8" fill="currentColor" />
-    {/* Beine gestreckt, leicht angehoben */}
-    <line x1="22" y1="18" x2="28" y2="16" />
-    {/* Füße */}
-    <line x1="28" y1="15" x2="28" y2="17" />
-  </Stroke>
-);
-
-
 // Ausfallschritt, seitlich: vorderes Knie 90°, hinteres Knie kurz über dem Boden.
 const LungeSvg = ({ size = 24 }) => (
   <Stroke size={size}>
@@ -256,17 +170,6 @@ const LungeSvg = ({ size = 24 }) => (
     <polyline points="16,10 19,13 17,15.5" />
     <polyline points="16,16 23,17 23,26 26,26" />
     <polyline points="16,16 11,25 5,27" />
-  </Stroke>
-);
-
-// Bergsteiger: Stütz mit gestreckten Armen, ein Knie zur Brust gezogen.
-const MountainClimberSvg = ({ size = 24 }) => (
-  <Stroke size={size}>
-    <circle cx="5.5" cy="10.5" r="2" />
-    <line x1="8" y1="13" x2="29" y2="25" />
-    <line x1="8" y1="13" x2="8" y2="25" />
-    <line x1="5.5" y1="25" x2="10.5" y2="25" />
-    <polyline points="18,18.7 12,21.5 15.5,25" />
   </Stroke>
 );
 
@@ -352,19 +255,6 @@ const StairsSvg = ({ size = 24 }) => (
   </Stroke>
 );
 
-// Hängen (Dead Hang): Stange oben, Arme gestreckt, Körper hängt gerade.
-const DeadHangSvg = ({ size = 24 }) => (
-  <Stroke size={size}>
-    <line x1="3" y1="4" x2="29" y2="4" />
-    <line x1="12" y1="4" x2="14" y2="13" />
-    <line x1="20" y1="4" x2="18" y2="13" />
-    <circle cx="16" cy="10" r="2" />
-    <line x1="16" y1="12.5" x2="16" y2="21" />
-    <line x1="16" y1="21" x2="15" y2="29" />
-    <line x1="16" y1="21" x2="17" y2="29" />
-  </Stroke>
-);
-
 // Gym (Aktivität): Kurzhantel.
 const GymSvg = ({ size = 24 }) => (
   <Stroke size={size}>
@@ -373,6 +263,14 @@ const GymSvg = ({ size = 24 }) => (
     <rect x="23" y="10" width="4" height="12" rx="1" />
     <line x1="2.5" y1="13" x2="2.5" y2="19" />
     <line x1="29.5" y1="13" x2="29.5" y2="19" />
+  </Stroke>
+);
+
+// Kettlebell (Dean 2026-11-27): Griff oben, runde Kugel mit flachem Boden.
+const KettlebellSvg = ({ size = 24 }) => (
+  <Stroke size={size}>
+    <path d="M9.5 15.5 C8.5 9 10.5 5 16 5 C21.5 5 23.5 9 22.5 15.5" />
+    <path d="M10.2 28 h11.6 a8.3 8.3 0 1 0 -11.6 0 Z" />
   </Stroke>
 );
 
@@ -400,17 +298,10 @@ const REGISTRY = {
   walk: WalkSvg,
   hike: HikeSvg,
   situp: SitupSvg,
-  dip: DipSvg,
-  burpee: BurpeeSvg,
   lunge: LungeSvg,
   plank: PlankSvg,
-  mountainclimber: MountainClimberSvg,
   handstand: HandstandSvg,
-  deadhang: DeadHangSvg,
-  wallsit: WallSitSvg,
-  hollow: HollowHoldSvg,
   jump: JumpSvg,
-  jumprope: JumpRopeSvg,
   stairs: StairsSvg,
   row: RowSvg,
   deadlift: DeadliftSvg,
@@ -420,14 +311,23 @@ const REGISTRY = {
   box: BoxSvg,
   yoga: YogaSvg,
   gym: GymSvg,
+  kettlebell: KettlebellSvg,
   sauna: SaunaSvg,
 };
 
-// Alte Daten: "sprint"/"hspu" waren Handstand, "legraise" zeigte das Springseil.
+// Alte Daten: "sprint"/"hspu" waren Handstand. Ausgemistet (Dean 2026-11-27: schwach gezeichnet
+// oder fast gleich wie ein anderes) -> gespeicherte Übungen zeigen das ähnlichste verbleibende Icon.
 const ALIASES = {
   sprint: "handstand",
   hspu: "handstand",
-  legraise: "jumprope",
+  legraise: "situp",
+  jumprope: "jump",
+  burpee: "jump",
+  hollow: "situp",
+  dip: "bench",
+  deadhang: "pullup",
+  wallsit: "squat",
+  mountainclimber: "plank",
 };
 
 export const ICON_KEYS = Object.keys(REGISTRY);

@@ -52,18 +52,18 @@ export const CATALOG = [
     fuzzy: ["handstand"],
   },
   {
-    kind: "mountainclimber", icon: "mountainclimber",
+    kind: "mountainclimber", icon: "plank",
     words: ["mountainclimb", "bergsteiger", "escalador", "grimpeur"],
     fuzzy: ["bergsteiger"],
   },
-  { kind: "hollow", icon: "hollow", words: ["hollow"], fuzzy: [] },
+  { kind: "hollow", icon: "situp", words: ["hollow"], fuzzy: [] },
   {
     kind: "plank", icon: "plank",
     words: ["plank", "planke", "unterarmstutz", "unterarmstuetz", "seitstutz", "seitstuetz", "plancha", "gainage"],
     fuzzy: ["plank", "planke", "plancha", "gainage"],
   },
   {
-    kind: "wallsit", icon: "wallsit",
+    kind: "wallsit", icon: "squat",
     words: ["wallsit", "wandsitz", "sentadillaenpared", "sentadillapared", "sillaenlapared", "sillapared", "chaise"],
     fuzzy: ["wandsitzen", "wallsit"],
   },
@@ -73,12 +73,12 @@ export const CATALOG = [
     fuzzy: ["kreuzheben", "deadlift", "deadlifts"],
   },
   {
-    kind: "deadhang", icon: "deadhang",
+    kind: "deadhang", icon: "pullup",
     words: ["deadhang", "totehang", "toterhang", "totenhang", "colgarse", "colgado", "suspension"],
     exact: ["hangen", "haengen", "hang"],
     fuzzy: ["deadhang", "hangen"],
   },
-  { kind: "dips", icon: "dip", words: ["dip", "fondos"], fuzzy: [] },
+  { kind: "dips", icon: "bench", words: ["dip", "fondos"], fuzzy: [] },
   {
     kind: "ohp", icon: "ohp",
     words: ["schulterdruck", "schulterdrueck", "shoulderpress", "overheadpress", "militarypress", "pushpress", "pressmilitar", "presshombro", "pressdehombro", "presshombros", "developpemilitaire", "developpeepaules", "uberkopfdruck", "ueberkopfdrueck"],
@@ -89,7 +89,7 @@ export const CATALOG = [
     words: ["bankdruck", "bankdrueck", "benchpress", "bench", "pressdebanca", "pressbanca", "pressdepecho", "developpecouche"],
     fuzzy: ["bankdrucken"],
   },
-  { kind: "burpees", icon: "burpee", words: ["burpee", "burpie", "burpi"], fuzzy: ["burpees", "burpee"] },
+  { kind: "burpees", icon: "jump", words: ["burpee", "burpie", "burpi"], fuzzy: ["burpees", "burpee"] },
   {
     kind: "situps", icon: "situp",
     words: ["situp", "crunch", "abdominal", "abdos", "bauchpresse", "bauchmuskel", "bauchtraining"],
@@ -106,7 +106,7 @@ export const CATALOG = [
     fuzzy: ["kniebeugen", "kniebeuge", "squats", "sentadillas"],
   },
   {
-    kind: "rope", icon: "jumprope",
+    kind: "rope", icon: "jump",
     words: ["seilspring", "seilhupf", "seilchen", "ropejump", "ropeskip", "jumprope", "skipping", "springseil", "comba", "saltarcuerda", "saltaralacuerda", "cordeasauter", "cordesauter"],
     fuzzy: ["seilspringen", "springseil"],
   },
@@ -189,6 +189,11 @@ export const CATALOG = [
     fuzzy: ["liegestutze", "liegestutz", "liegestuetze", "pushups", "flexiones", "pompes"],
   },
   // Aktivitäten (Dean 2026-11-26): ohne Rang-Tabelle, für Icon + Spracheingabe („heute war ich im Gym“)
+  {
+    kind: "kettlebell", icon: "kettlebell",
+    words: ["kettlebell", "kugelhantel", "swing", "pesarusa", "kettle"],
+    fuzzy: ["kettlebell"],
+  },
   {
     kind: "gym", icon: "gym",
     words: ["gym", "fitnessstudio", "fitnesscenter", "krafttraining", "gimnasio", "salledesport", "musculation"],

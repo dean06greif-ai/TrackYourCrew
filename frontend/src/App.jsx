@@ -25,9 +25,8 @@ function AuthGate({ children }) {
         className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"
         data-testid="auth-loading"
       >
-        <div className="text-[#CCFF00] font-anton text-3xl tracking-widest animate-pulse">
-          AUTHENTICATING...
-        </div>
+        {/* gleicher Ladebildschirm wie das Dashboard (Dean 2026-11-27: kein eigenes „Authenticating“) */}
+        <p className="text-[#CCFF00] font-anton text-3xl tracking-widest animate-pulse">LOADING...</p>
       </div>
     );
   }

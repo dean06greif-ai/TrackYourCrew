@@ -27,13 +27,13 @@ export const EXERCISE_IDEAS = [
   { key: "ex_squats", icon: "squat", unit: "", base: 150 },
   { key: "ex_run", icon: "run", unit: "km", base: 10 },
   { key: "ex_plank", icon: "plank", unit: "min", base: 5 },
-  { key: "ex_burpees", icon: "burpee", unit: "", base: 50 },
+  { key: "ex_burpees", icon: "jump", unit: "", base: 50 },
   { key: "ex_situps", icon: "situp", unit: "", base: 100 },
-  { key: "ex_dips", icon: "dip", unit: "", base: 50 },
+  { key: "ex_dips", icon: "bench", unit: "", base: 50 },
   { key: "ex_lunges", icon: "lunge", unit: "", base: 100 },
   { key: "ex_walk", icon: "walk", unit: "km", base: 20 },
   { key: "ex_bike", icon: "bike", unit: "km", base: 30 },
-  { key: "ex_jumprope", icon: "jumprope", unit: "min", base: 15 },
+  { key: "ex_jumprope", icon: "jump", unit: "min", base: 15 },
 ];
 
 // An wie vielen Tagen der Woche erledigt? (days = {"0": {key: 1}, …})
