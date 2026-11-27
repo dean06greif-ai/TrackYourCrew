@@ -47,6 +47,13 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
   kein Formverlust, kein Boost, keine Variante, kein Ziel-Vorschlag, kein Rang; eigene Obergrenze 7. Einstellungen:
   Umschalter Übungen/Aktivitäten + Glühbirne -> Ideen-Fenster (ACTIVITY_IDEAS / EXERCISE_IDEAS); Karte `card/ActivityRow.jsx` (Kästchen); Eintragen `ActivityLog.jsx`
   (Tage abhaken); Sprache „heute war ich im Gym“. Ranking/Meilensteine/Prozent/Challenges/Radar/Insights nur Übungen.
+- **Zeitzone (2026-11-27):** Frontend schickt `X-Timezone`, `get_current_user` merkt sie in `users.tz` + `user_goals.tz`;
+  `_calc_week_number(sd, tz)` rechnet „heute“ in Ortszeit (Woche endet So 24:00 dort), Start-Montag bleibt UTC.
+- **Nutzungsstatistik + Wochenbericht (2026-11-27):** `lib/usage.js` (`track("…")`, Seitenzeit), `POST /api/usage`
+  (nur Namen aus `usage.EVENTS`/`PAGES`, `db.usage` je Woche+Nutzer, 12 Monate), `backend/usage.py` schickt Montag 0:00 Berlin
+  den Bericht der Vorwoche per Telegram (Schleife bei gesetztem TELEGRAM_*, sonst `POST /api/cron/weekly-report`).
+- **Sprache löschen/keine:** „keine Liegestütze heute“ = Tag 0; „lösch alles von heute“ = alle Übungen Tag 0, immer über
+  die Prüfen-Ansicht (`clear`); ganze Woche per Sprache abgelehnt (`refused: "week"`).
 - **Streak:** aufeinanderfolgende Wochen, in denen alle aktiven Übungen und Aktivitäten geschafft sind.
 - **Ränge F–S+** (`frontend/src/lib/ranks.js`, Tabelle `docs/RANG-TABELLE.md`): nur aus dem Serverwert `best_goals`
   (bester Wochenwert, gedeckelt aufs Wochenziel) -> auf allen Geräten gleich. Übungsart wird
@@ -82,7 +89,8 @@ immer `t("…")` + Eintrag in allen vier Dateien. Design: dunkel, Neon (#CCFF00)
   Postausgang `tyc_outbox` (je Woche ein ganzer Wochenstand + Basis), senden beim Start/online/alle 30 s (Web Lock, ein Tab);
   409 -> `alreadyApplied` (Antwort verloren) sonst `mergeDays` (eigene Änderung auf Server-Stand). Netzfehler loggen nie aus.
 - **Crew/Freunde (Plan 4b):** Hinzufügen per Name + Code ist eine Anfrage, die der andere annimmt (optional
-  „zurück hinzufügen“). Einladungslink `/join/CODE` verbindet sofort gegenseitig. Freundschaft bleibt technisch
+  „zurück hinzufügen“). Einladungslink `/join/CODE` verbindet sofort gegenseitig; CODE = 10 Zeichen aus `GET /me/invite`
+  (`users.invite`, gilt `INVITE_DAYS` 7 Tage, danach 410; Link nur in den Einstellungen, Teilen nur Titel + URL wegen Vorschaubild). Freundschaft bleibt technisch
   einseitig (`users.friends`), Anfragen in `users.friend_requests_in`, Schalter `accept_friend_requests`.
 - **Crew-Board:** Live-Events gehen nur an Betroffene (`_notify`/`_audience`), WebSocket nur
   mit Login. `week_completed` kommt beim Speichern von Fortschritt; "Woche verfehlt" erkennt
