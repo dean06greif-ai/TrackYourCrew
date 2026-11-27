@@ -129,4 +129,5 @@ body {
   50% { height: 12px; }
 }
 .music-bar { animation: music-bar 0.9s ease-in-out infinite; height: 3px; }
-@media (prefers-reduced-motion: reduce) { .music-bar { animation: none; height: 6px; } }
+/* „Bewegung reduzieren“: trotzdem bewegen (winzige Anzeige), nur ruhiger */
+@media (prefers-reduced-motion: reduce) { .music-bar { animation-duration: 1.6s; } }

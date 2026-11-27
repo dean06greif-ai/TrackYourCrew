@@ -61,7 +61,7 @@ export default function MusicButton() {
         className={`relative border px-2.5 md:px-3 py-2 flex items-center justify-center transition-colors ${m.playing ? "border-[#CCFF00]/60 text-[#CCFF00]" : "border-[#222] text-white hover:border-[#CCFF00] hover:text-[#CCFF00]"}`}
       >
         <MusicNotesSimple size={16} weight={m.playing ? "fill" : "bold"} />
-        {m.playing && <Waves playing className="absolute -top-2 left-1/2 -translate-x-1/2" />}
+        {m.playing && <Waves playing className="absolute -top-[18px] left-1/2 -translate-x-1/2" />}
       </button>
 
       {open && (
