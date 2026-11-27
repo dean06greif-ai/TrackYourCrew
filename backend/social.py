@@ -6,6 +6,7 @@ import math
 from pydantic import BaseModel, field_validator
 from typing import Optional, List
 import uuid
+import secrets
 from datetime import datetime, timezone, timedelta
 import i18n_messages
 from core import FriendAddRequest, FriendJoinRequest, FriendOrderUpdate, FriendRequestAnswer, FriendRequestsSetting, User, _challenge_query_for, _clean_variant_text, _normalize_exercise_colors, _notify, _picture_ref, _rename_defaults, api_router, db, get_current_user, manager
@@ -730,16 +731,48 @@ async def decline_friend_request(from_user_id: str, user: User = Depends(get_cur
     return {"ok": True}
 
 
+INVITE_DAYS = 7  # Einladungslinks gelten eine Woche (Dean 2026-11-27)
+
+
+def _invite_expires(inv: dict) -> Optional[datetime]:
+    try:
+        created = inv.get("created_at")
+        if isinstance(created, str):
+            created = datetime.fromisoformat(created)
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        return created + timedelta(days=INVITE_DAYS)
+    except Exception:
+        return None
+
+
+@api_router.get("/me/invite")
+async def get_invite(user: User = Depends(get_current_user)):
+    """Aktueller Einladungslink-Code (eine Woche gültig). Abgelaufen -> neuer Code."""
+    doc = await db.users.find_one({"user_id": user.user_id}, {"_id": 0, "invite": 1}) or {}
+    inv = doc.get("invite") or {}
+    exp = _invite_expires(inv) if inv.get("code") else None
+    now = datetime.now(timezone.utc)
+    # Läuft er bald ab (< 1 Tag), gleich einen frischen ausgeben, damit geteilte Links nicht sofort verfallen
+    if not exp or exp - now < timedelta(days=1):
+        inv = {"code": secrets.token_urlsafe(7).replace("-", "x").replace("_", "y")[:10], "created_at": now.isoformat()}
+        await db.users.update_one({"user_id": user.user_id}, {"$set": {"invite": inv}})
+        exp = _invite_expires(inv)
+    return {"code": inv["code"], "expires_at": exp.isoformat()}
+
+
 @api_router.post("/friends/join")
 async def join_via_invite(payload: FriendJoinRequest, user: User = Depends(get_current_user)):
     """Einladungslink /join/<CODE>: der Besitzer teilt ihn bewusst, daher sofort
-    gegenseitig verbunden – auch wenn er Anfragen per Code ausgeschaltet hat."""
-    handle = (payload.handle or "").strip().upper().lstrip("#")
-    if len(handle) != 5:
-        raise HTTPException(status_code=400, detail="Hashtag muss 5 Zeichen lang sein")
-    target = await db.users.find_one({"handle": handle}, {"_id": 0})
+    gegenseitig verbunden – auch wenn er Anfragen per Code ausgeschaltet hat.
+    Der Code im Link gilt eine Woche (alte Links mit dem festen 5er-Code gelten nicht mehr)."""
+    code = (payload.handle or "").strip()
+    target = await db.users.find_one({"invite.code": code}, {"_id": 0}) if len(code) == 10 else None
     if not target:
-        raise HTTPException(status_code=404, detail="Kein User mit diesem Hashtag")
+        raise HTTPException(status_code=404, detail="Einladungslink ungültig")
+    exp = _invite_expires(target.get("invite") or {})
+    if not exp or exp < datetime.now(timezone.utc):
+        raise HTTPException(status_code=410, detail="Einladungslink abgelaufen")
     if target["user_id"] == user.user_id:
         raise HTTPException(status_code=400, detail="Dich selbst kannst du nicht hinzufügen")
     await _connect_friends(user.user_id, target["user_id"])

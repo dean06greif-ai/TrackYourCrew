@@ -77,6 +77,11 @@ MESSAGES = {
     "Hashtag muss 5 Zeichen lang sein": {
         "en": "The code must be 5 characters", "es": "El código debe tener 5 caracteres",
         "fr": "Le code doit comporter 5 caractères"},
+    "Einladungslink ungültig": {
+        "en": "Invalid invite link", "es": "Enlace de invitación no válido", "fr": "Lien d'invitation invalide"},
+    "Einladungslink abgelaufen": {
+        "en": "This invite link has expired – ask for a new one", "es": "El enlace de invitación ha caducado: pide uno nuevo",
+        "fr": "Ce lien d'invitation a expiré – demandes-en un nouveau"},
     "Kein User mit diesem Hashtag": {
         "en": "No user with this code", "es": "Ningún usuario con este código",
         "fr": "Aucun utilisateur avec ce code"},

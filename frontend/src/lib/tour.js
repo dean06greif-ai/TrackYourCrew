@@ -40,7 +40,7 @@ export const TOUR_STEPS = [
   { id: "flip", target: "my-card", advance: "card-flipped", needs: "card-front" },
   { id: "back", target: "my-card", advance: null, needs: "card-back" },
   { id: "crew", target: "crew-toggle", advance: "crew-open" },
-  { id: "invite", target: "invite", advance: "invite-shared", fallback: 8, needs: "crew" },
+  { id: "invite", target: "invite", advance: null, fallback: 8, needs: "crew" },
   { id: "settings", target: "settings-link", advance: null },
 ];
 

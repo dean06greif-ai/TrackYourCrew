@@ -19,7 +19,7 @@ import { useCelebrationState } from "../hooks/useCelebrationState";
 import { exerciseLabel } from "../lib/exercises";
 import { useMilestones } from "../hooks/useMilestones";
 import MilestoneToasts from "../components/MilestoneToast";
-import CrewRequests, { InviteBox } from "../components/CrewRequests";
+import CrewRequests from "../components/CrewRequests";
 import { consumePendingJoin } from "./JoinPage";
 import GuidedTour from "../components/GuidedTour";
 import GoalHint from "../components/GoalHint";
@@ -1962,6 +1962,7 @@ export default function Dashboard() {
                 {/* Add friend form */}
                 <form
                   onSubmit={handleAddFriend}
+                  data-tour="invite"
                   data-testid="friend-add-form"
                   className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-3 items-stretch"
                 >
@@ -2012,7 +2013,7 @@ export default function Dashboard() {
                   </button>
                 </form>
 
-                <InviteBox handle={user?.handle} tour />
+                {/* Einladungslink nur noch in den Einstellungen (Dean 2026-11-27) */}
 
                 {/* Friend list */}
                 {friends.length === 0 ? (

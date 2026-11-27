@@ -66,29 +66,35 @@ def test_crossing_requests_connect_both(client, user, bob):
     assert requests_of(client, user)["incoming"] == [] and requests_of(client, bob)["incoming"] == []
 
 
+def invite_code(client, who):
+    return client.get("/api/me/invite", headers=who["headers"]).json()["code"]
+
+
 def test_requests_can_be_switched_off_but_invite_link_works(client, user, bob):
     client.put("/api/me/friend-requests-setting", json={"accept": False}, headers=bob["headers"])
     assert client.get("/api/me/friend-requests-setting", headers=bob["headers"]).json() == {"accept": False}
     assert ask(client, user, bob).status_code == 403
-    r = client.post("/api/friends/join", json={"handle": "bob22"}, headers=user["headers"])
+    r = client.post("/api/friends/join", json={"handle": invite_code(client, bob)}, headers=user["headers"])
     assert r.status_code == 200
     assert board_ids(client, user) == [user["user_id"], bob["user_id"]]
     assert board_ids(client, bob) == [bob["user_id"], user["user_id"]]
 
 
 def test_join_validations_and_idempotent(client, user, bob):
-    assert client.post("/api/friends/join", json={"handle": "XXXXX"}, headers=user["headers"]).status_code == 404
-    assert client.post("/api/friends/join", json={"handle": "ABC"}, headers=user["headers"]).status_code == 400
-    assert client.post("/api/friends/join", json={"handle": user["handle"]}, headers=user["headers"]).status_code == 400
-    client.post("/api/friends/join", json={"handle": "BOB22"}, headers=user["headers"])
-    client.post("/api/friends/join", json={"handle": "BOB22"}, headers=user["headers"])
+    assert client.post("/api/friends/join", json={"handle": "XXXXXXXXXX"}, headers=user["headers"]).status_code == 404
+    assert client.post("/api/friends/join", json={"handle": "BOB22"}, headers=user["headers"]).status_code == 404  # alter 5er-Link gilt nicht mehr
+    assert client.post("/api/friends/join", json={"handle": invite_code(client, user)}, headers=user["headers"]).status_code == 400
+    code = invite_code(client, bob)
+    assert invite_code(client, bob) == code  # gleicher Link, solange er gilt
+    client.post("/api/friends/join", json={"handle": code}, headers=user["headers"])
+    client.post("/api/friends/join", json={"handle": code}, headers=user["headers"])
     friends = client.get("/api/friends", headers=user["headers"]).json()["friends"]
     assert [f["handle"] for f in friends] == ["BOB22"]
 
 
 def test_join_clears_pending_request(client, user, bob):
     ask(client, user, bob)
-    client.post("/api/friends/join", json={"handle": user["handle"]}, headers=bob["headers"])
+    client.post("/api/friends/join", json={"handle": invite_code(client, user)}, headers=bob["headers"])
     assert requests_of(client, bob)["incoming"] == []
     assert requests_of(client, user)["outgoing"] == []
 
@@ -106,3 +112,17 @@ def test_request_event_goes_only_to_target(client, user, bob):
         ask(client, user, bob)
         msg = ws.receive_json()
         assert msg == {"type": "friend_request", "user_id": user["user_id"]}
+
+
+def test_invite_link_expires_after_a_week(client, user, bob, db):
+    """Einladungslinks gelten 7 Tage (Dean 2026-11-27); danach gibt es einen neuen Code."""
+    from datetime import datetime, timedelta, timezone
+    from conftest import run
+    code = invite_code(client, bob)
+    old = (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
+    run(db.users.update_one({"user_id": bob["user_id"]}, {"$set": {"invite.created_at": old}}))
+    r = client.post("/api/friends/join", json={"handle": code}, headers=user["headers"])
+    assert r.status_code == 410
+    new = invite_code(client, bob)
+    assert new != code and len(new) == 10
+    assert client.post("/api/friends/join", json={"handle": new}, headers=user["headers"]).status_code == 200

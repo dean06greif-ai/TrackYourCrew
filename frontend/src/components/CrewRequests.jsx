@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ShareNetwork, Copy, Check, X, LinkSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
@@ -6,17 +6,29 @@ import { useI18n } from "../i18n";
 import { tourEvent } from "../lib/tour";
 
 // Einladungslink: https://<seite>/join/<CODE>. Wer ihn öffnet, ist sofort gegenseitig verbunden.
-export function inviteLink(handle) {
-  return `${window.location.origin}/join/${encodeURIComponent(handle || "")}`;
+// Der Code kommt vom Server und gilt eine Woche (Dean 2026-11-27), danach gibt es einen neuen.
+export function inviteLink(code) {
+  return `${window.location.origin}/join/${encodeURIComponent(code || "")}`;
+}
+
+export function useInviteCode() {
+  const [inv, setInv] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    api.get("/me/invite").then(({ data }) => { if (alive) setInv(data); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  return inv; // { code, expires_at } oder null (lädt)
 }
 
 // Teilen am Handy (Web Share API), sonst Link kopieren.
-export async function shareInvite(handle, t, { linkOnly = false } = {}) {
-  const url = inviteLink(handle);
+// Nur Titel + Link teilen: mit zusätzlichem Text zeigen iMessage/WhatsApp keine Vorschau mit Bild.
+export async function shareInvite(code, t, { linkOnly = false } = {}) {
+  const url = inviteLink(code);
   const text = t("crew.shareText");
   try {
     if (!linkOnly && navigator.share) {
-      await navigator.share({ title: t("crew.shareTitle"), text, url });
+      await navigator.share({ title: t("crew.shareTitle"), url });
       return "shared";
     }
   } catch (e) {
@@ -49,13 +61,17 @@ export async function shareInvite(handle, t, { linkOnly = false } = {}) {
 }
 
 // Kasten mit Einladungslink + Teilen-Knopf (Crew-Panel, Einstellungen, Tour).
-export function InviteBox({ handle, compact = false, tour = false, embedded = false }) {
-  const { t } = useI18n();
+export function InviteBox({ compact = false, tour = false, embedded = false }) {
+  const { t, locale } = useI18n();
   const [done, setDone] = useState(false);
   const linkRef = useRef(null);
-  const url = inviteLink(handle);
+  const inv = useInviteCode();
+  const handle = inv?.code || "…";
+  const url = inviteLink(inv?.code);
+  const until = inv?.expires_at ? new Date(inv.expires_at).toLocaleDateString(locale, { day: "numeric", month: "numeric" }) : "";
   const onShare = async () => {
-    const r = await shareInvite(handle, t);
+    if (!inv?.code) return;
+    const r = await shareInvite(inv.code, t);
     if (r === "aborted") return;
     tourEvent("invite-shared");
     if (r === "copied" || r === "shared") {
@@ -84,7 +100,7 @@ export function InviteBox({ handle, compact = false, tour = false, embedded = fa
       <div className="border-t border-[#222] pt-4 mt-4 flex items-center gap-3" data-testid="invite-box" data-tour={tour ? "invite" : undefined}>
         <LinkSimple size={16} weight="bold" className="text-[#CCFF00] shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-ink-3">{t("crew.invite")}</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-ink-3">{t("crew.invite")}{until && <span className="normal-case tracking-normal ml-2 text-ink-3/80" data-testid="invite-until">· {t("crew.inviteUntil", { date: until })}</span>}</p>
           {/* Einstellungen: ganzer Link (ohne „https://“, kopiert wird der volle), am Handy etwas kleiner -> eine Zeile (Dean 2026-11-27) */}
           <code ref={linkRef} className="block break-words select-all text-[11px] sm:text-xs tracking-tight sm:tracking-normal text-ink-2 font-mono mt-0.5 leading-5" title={url} data-testid="invite-link">
             {url.replace(/^https?:\/\//, "").split("/").map((part, i, arr) => (

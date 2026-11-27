@@ -1088,7 +1088,7 @@ export default function Settings() {
                 </div>
               </div>
               {/* Einladungslink direkt beim eigenen Code (Plan 4b) */}
-              <InviteBox handle={user.handle} embedded />
+              <InviteBox embedded />
             </div>
             <div className="border border-[#222] bg-[#121212] p-5">
               <label className="text-[10px] uppercase tracking-widest text-ink-2 mb-2 block">{t("settings.email")}</label>

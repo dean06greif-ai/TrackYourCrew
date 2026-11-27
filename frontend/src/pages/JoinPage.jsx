@@ -19,8 +19,9 @@ export function consumePendingJoin() {
   }
 }
 
+// Code aus dem Link (10 Zeichen, eine Woche gültig – Dean 2026-11-27). Groß/klein zählt.
 function cleanHandle(h) {
-  return String(h || "").trim().toUpperCase().replace(/^#/, "").slice(0, 5);
+  return String(h || "").trim().replace(/[^A-Za-z0-9]/g, "").slice(0, 10);
 }
 
 export default function JoinPage() {
@@ -32,7 +33,7 @@ export default function JoinPage() {
   const code = cleanHandle(handle);
 
   useEffect(() => {
-    if (!user || started.current || code.length !== 5) return;
+    if (!user || started.current || code.length !== 10) return;
     started.current = true;
     api.post("/friends/join", { handle: code })
       .then(({ data }) => toast.success(t("crew.joined", { name: data?.friend?.name || code }), { duration: 3000 }))
@@ -40,7 +41,7 @@ export default function JoinPage() {
       .finally(() => navigate("/dashboard", { replace: true }));
   }, [user, code, navigate, t]);
 
-  if (code.length !== 5) return <Navigate to="/" replace />;
+  if (code.length !== 10) return <Navigate to="/" replace />;
   if (!user) {
     try { window.localStorage.setItem(PENDING_KEY, code); } catch { /* egal */ }
     return <Navigate to="/" replace />;
