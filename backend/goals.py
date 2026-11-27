@@ -361,6 +361,9 @@ def _compute_progression(exercise: dict, all_boost_weeks: set, progress_by_week:
 
         entry = {"week": w, "goal": goal_rounded, "status": status,
                  "boost": boost_this_week, "voided_boost": voided_boost}
+        # Geschafft (bisher/aktuell): für den Aktivitäten-Verlauf in den Einstellungen
+        if w <= current_week:
+            entry["done"] = round(float(progress_by_week.get(w, {}).get(exercise.get("key"), 0) or 0), 2)
         if after_pause:
             entry["after_pause"] = after_pause
         if w in overrides:

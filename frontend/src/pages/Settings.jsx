@@ -1106,7 +1106,6 @@ export default function Settings() {
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-anton text-xl tracking-tight">{t("settings.moreTitle")}</p>
-                  <p className="text-xs text-ink-3 mt-1 truncate">{t("settings.moreSummary")}</p>
                 </div>
                 <CaretDown size={18} weight="bold" className={`shrink-0 text-ink-2 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
               </button>
@@ -1114,8 +1113,7 @@ export default function Settings() {
               <div className="px-3 pb-3 sm:px-5 sm:pb-5 [&>*]:!mb-3 [&>*:last-child]:!mb-0" data-testid="more-settings-body">
             {/* Sprache: gilt sofort und für alle Geräte (am Konto gespeichert) */}
             <div className="border border-[#222] bg-[#121212] p-5 mb-10" data-testid="language-row">
-              <p className="font-anton text-xl tracking-tight mb-1">{t("settings.language")}</p>
-              <p className="text-xs text-ink-2 mb-3">{t("settings.languageText")}</p>
+              <p className="font-anton text-xl tracking-tight mb-3">{t("settings.language")}</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {LANGUAGES.map((l) => (
                   <button
@@ -1173,7 +1171,6 @@ export default function Settings() {
                 </button>
                 <div className="flex-1">
                   <p className="font-anton text-xl tracking-tight">{t("settings.acceptRequests")}</p>
-                  <p className="text-xs text-ink-2 mt-1 leading-relaxed">{t("settings.acceptRequestsText")}</p>
                 </div>
               </div>
             </div>
@@ -1222,7 +1219,6 @@ export default function Settings() {
                 </button>
                 <div className="flex-1">
                   <p className="font-anton text-xl tracking-tight">{t("settings.voiceConfirm")}</p>
-                  <p className="text-xs text-ink-2 mt-1 leading-relaxed">{t("settings.voiceConfirmText")}</p>
                 </div>
               </div>
             )}
@@ -1243,7 +1239,7 @@ export default function Settings() {
               <div className="flex-1">
                 <p className="font-anton text-xl tracking-tight">{t("settings.remember")}</p>
                 <p className="text-xs text-ink-2 mt-1 leading-relaxed">
-                  {rememberMe ? t("settings.rememberOnText") : t("settings.rememberOffText")}
+                  {t("settings.rememberText")}
                 </p>
               </div>
             </div>
@@ -1252,7 +1248,6 @@ export default function Settings() {
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5 border border-[#222] bg-[#121212] p-5 mb-10" data-testid="tour-row">
               <div className="flex-1">
                 <p className="font-anton text-xl tracking-tight">{t("settings.tour")}</p>
-                <p className="text-xs text-ink-2 mt-1 leading-relaxed">{t("settings.tourText")}</p>
               </div>
               <button
                 type="button"
@@ -1301,17 +1296,6 @@ export default function Settings() {
             </button>
           ))}
         </div>
-          {/* Ideen hinter der Glühbirne (Dean 2026-11-26) */}
-          <button
-            type="button"
-            onClick={() => setIdeasOpen(true)}
-            title={t("settings.ideas")}
-            aria-label={t("settings.ideas")}
-            data-testid="ideas-button"
-            className="shrink-0 w-11 border border-[#333] text-[#FFD700] hover:border-[#FFD700] hover:bg-[#FFD700]/10 flex items-center justify-center transition-colors"
-          >
-            <Lightbulb size={18} weight="fill" />
-          </button>
         </div>
         <p className="text-ink-2 max-w-xl leading-relaxed mb-6 text-pretty">
           {section === "activity" ? t("settings.activitiesText") : t("settings.goalsText", { n: DELOAD_AFTER_MISSES })}
@@ -1353,7 +1337,6 @@ export default function Settings() {
             const inStartWeek = fresh || (ex.added_week || 1) === currentWeek;
             const goalChanged = !fresh && String(ex.goal_input) !== String(goalNow);
             const missStreak = st?.miss_streak || 0;
-            const boostedNow = (st?.effective_boost_weeks || []).includes(currentWeek);
             return (
               <div
                 key={ex.key}
@@ -1469,6 +1452,18 @@ export default function Settings() {
                       className="min-w-0 flex-1 h-8 bg-[#0A0A0A] border border-[#222] focus:border-[#CCFF00] outline-none px-2 text-sm text-white placeholder:text-ink-3 transition-colors"
                       data-testid={`input-variant-${ex.key}`}
                     />
+                    {/* „− Variante“ klappt das Feld wieder zu (nur solange die Übung noch keine gespeicherte Variante hat) */}
+                    {!(originalExercises.find((x) => x.key === ex.key)?.variant || "").trim() && (
+                      <button
+                        type="button"
+                        data-no-drag
+                        onClick={() => { updateExercise(idx, { variant: "" }); setVariantOpen((o) => ({ ...o, [ex.key]: false })); }}
+                        className="shrink-0 text-[10px] uppercase tracking-widest text-ink-3 hover:text-[#CCFF00] transition-colors"
+                        data-testid={`variant-close-${ex.key}`}
+                      >
+                        {t("settings.variantRemove")}
+                      </button>
+                    )}
                   </div>
                   {(() => {
                     const c = !fresh && variantChange(ex);
@@ -1597,7 +1592,6 @@ export default function Settings() {
                         )}
                       </p>
                     )}
-                    {boostedNow && <p className="text-[#FF8800]">{t("settings.boostedNow")}</p>}
                     {missStreak > 0 && (
                       <p className="text-[#FF8800]/80">
                         {t("settings.missStreak", { n: missStreak, left: DELOAD_AFTER_MISSES - missStreak })}
@@ -1610,15 +1604,28 @@ export default function Settings() {
             );
           })}
           {notDoneCount < MAX_EXERCISES && (
+            <div className="relative flex flex-col">
             <button
               onClick={() => addExercise(section)}
               data-testid={section === "activity" ? "add-activity-button" : "add-exercise-button"}
-              className={`border border-dashed border-[#333] hover:border-[#CCFF00] hover:text-[#CCFF00] text-ink-2 transition-colors flex md:flex-col items-center justify-center gap-2 md:gap-3 px-4 py-4 text-xs uppercase tracking-widest ${section === "activity" ? "md:min-h-[180px]" : "md:min-h-[240px]"}`}
+              className={`flex-1 border border-dashed border-[#333] hover:border-[#CCFF00] hover:text-[#CCFF00] text-ink-2 transition-colors flex md:flex-col items-center justify-center gap-2 md:gap-3 px-4 py-4 text-xs uppercase tracking-widest ${section === "activity" ? "md:min-h-[180px]" : "md:min-h-[240px]"}`}
             >
               <Plus size={14} weight="bold" className="md:w-6 md:h-6" />
               <span>{t(section === "activity" ? "settings.addActivity" : "settings.addExercise")}</span>
               <span className="text-ink-3">{notDoneCount}/{MAX_EXERCISES}</span>
             </button>
+            {/* Ideen: Glühbirne im Hinzufügen-Feld (je Reiter, Dean 2026-11-27) */}
+            <button
+              type="button"
+              onClick={() => setIdeasOpen(true)}
+              title={t("settings.ideas")}
+              aria-label={t("settings.ideas")}
+              data-testid="ideas-button"
+              className="absolute top-1/2 -translate-y-1/2 right-2 md:top-2 md:translate-y-0 w-9 h-9 text-[#FFD700] hover:bg-[#FFD700]/10 flex items-center justify-center transition-colors"
+            >
+              <Lightbulb size={18} weight="fill" />
+            </button>
+            </div>
           )}
         </div>
 
@@ -1798,6 +1805,57 @@ export default function Settings() {
             {t("settings.programStarted", { date: new Date(startDate).toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" }), week: currentWeek })}
           </p>
         )}
+
+        {/* Aktivitäten-Verlauf (Dean 2026-11-27): je Woche geschafft / Ziel, neueste oben */}
+        {section === "activity" && (() => {
+          const acts = exercises.filter((ex) => isActivity(ex) && !isNew(ex) && statusOf(state[ex.key]) !== "completed");
+          if (!acts.length) return null;
+          const progs = acts.map((ex) => (state[ex.key]?.progression || []).filter((c) => c.week <= currentWeek && c.status !== "pre_existence"));
+          const first = Math.min(...progs.map((p) => (p.length ? p[0].week : currentWeek)));
+          const weeks = [];
+          for (let w = currentWeek; w >= first; w--) weeks.push(w);
+          return (
+            <div className="border border-[#1A1A1A] bg-[#121212] p-4 md:p-6 mb-10" data-testid="activity-history">
+              <h3 className="font-anton text-2xl tracking-tight mb-1">{t("settings.activityHistory")}</h3>
+              <p className="text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest text-ink-2 mb-5 flex flex-wrap gap-x-3 gap-y-1">
+                <span>{t("settings.currentWeek", { week: currentWeek })}</span>
+                <span><span className="text-[#CCFF00]">✓</span> {t("settings.legendDone")}</span>
+                <span>‖ {t("settings.legendPaused")}</span>
+              </p>
+              <div className="overflow-auto max-h-[360px] scrollbar-dark pr-3" style={{ overscrollBehavior: "contain" }}>
+                <table className="w-full text-xs md:text-sm border-collapse" style={{ minWidth: `${44 + acts.length * 84}px` }}>
+                  <thead className="sticky top-0 z-10 bg-[#121212]">
+                    <tr className="text-[9px] md:text-[10px] uppercase tracking-normal md:tracking-widest text-ink-3 border-b border-[#1A1A1A]">
+                      <th className="py-2 pr-2 text-left w-12 bg-[#121212]">{t("common.week")}</th>
+                      {acts.map((ex) => <th key={ex.key} className="py-2 px-2 text-center whitespace-nowrap bg-[#121212]" style={{ color: ex.color }}>{exerciseLabel(ex)}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody className="font-anton">
+                    {weeks.map((w) => (
+                      <tr key={w} className={`border-b border-[#1A1A1A] ${w === currentWeek ? "bg-[#CCFF00]/[0.06]" : ""}`} style={{ height: 38 }} data-testid={`activity-row-${w}`}>
+                        <td className={`py-2 pr-2 ${w === currentWeek ? "text-[#CCFF00]" : "text-ink-3"}`}>{String(w).padStart(2, "0")}</td>
+                        {acts.map((ex, i) => {
+                          const c = progs[i].find((x) => x.week === w);
+                          if (!c || c.status === "pre_existence") return <td key={ex.key} />;
+                          if (c.status === "paused") return <td key={ex.key} className="text-center text-[#333]">‖</td>;
+                          const done = Math.round(Number(c.done) || 0);
+                          const goal = Math.round(Number(c.goal) || 0);
+                          const ok = done >= goal && goal > 0;
+                          const missed = c.status === "missed";
+                          return (
+                            <td key={ex.key} className={`py-2 px-2 text-center tabular-nums ${ok ? "text-[#CCFF00]" : missed ? "text-ink-3" : "text-white"}`} data-testid={`activity-cell-${w}-${ex.key}`}>
+                              {done}<span className="text-ink-3 text-[10px] md:text-xs">/{goal}</span>{ok && <span className="ml-1">✓</span>}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Wochen-Progression: gehört zu den Übungen (Aktivitäten haben keine Steigerung) */}
         {section === "exercise" && tableExercises.length > 0 && (

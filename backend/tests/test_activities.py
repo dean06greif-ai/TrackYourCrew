@@ -114,3 +114,12 @@ def test_obergrenze_getrennt(auth):
     g = auth.get("/api/goals/me").json()
     one_more = {"key": "n9", "name": "Akt 9", "unit": "", "icon": "gym", "base_value": 1, "progression_pct": 0, "type": "activity"}
     assert auth.put("/api/goals/me", json={"exercises": items(g) + [one_more]}).status_code == 400
+
+
+def test_progression_liefert_geschafft_je_woche():
+    """Aktivitäten-Verlauf (Einstellungen): je vergangener/aktueller Woche „done“, Zukunft ohne."""
+    ex = {"key": "gym", "name": "Gym", "unit": "×", "type": "activity", "base_value": 3, "start_week": 1, "progression_pct": 0}
+    res = _compute_progression(ex, set(), {1: {"gym": 2}, 2: {"gym": 3}}, 3, future_weeks=2)
+    by = {p["week"]: p for p in res["progression"]}
+    assert by[1]["done"] == 2 and by[2]["done"] == 3 and by[3]["done"] == 0
+    assert "done" not in by[4]
