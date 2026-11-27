@@ -89,6 +89,9 @@ function beep(freq, dur = 0.18) {
 export const VOICE_KEY = "tyc_sw_voice";
 export const PACK_KEY = "tyc_sw_coach_voice"; // "pack:<id>" (KI-Stimme) oder "device" (Gerätestimme)
 export const CLANG_KEY = "tyc_sw_coach_lang"; // Sprache des Coachs; leer = App-Sprache
+// Stoppuhr und Workout teilen sich die Coach-Einstellung: Änderung sofort an alle offenen Fenster melden
+export const COACH_SYNC = "tyc:coach-setting";
+export const announceCoachSetting = () => { try { window.dispatchEvent(new Event(COACH_SYNC)); } catch { /* egal */ } };
 const HARD_KEY = "tyc_sw_coach_hard"; // "1" = harte Ansagen
 const MALE = /\b(stefan|conrad|killian|hans|markus|daniel|thomas|david|guy|christopher|eric|mark|james|george|jorge|pablo|alvaro|henri|paul|claude|thierry|male|mann|männlich)\b/i;
 
@@ -253,6 +256,11 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
     loadPackIndex().then((list) => { if (alive) setPackIndex(list); });
     return () => { alive = false; };
   }, []);
+  useEffect(() => {
+    const sync = () => { setChoice(readLS(PACK_KEY)); setCoachLangPref(readLS(CLANG_KEY)); };
+    window.addEventListener(COACH_SYNC, sync);
+    return () => window.removeEventListener(COACH_SYNC, sync);
+  }, []);
   const packList = packIndex.filter((p) => (p.langs || []).includes(cLang));
   const chosen = choice.startsWith("pack:") ? choice.slice(5) : "";
   const activeEntry = choice === "device" ? null : (packList.find((p) => p.id === chosen) || packList[0] || null);
@@ -281,6 +289,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
     unlockAudio();
     setChoice(val);
     writeLS(PACK_KEY, val);
+    announceCoachSetting();
     const pack = val.startsWith("pack:") ? val.slice(5) : "";
     const entry = packIndex.find((p) => p.id === pack);
     const h = hard && (!entry || (entry.langs || []).includes(`${cLang}-hart`));
@@ -292,6 +301,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
     const v = code === lang ? "" : code; // App-Sprache = Standard, folgt späteren Wechseln der App-Sprache
     setCoachLangPref(v);
     writeLS(CLANG_KEY, v);
+    announceCoachSetting();
   };
   const toggleHard = () => {
     unlockAudio();

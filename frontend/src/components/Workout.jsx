@@ -14,7 +14,7 @@ import { useVoiceChannel, cleanSpeech, kickVoice } from "../lib/voiceHub";
 import { getAudioCtx, unlockAudio, loadPackIndex, loadCoachClips, playCoachClip } from "../lib/coachAudio";
 import { clipId, cueText } from "../lib/coachClips";
 import { translate, LANGUAGES } from "../i18n";
-import { speak, PACK_KEY, CLANG_KEY } from "./Stopwatch";
+import { speak, PACK_KEY, CLANG_KEY, COACH_SYNC, announceCoachSetting } from "./Stopwatch";
 import { claimMediaSession, restoreMediaSession, pause as pauseMusic, play as playMusic } from "../lib/musicPlayer";
 import { PRESETS, buildPhases, phaseAt, parseRepsSpeech, clampInt, sum, totalSeconds, COUNTDOWN_S } from "../lib/workout";
 import ExerciseIcon from "./ExerciseIcon";
@@ -98,6 +98,11 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     loadPackIndex().then((l) => { if (alive) setPackIndex(l); });
     return () => { alive = false; };
   }, [open]);
+  useEffect(() => {
+    const sync = () => { setVoiceChoice(readLS(PACK_KEY)); setCLangPref(readLS(CLANG_KEY)); };
+    window.addEventListener(COACH_SYNC, sync);
+    return () => window.removeEventListener(COACH_SYNC, sync);
+  }, []);
   const packList = packIndex.filter((p) => (p.langs || []).includes(cLang));
   const chosenPack = voiceChoice.startsWith("pack:") ? voiceChoice.slice(5) : "";
   const activePack = voiceChoice === "device" ? "" : (packList.find((p) => p.id === chosenPack) || packList[0])?.id || "";
@@ -118,6 +123,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     unlockAudio();
     setVoiceChoice(val);
     writeLS(PACK_KEY, val);
+    announceCoachSetting();
     hello(val.startsWith("pack:") ? val.slice(5) : "", cLang);
   };
   const pickLang = (code) => {
@@ -125,6 +131,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
     const v = code === lang ? "" : code;
     setCLangPref(v);
     writeLS(CLANG_KEY, v);
+    announceCoachSetting();
     const pk = packIndex.filter((p) => (p.langs || []).includes(code));
     const p = voiceChoice === "device" ? "" : (pk.find((x) => x.id === chosenPack) || pk[0])?.id || "";
     hello(p, code);
