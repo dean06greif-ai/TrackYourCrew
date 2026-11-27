@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import UserCard from "../components/UserCard";
 import ExerciseIcon from "../components/ExerciseIcon";
+import FitLabel from "../components/FitLabel";
 import Ranking from "../components/Ranking";
 import Insights from "../components/Insights";
 import Onboarding from "../components/Onboarding";
@@ -1524,11 +1525,13 @@ export default function Dashboard() {
             {me?.exercises.map((ex) => (
               <div
                 key={ex.key}
-                className="border border-[#222] bg-[#121212] p-3 md:p-4 relative min-w-0 md:min-w-[120px] md:max-w-[190px]"
+                className="border border-[#222] bg-[#121212] p-3 md:p-4 relative min-w-0 md:min-w-[120px] md:max-w-[190px] flex flex-col justify-between"
                 data-testid={`hero-goal-${ex.key}`}
               >
-                <p className="text-[10px] md:text-[10px] uppercase tracking-wider md:tracking-widest text-ink-2 mb-1 flex items-center gap-1 truncate pr-3 md:pr-0">
-                  <ExerciseIcon icon={ex.icon} size={12} /> {exerciseLabel(ex)}
+                {/* Name passt sich ein (enger/kleiner, notfalls zweizeilig) statt abgeschnitten zu werden */}
+                <p className={`text-[10px] uppercase tracking-wider md:tracking-widest text-ink-2 mb-1 flex items-start gap-1 ${ex.boosted_this_week ? "pr-3 md:pr-2" : ""}`}>
+                  <ExerciseIcon icon={ex.icon} size={12} className="shrink-0 mt-px" />
+                  <FitLabel testid={`hero-goal-label-${ex.key}`}>{exerciseLabel(ex)}</FitLabel>
                 </p>
                 <p className="font-anton text-3xl leading-none" style={{ color: ex.color }}>
                   {isActivity(ex) ? ex.goal : amountParts(ex.goal, ex.unit, locale).num}<span className={`text-ink-3 ml-1 whitespace-nowrap ${isActivity(ex) ? "text-sm" : "text-base"}`}>{isActivity(ex) ? t("hero.perWeek") : amountParts(ex.goal, ex.unit, locale).unit}</span>
