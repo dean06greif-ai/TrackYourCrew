@@ -265,7 +265,7 @@ async def create_challenge(payload: ChallengeCreate, user: User = Depends(get_cu
     if user.user_id in targets:
         raise HTTPException(status_code=400, detail="Dich selbst kannst du nicht herausfordern")
     if len(targets) > CHALLENGE_MAX_INVITES:
-        raise HTTPException(status_code=400, detail="Höchstens 5 Leute pro Challenge")
+        raise HTTPException(status_code=400, detail="Höchstens 5 Leute pro Herausforderung")
     friends = set(await _get_friend_ids_ordered(user.user_id))
     if any(t not in friends for t in targets):
         raise HTTPException(status_code=404, detail="Nicht in deiner Crew")
@@ -277,7 +277,7 @@ async def create_challenge(payload: ChallengeCreate, user: User = Depends(get_cu
         raise HTTPException(status_code=400, detail="Bitte ein gemeinsames Ziel angeben")
     monday = _this_monday().isoformat()
     if await db.challenges.count_documents({"monday": monday, "from_user_id": user.user_id}) >= CHALLENGE_MAX_OPEN:
-        raise HTTPException(status_code=400, detail="Diese Woche läuft schon eine Challenge mit dieser Person")
+        raise HTTPException(status_code=400, detail="Diese Woche läuft schon eine Herausforderung mit dieser Person")
     c = {"id": uuid.uuid4().hex[:12], "kind": payload.kind, "monday": monday, "from_user_id": user.user_id,
          "participants": [{"user_id": user.user_id, "key": payload.from_key, "status": "accepted"}]
          + [{"user_id": t, "key": None, "status": "invited"} for t in targets],
@@ -294,7 +294,7 @@ async def create_challenge(payload: ChallengeCreate, user: User = Depends(get_cu
 async def _get_challenge_for(cid: str, user: User) -> dict:
     c = await db.challenges.find_one({"id": cid}, {"_id": 0})
     if not c or user.user_id not in {p["user_id"] for p in _participants(c)}:
-        raise HTTPException(status_code=404, detail="Challenge nicht gefunden")
+        raise HTTPException(status_code=404, detail="Herausforderung nicht gefunden")
     return await _expire_invites(c)
 
 
@@ -313,7 +313,7 @@ async def accept_challenge(cid: str, payload: ChallengeAccept, user: User = Depe
     if me["status"] == "missed":
         raise HTTPException(status_code=400, detail="Zu spät – die Zeit zum Annehmen ist abgelaufen")
     if me["status"] != "invited" or c["monday"] != _this_monday().isoformat():
-        raise HTTPException(status_code=400, detail="Diese Challenge kann nicht mehr angenommen werden")
+        raise HTTPException(status_code=400, detail="Diese Herausforderung kann nicht mehr angenommen werden")
     g = await _load_goals(user.user_id)
     ex = next((e for e in g.get("exercises", []) if e["key"] == payload.to_key), None)
     if not ex or _exercise_status(ex) != "active":
@@ -339,7 +339,7 @@ async def decline_challenge(cid: str, user: User = Depends(get_current_user)):
     c = await _get_challenge_for(cid, user)
     me = next(p for p in _participants(c) if p["user_id"] == user.user_id)
     if me["status"] != "invited":
-        raise HTTPException(status_code=400, detail="Diese Challenge kann nicht mehr angenommen werden")
+        raise HTTPException(status_code=400, detail="Diese Herausforderung kann nicht mehr angenommen werden")
     parts = _set_participant(c, user.user_id, status="declined")
     await db.challenges.update_one({"id": cid}, {"$set": {"participants": parts}})
     c["participants"] = parts
@@ -356,7 +356,7 @@ async def withdraw_challenge(cid: str, user: User = Depends(get_current_user)):
     c = await _get_challenge_for(cid, user)
     parts = _participants(c)
     if c["from_user_id"] != user.user_id or any(p["status"] == "accepted" and p["user_id"] != user.user_id for p in parts):
-        raise HTTPException(status_code=400, detail="Diese Challenge kann nicht mehr zurückgezogen werden")
+        raise HTTPException(status_code=400, detail="Diese Herausforderung kann nicht mehr zurückgezogen werden")
     await db.challenges.delete_one({"id": cid})
     await manager.send_to({p["user_id"] for p in parts}, {"type": "challenge", "event": "withdrawn", "id": cid})
     return {"ok": True}

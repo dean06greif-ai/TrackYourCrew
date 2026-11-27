@@ -17,7 +17,7 @@ DEFAULT_NAMES = {
 
 MESSAGES = {
     "Wen willst du herausfordern?": {"en": "Who do you want to challenge?", "es": "¿A quién quieres retar?", "fr": "Qui veux-tu défier ?"},
-    "Höchstens 5 Leute pro Challenge": {"en": "At most 5 people per challenge", "es": "Máximo 5 personas por reto", "fr": "5 personnes maximum par défi"},
+    "Höchstens 5 Leute pro Herausforderung": {"en": "At most 5 people per challenge", "es": "Máximo 5 personas por reto", "fr": "5 personnes maximum par défi"},
     "Kurz warten": {"en": "Wait a moment", "es": "Espera un momento", "fr": "Attends un instant"},
     "Auf einem anderen Gerät wurde inzwischen gespeichert": {
         "en": "Something was saved on another device in the meantime",
@@ -39,15 +39,15 @@ MESSAGES = {
         "en": "You can't challenge yourself", "es": "No puedes retarte a ti mismo", "fr": "Tu ne peux pas te défier toi-même"},
     "Bitte ein gemeinsames Ziel angeben": {
         "en": "Please enter a shared goal", "es": "Indica un objetivo común", "fr": "Indique un objectif commun"},
-    "Diese Woche läuft schon eine Challenge mit dieser Person": {
+    "Diese Woche läuft schon eine Herausforderung mit dieser Person": {
         "en": "There's already a challenge with this person this week",
         "es": "Ya hay un reto con esta persona esta semana", "fr": "Il y a déjà un défi avec cette personne cette semaine"},
-    "Challenge nicht gefunden": {
+    "Herausforderung nicht gefunden": {
         "en": "Challenge not found", "es": "Reto no encontrado", "fr": "Défi introuvable"},
-    "Diese Challenge kann nicht mehr angenommen werden": {
+    "Diese Herausforderung kann nicht mehr angenommen werden": {
         "en": "This challenge can no longer be accepted", "es": "Este reto ya no se puede aceptar",
         "fr": "Ce défi ne peut plus être accepté"},
-    "Diese Challenge kann nicht mehr zurückgezogen werden": {
+    "Diese Herausforderung kann nicht mehr zurückgezogen werden": {
         "en": "This challenge can no longer be withdrawn", "es": "Este reto ya no se puede retirar",
         "fr": "Ce défi ne peut plus être retiré"},
     "Die Einheiten passen nicht zusammen": {

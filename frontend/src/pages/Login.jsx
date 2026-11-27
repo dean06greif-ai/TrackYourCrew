@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import LegalLinks from "../components/LegalLinks";
-import { Lightning, GoogleLogo, WarningCircle, TrendUp, UsersThree, Fire, Barbell } from "@phosphor-icons/react";
+import { Lightning, GoogleLogo, WarningCircle, UsersThree, Fire, Barbell } from "@phosphor-icons/react";
 import { API } from "../lib/api";
 import { useI18n, LANGUAGES, getLang, hasStoredLanguage } from "../i18n";
 
@@ -246,7 +246,7 @@ export default function Login() {
         </div>
         <div className="absolute bottom-12 left-8 right-8 max-w-md">
           <p className="text-xs tracking-[0.3em] uppercase text-[#CCFF00] mb-4">
-            WEEKLY PROGRESSION SYSTEM
+            BUILT FOR HIGH-VOLUME CALISTHENICS
           </p>
           <h2 className="font-anton text-5xl lg:text-6xl leading-none tracking-tight mb-4">
             PUSH HARDER.<br />EVERY. SINGLE. WEEK.
@@ -283,8 +283,8 @@ export default function Login() {
           <p className="text-xs tracking-[0.3em] uppercase text-ink-2 mb-3">
             / ACCESS TERMINAL
           </p>
-          <h1 className="font-anton text-5xl lg:text-6xl leading-none mb-3">
-            SIGN IN
+          <h1 className="font-anton text-5xl lg:text-6xl leading-none mb-3 uppercase">
+            {t("login.signIn")}
           </h1>
           <p className="text-ink-2 mb-12 text-sm leading-relaxed">
             {t("login.intro")}
@@ -311,7 +311,7 @@ export default function Login() {
           <div className="mt-12 pt-8 border-t border-[#222]">
             {/* Worum es geht – kurz, macht Lust (Dean 2026-11-26) */}
             <ul className="space-y-3" data-testid="login-features">
-              {[[Barbell, "f4"], [UsersThree, "f2"], [Fire, "f3"], [TrendUp, "f1"]].map(([Icon, k]) => (
+              {[[Barbell, "f4"], [UsersThree, "f2"], [Fire, "f3"]].map(([Icon, k]) => (
                 <li key={k} className="flex items-start gap-3">
                   <Icon size={18} weight="bold" className="text-[#CCFF00] shrink-0 mt-0.5" />
                   <span className="text-sm text-ink-2 leading-snug"><span className="text-white font-semibold">{t(`login.${k}`)}</span> {t(`login.${k}Text`)}</span>

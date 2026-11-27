@@ -200,6 +200,32 @@ function ChallengeDialog({ open, onClose, board, meId, onDone, presetTo, onlineI
   }, [open]);
   const ex = myExercises.find((e) => e.key === key);
   const chosen = to.map((id) => friends.find((f) => f.user_id === id)).filter(Boolean);
+  // Übungswahl (Dean 2026-11-27): annehmen kann nur, wer eine Übung mit derselben Einheit hat ->
+  // passend = alle Eingeladenen haben sie (gleiche Art zählt doppelt, z. B. Liegestütze ↔ Push-ups)
+  const normU = (u) => (u || "").trim().toLowerCase().replace(/\.$/, "");
+  const fitOf = (e) => {
+    const k = detectExerciseKind(e.name);
+    let unitOk = 0;
+    let kindOk = 0;
+    for (const f of chosen) {
+      const same = (f.exercises || []).filter((x) => x.type !== "activity" && normU(x.unit) === normU(e.unit));
+      if (same.length) unitOk += 1;
+      if (k && same.some((x) => detectExerciseKind(x.name) === k)) kindOk += 1;
+    }
+    return { all: chosen.length > 0 && unitOk === chosen.length, kind: chosen.length > 0 && kindOk === chosen.length };
+  };
+  const ranked = myExercises.map((e) => ({ e, fit: fitOf(e) }))
+    .sort((a, b) => (b.fit.kind - a.fit.kind) || (b.fit.all - a.fit.all));
+  const toKey = to.join(",");
+  useEffect(() => {
+    if (!open) return;
+    const cur = ranked.find((r) => r.e.key === key);
+    if (!cur || !cur.fit.all) {
+      const best = ranked.find((r) => r.fit.all);
+      if (best && best.e.key !== key) setKey(best.e.key);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, toKey]);
   const rest = friends.filter((f) => !to.includes(f.user_id));
   // Vorschlag gemeinsames Ziel: eigenes Wochenziel + passende Ziele der anderen
   const suggested = useMemo(() => {
@@ -278,12 +304,30 @@ function ChallengeDialog({ open, onClose, board, meId, onDone, presetTo, onlineI
                 </button>
               ))}
             </div>
-            <label className="block">
+            <div>
               <span className="text-[10px] uppercase tracking-widest text-ink-3">{t("chal.exercise")}</span>
-              <select value={key} onChange={(e) => setKey(e.target.value)} className="mt-1 w-full bg-[#0A0A0A] border border-[#333] text-white px-3 py-2.5" data-testid="challenge-ex">
-                {myExercises.map((e) => <option key={e.key} value={e.key}>{exerciseLabel(e)}</option>)}
-              </select>
-            </label>
+              <div className="mt-1 grid grid-cols-2 gap-2" role="radiogroup" data-testid="challenge-ex">
+                {ranked.map(({ e, fit }) => {
+                  const on = e.key === key;
+                  return (
+                    <button key={e.key} type="button" role="radio" aria-checked={on} disabled={!fit.all}
+                      onClick={() => setKey(e.key)} data-testid={`challenge-ex-${e.key}`}
+                      className={`text-left px-3 py-2 border transition-colors min-w-0 disabled:opacity-35 disabled:cursor-not-allowed ${on ? "border-[#CCFF00] bg-[#CCFF00]/10" : "border-[#222] bg-[#121212] hover:border-[#444]"}`}>
+                      <span className="flex items-center gap-1.5 min-w-0" style={{ color: e.color }}>
+                        <ExerciseIcon icon={e.icon} size={14} className="shrink-0" />
+                        <span className="text-xs font-semibold uppercase tracking-wider truncate">{exerciseLabel(e)}</span>
+                      </span>
+                      <span className="block text-[10px] text-ink-3 mt-0.5 truncate">
+                        {fit.all
+                          ? (fit.kind ? (chosen.length === 1 ? t("chal.fitSameOne", { name: chosen[0].name }) : t("chal.fitSame")) : t("chal.fitUnit"))
+                          : (chosen.length === 1 ? t("chal.fitNoneOne", { name: chosen[0].name }) : t("chal.fitNone"))}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {!ranked.some((r) => r.fit.all) && <p className="text-[11px] text-[#FF8800] mt-1.5">{t("chal.noMatch")}</p>}
+            </div>
             {kind === "team" && (
               <label className="block">
                 <span className="text-[10px] uppercase tracking-widest text-ink-3">{t("chal.target")}{unit && ` (${ex.unit})`}</span>
