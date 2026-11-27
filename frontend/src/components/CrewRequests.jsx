@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { api } from "../lib/api";
 import { useI18n } from "../i18n";
 import { tourEvent } from "../lib/tour";
+import { track } from "../lib/usage";
 
 // Einladungslink: https://<seite>/join/<CODE>. Wer ihn öffnet, ist sofort gegenseitig verbunden.
 // Der Code kommt vom Server und gilt eine Woche (Dean 2026-11-27), danach gibt es einen neuen.
@@ -74,6 +75,7 @@ export function InviteBox({ compact = false, tour = false, embedded = false }) {
     const r = await shareInvite(inv.code, t);
     if (r === "aborted") return;
     tourEvent("invite-shared");
+    track("invite_shared");
     if (r === "copied" || r === "shared") {
       setDone(true);
       setTimeout(() => setDone(false), 1800);

@@ -24,6 +24,7 @@ import { parseUnit } from "../lib/ranks";
 import { micEnabled, setMicEnabled, speechSupported } from "../lib/mic";
 import { voiceConfirm, setVoiceConfirm } from "../lib/voiceHub";
 import { ACTIVITY_IDEAS, EXERCISE_IDEAS, ACTIVITY_UNIT, isActivity, typeOf } from "../lib/activities";
+import { track } from "../lib/usage";
 // Muss mit EXERCISE_PALETTE in backend/server.py übereinstimmen.
 const EXERCISE_PALETTE = ["#CCFF00", "#FF3B30", "#00F0FF", "#FF8800", "#A855F7", "#22FF77", "#FF1493"];
 // Vorschlag fürs Ziel einer neuen Übung (grau im Feld, gilt wenn man nichts einträgt)
@@ -838,6 +839,7 @@ export default function Settings() {
         return c ? { ...ex, variant: c.from, goal_input: String(c.goalNow) } : ex;
       });
       let { data } = await api.put("/goals/me", toPayload(base));
+      track("settings_saved");
       // 2) Varianten-Wechsel: alte Übung ins Archiv, Variante startet neu
       for (const [ex, c] of changes) {
         ({ data } = await api.post(`/goals/me/exercises/${encodeURIComponent(ex.key)}/upgrade`, { variant: c.to, start_value: c.start }));
@@ -1145,7 +1147,7 @@ export default function Settings() {
               {["ios", "android", "inapp"].includes(installPlatformName) && (
                 <button
                   type="button"
-                  onClick={() => setInstallOpen(true)}
+                  onClick={() => { setInstallOpen(true); track("install_opened"); }}
                   data-testid="install-open"
                   className="shrink-0 border border-[#CCFF00]/60 text-[#CCFF00] hover:bg-[#CCFF00] hover:text-black uppercase tracking-widest text-xs px-4 py-2.5 transition-colors"
                 >

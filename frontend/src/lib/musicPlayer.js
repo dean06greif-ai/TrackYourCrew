@@ -3,6 +3,7 @@
 // (läuft beim Seitenwechsel weiter), merkt sich Playlist + Stelle, Sperrbildschirm-Anzeige (Media Session),
 // wird leiser, wenn Coach/Ansagen sprechen (Ereignis „tyc:duck“). Lizenz CC BY 4.0 -> Credits je Lied anzeigen.
 import { useSyncExternalStore } from "react";
+import { track } from "./usage";
 
 const KEY = "tyc_music_state";
 const DUCK = 0.3;
@@ -133,6 +134,7 @@ function selectPlaylist(id, autoplay, at) {
 }
 
 export async function play() {
+  track("music_played");
   await loadMusic();
   if (!data) return;
   const a = ensureAudio();

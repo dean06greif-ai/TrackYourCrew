@@ -73,6 +73,15 @@ function Privacy() {
       <P><strong className="text-white">Fehlermeldungen.</strong> Bei technischen Fehlern erhält der Betreiber eine
         kurze Meldung per Telegram (Art des Fehlers, ggf. interne Nutzerkennung, keine Trainingsdaten).
         Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (stabiler Betrieb).</P>
+      <P><strong className="text-white">Nutzungsstatistik.</strong> Damit wir sehen, welche Funktionen genutzt werden
+        und was verbessert werden sollte, zählen wir, wenn du eingeloggt bist, wie oft du bestimmte Funktionen
+        verwendest (z. B. Eintragen, Stoppuhr, Intervall-Timer, Musik) und wie lange du ungefähr auf welcher Seite
+        bist – je Kalenderwoche, auf unserem eigenen Server, ohne Inhalte, ohne IP-Adresse und ohne Drittanbieter.
+        Der Betreiber erhält daraus wöchentlich nur zusammengefasste Zahlen (z. B. „30 aktive Nutzer, Stoppuhr
+        12× genutzt“) per Telegram. Die Zähler werden nach spätestens 12 Monaten gelöscht und mit deinem Konto
+        entfernt. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (Verbesserung des Angebots).</P>
+      <P><strong className="text-white">Zeitzone.</strong> Dein Gerät übermittelt seine Zeitzone (z. B.
+        „Europe/Berlin“), damit deine Woche zur richtigen Uhrzeit endet. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.</P>
       <P><strong className="text-white">Erinnerungen (optional).</strong> Wenn du Erinnerungen einschaltest, speichern
         wir die Push-Adresse deines Browsers und deine gewählte Uhrzeit. Die Nachricht wird über den Push-Dienst
         deines Browser- bzw. Geräteherstellers zugestellt (z. B. Google, Apple, Mozilla). Rechtsgrundlage:
@@ -88,7 +97,7 @@ function Privacy() {
         "Render Services, Inc. (USA) – Betrieb von Website und Server, Rechenzentrum in Frankfurt am Main.",
         "MongoDB, Inc. (USA) – Datenbank „MongoDB Atlas“.",
         "Google Ireland Ltd. / Google LLC – Anmeldung („Mit Google fortfahren“).",
-        "Telegram Messenger Inc. – Zustellung von Feedback und Fehlermeldungen an den Betreiber.",
+        "Telegram Messenger Inc. – Zustellung von Feedback, Fehlermeldungen und der wöchentlichen Nutzungsübersicht (nur zusammengefasste Zahlen) an den Betreiber.",
       ]} />
       <P>Mit diesen Anbietern bestehen bzw. gelten Auftragsverarbeitungsbedingungen. Für Übermittlungen in die USA
         stützen sich die Anbieter auf das EU-US Data Privacy Framework bzw. EU-Standardvertragsklauseln

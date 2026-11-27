@@ -6,6 +6,7 @@ import { useI18n, formatNumber } from "../i18n";
 import { formatAmount, amountParts } from "../lib/amount";
 import { exerciseLabel, detectExerciseKind } from "../lib/exercises";
 import ExerciseIcon from "./ExerciseIcon";
+import { track } from "../lib/usage";
 
 // Crew-Challenges (Plan 12e, Gruppen seit 2026-11-25). Herausforderung für die laufende Kalenderwoche:
 // Duell („wer schafft am meisten?“) oder gemeinsames Ziel, mit einer oder mehreren Personen aus der Crew.
@@ -243,6 +244,7 @@ function ChallengeDialog({ open, onClose, board, meId, onDone, presetTo, onlineI
     setBusy(true);
     try {
       await api.post("/challenges", { to_user_ids: to, kind, from_key: key, target: kind === "team" ? Number(target || suggested) : undefined });
+      track("challenge_sent");
       toast.success(t("chal.sent", { name: chosen.map((f) => f.name).join(", ") }), { duration: 2000 });
       onClose();
       await onDone?.();

@@ -18,6 +18,7 @@ import { speak, PACK_KEY, CLANG_KEY, COACH_SYNC, announceCoachSetting } from "./
 import { claimMediaSession, restoreMediaSession, pause as pauseMusic, play as playMusic } from "../lib/musicPlayer";
 import { PRESETS, buildPhases, phaseAt, parseRepsSpeech, clampInt, sum, totalSeconds, COUNTDOWN_S } from "../lib/workout";
 import ExerciseIcon from "./ExerciseIcon";
+import { track } from "../lib/usage";
 
 const KEY = "tyc_workout";
 const PREFS_KEY = "tyc_workout_prefs"; // { coach: bool, live: bool, steps: [n,n,n] }
@@ -424,6 +425,7 @@ export default function Workout({ open, onClose, exercises = [], onLog }) {
   }, () => setMic(false));
 
   const start = () => {
+    track("workout_started");
     unlockAudio();
     writeLast({ exKey, work, rest, rounds });
     setReps(Array.from({ length: rounds }, () => 0));

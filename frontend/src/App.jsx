@@ -1,6 +1,6 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./i18n";
@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 // Einstellungen erst laden, wenn sie geöffnet werden (Plan 9): kleineres Start-Paket.
 const Settings = lazy(() => import("./pages/Settings"));
 import JoinPage from "./pages/JoinPage";
+import { startUsage, setPage } from "./lib/usage";
 const Legal = lazy(() => import("./pages/Legal"));
 
 // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
@@ -47,6 +48,10 @@ function ProtectedRoute({ children }) {
 }
 
 function AppRouter() {
+  // Nutzungsstatistik: Seite + Verweildauer (lib/usage, nur mit Login gesendet)
+  const loc = useLocation();
+  useEffect(() => { startUsage(); }, []);
+  useEffect(() => { setPage(loc.pathname); }, [loc.pathname]);
   return (
     <Routes>
       {/* Impressum/Datenschutz: immer sofort erreichbar, ohne Login und ohne auf den Server zu warten */}

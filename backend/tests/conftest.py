@@ -40,11 +40,11 @@ import server  # noqa: E402
 assert isinstance(server.client, AsyncMongoMockClient), "Tests dürfen nie gegen echtes MongoDB laufen"
 
 from fastapi.testclient import TestClient  # noqa: E402
-import core, goals, social, routes_auth, board, push, stats  # noqa: E402
+import core, goals, social, routes_auth, board, push, stats, usage  # noqa: E402
 
 # Seit der Aufteilung (BACKLOG W1) liegt jeder Name in einem Modul und wird von anderen importiert.
 # Tests ersetzen Werte/Funktionen deshalb überall, wo der Name vorkommt.
-MODULES = [server, core, goals, social, routes_auth, board, push, stats]
+MODULES = [server, core, goals, social, routes_auth, board, push, stats, usage]
 
 
 def patch_everywhere(monkeypatch, name, value):

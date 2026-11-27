@@ -9,6 +9,7 @@ import {
 } from "../lib/stopwatch";
 import { clipId, cueText } from "../lib/coachClips";
 import { getAudioCtx, unlockAudio, loadPackIndex, loadCoachClips, playCoachClip, stopCoachClips } from "../lib/coachAudio";
+import { track } from "../lib/usage";
 
 // Stoppuhr für Zeit-Übungen (Plan 13f) im Eintrag-Formular.
 // - Start mit 3-2-1-Countdown (Piepton, mit Coach auch gesprochen), dann zählt die Zeit.
@@ -382,6 +383,7 @@ export default function Stopwatch({ id, unit, color = "#CCFF00", onAdd, goal = 0
 
   // 3-2-1, dann zählt die Zeit
   const go = useCallback(() => {
+    track("stopwatch_started");
     window.clearTimeout(countTimer.current);
     setReview(null);
     writePaused(id, null);

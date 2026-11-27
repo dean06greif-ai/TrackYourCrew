@@ -15,6 +15,7 @@ import { MetricRow } from "./card/MetricRow";
 import { ActivityRow } from "./card/ActivityRow";
 import { isActivity } from "../lib/activities";
 import { InfoIcon } from "./card/Rank";
+import { track } from "../lib/usage";
 
 // Touch-Device Detection: Auf Touch-Geräten lösen Tap/Swipe ein "Hover" aus,
 // was zu einem ruckartigen Wechsel zwischen scale 1.03 (isActive) und
@@ -136,6 +137,7 @@ export default function UserCard({ entry, isMe, flash, canBoost, onBoost, onCanc
     if (last.time > 0 && gap < 350 && dist < 30) {
       // 🎉 Double-Tap erkannt → Karte umdrehen
       setFlipped((f) => !f);
+      track("card_flipped");
       lastTapRef.current = { time: 0, x: 0, y: 0 };
     } else {
       lastTapRef.current = { time: now, x: e.clientX, y: e.clientY };

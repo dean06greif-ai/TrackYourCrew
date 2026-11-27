@@ -288,6 +288,13 @@ from stats import (  # noqa: F401
     my_percentiles,
     set_stat_kinds,
 )
+from usage import (  # noqa: F401
+    _weekly_report_loop,
+    build_weekly_report,
+    cron_weekly_report,
+    report_usage,
+    run_weekly_report,
+)
 
 @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 async def site_root():
@@ -318,10 +325,14 @@ async def lifespan(_app):
     app.state.reminder_task = None
     if _push_enabled() and os.environ.get("DISABLE_REMINDER_LOOP") != "1":
         app.state.reminder_task = asyncio.create_task(_reminder_loop())
+    # Wochenbericht an den Betreiber (Telegram), Montag 0:00 Berlin
+    app.state.report_task = None
+    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID and os.environ.get("DISABLE_REMINDER_LOOP") != "1":
+        app.state.report_task = asyncio.create_task(_weekly_report_loop())
     try:
         yield
     finally:
-        for task in (app.state.reminder_task, app.state.db_startup_task):
+        for task in (app.state.reminder_task, app.state.report_task, app.state.db_startup_task):
             if task and not task.done():
                 task.cancel()
         client.close()

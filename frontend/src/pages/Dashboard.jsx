@@ -41,6 +41,7 @@ import { useVoiceConfirm, setGlobalVoice } from "../lib/voiceHub";
 import { ActivityLogRow, ActivityDayButton } from "../components/ActivityLog";
 import { isActivity, doneDays } from "../lib/activities";
 import { AutoFitNumberInput, NumInput } from "../components/NumInput";
+import { track } from "../lib/usage";
 
 // Globaler Toast-Tweak: Container click-through machen, damit Buttons hinter Nachrichten
 // trotzdem klickbar sind. Zusätzlich werden Toasts nach unten verschoben, damit sie nicht
@@ -111,6 +112,7 @@ export default function Dashboard() {
     pushBurst(toUserId, { id: `out-${Date.now()}`, emoji });
     try {
       await api.post("/emoji", { to_user_id: toUserId, emoji });
+      track("emoji_sent");
     } catch (e) {
       toast.error(e.response?.data?.detail || t("common.error"), { id: "emoji-err", duration: 2000 });
     }
@@ -712,6 +714,7 @@ export default function Dashboard() {
     try {
       const { data } = await api.post("/friends/add", { name, handle });
       // Seit Plan 4b eine Anfrage; nur wenn die Person mir schon eine geschickt hatte, sofort verbunden.
+      track("friend_added");
       if (data?.status === "connected") toast.success(t("crew.added", { name }), { duration: 2500 });
       else toast.success(t("crew.requestSent", { name }), { duration: 2500 });
       setFriendName("");
@@ -1194,6 +1197,7 @@ export default function Dashboard() {
             description: <VoiceSaved rows={vRows} exercises={me?.exercises || []} todayIdx={getTodayIdx()} dayNames={weekdayNames(locale, "long")} t={t} locale={locale} />,
           });
         } else toast.success(t("log.saved"), { duration: 2500 });
+        track("log_saved");
         closeStepSettings();
         setLogging(false);
       }
@@ -1258,6 +1262,7 @@ export default function Dashboard() {
 
   // opts.silent: ohne Toast und ohne das Formular zu schließen (Workout „Live eintragen“ je Runde)
   const applyVoiceItems = (items, opts = {}) => {
+    track("voice_used");
     const round2 = (n) => Math.round(n * 100) / 100;
     const today = getTodayIdx();
     const newDays = JSON.parse(JSON.stringify(logDays || {}));
@@ -1399,6 +1404,7 @@ export default function Dashboard() {
   const handleBoost = async (exercise_key) => {
     try {
       await api.post("/boost", { exercise_key });
+      track("boost_used");
       toast.success(t("boost.activated"), { icon: "🔥", duration: 2500 });
       fetchBoard();
     } catch (e) {
@@ -1439,7 +1445,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-1.5 md:gap-3">
             <MusicButton />
             <button
-              onClick={() => setShowInsights(true)}
+              onClick={() => { setShowInsights(true); track("insights_opened"); }}
               data-testid="open-insights"
               aria-label={t("nav.insights")}
               className="border border-[#222] hover:border-[#CCFF00] hover:text-[#CCFF00] px-2.5 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"
@@ -1448,7 +1454,7 @@ export default function Dashboard() {
               <span className="hidden md:inline">{t("nav.insights")}</span>
             </button>
             <button
-              onClick={() => setShowRanking(true)}
+              onClick={() => { setShowRanking(true); track("ranking_opened"); }}
               data-testid="open-ranking"
               aria-label={t("nav.ranking")}
               className="border border-[#222] hover:border-[#CCFF00] hover:text-[#CCFF00] px-2.5 md:px-4 py-2 text-xs uppercase tracking-widest flex items-center gap-2 transition-colors"

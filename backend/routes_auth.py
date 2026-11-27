@@ -345,6 +345,7 @@ async def delete_my_account(payload: AccountDelete, request: Request, response: 
     await db.seen_effects.delete_many({"$or": [{"viewer_user_id": uid}, {"target_user_id": uid}]})
     await db.feedback.delete_many({"user_id": uid})
     await db.push_subscriptions.delete_many({"user_id": uid})
+    await db.usage.delete_many({"user_id": uid})
     await db.users.delete_one({"user_id": uid})
     # Crew aktualisiert ihr Board (die Karte verschwindet)
     await manager.send_to(audience - {uid}, {"type": "goals_updated", "user_id": uid})
